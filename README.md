@@ -1,0 +1,12 @@
+## Directories
+ - `./src/` = source files
+   - `./src/config/` = config files
+   - `./src/database/` = database logic files
+     - `./src/database/models` = database models for records
+   - `./src/utils/` = shared utility files
+   - `./src/events/` = handles interaction events
+   - `./src/interfaces/` = defines interfaces for common structures like commands
+   - `./src/commands/` = commands
+   - `./src/modules/` = helper modules for database
+ - `./prod/` = generated output files
+ - `./.env` = environment variables
