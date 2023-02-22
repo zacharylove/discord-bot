@@ -5,7 +5,6 @@ import { REST } from "@discordjs/rest";
 import { CommandList } from "../commands/_CommandList";
 import { CommandProperties } from "../interfaces/Command";
 
-import * as commands from "../commands";
 
 export const onReady = async (BOT: Client) => {
     console.log(`Logged in as ${BOT.user?.tag}!`);
