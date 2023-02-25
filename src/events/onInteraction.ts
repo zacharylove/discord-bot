@@ -3,6 +3,7 @@ import { Interaction } from 'discord.js';
 
 // Handles onInteraction event
 export const onInteraction = async (interaction: Interaction) => {
+    console.log("Registering onInteraction event...")
     // If interaction is a command
     if (interaction.isCommand()) {
         // Check if command matches any registered commands
@@ -14,4 +15,5 @@ export const onInteraction = async (interaction: Interaction) => {
             }
         }
     }
+    console.log("Registered onInteraction event.")
 }

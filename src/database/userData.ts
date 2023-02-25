@@ -1,12 +1,13 @@
-import userModel from "../database/models/userModel";
-import { UserInterface } from "../interfaces/User";
+import userModel, { UserInterface } from "../database/models/userModel";
+
 
 // Creates new user entry in database
 export const createNewUser = async (discordId: string) => {
     const newUser = userModel.create({
-        discordId: discordId,
+        userID: discordId,
         numPokes: 0,
         numPoked: 0,
+        wordleDataID: null,
     })
     return newUser;
 }
@@ -22,11 +23,11 @@ export const updateUserData = async ( User: UserInterface) => {
 }
 
 // Gets user data from database
-export const getUserData = async (id: string): Promise<UserInterface> => {
+export const getUserData = async (userID: string): Promise<UserInterface> => {
     // Find entry matching id or create new entry if none exists
     const userData = 
-    ( await userModel.findOne({ id: id }) ) ||
-    ( await createNewUser(id) );
+    ( await userModel.findOne({ userID: userID }) ) ||
+    ( await createNewUser(userID) );
 
     return userData;
 }

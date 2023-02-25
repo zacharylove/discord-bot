@@ -1,0 +1,11 @@
+{
+    "statuses": [ "Back and better than ever!" ],
+    "wordleConfig": {
+        "wordLength": 5,
+        "numGuesses": 6,
+        "letterMatch": ["🟩", "🟧"],
+        "letterClose": ["🟨", "🟦"],
+        "letterWrong": ["⬛", "⬜"],
+        "maxPuzzles": 2315
+    }
+}
