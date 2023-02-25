@@ -24,4 +24,21 @@ export const User = new Schema({
     wordleDataID: Types.ObjectId,
 });
 
-export default model<UserInterface>('User', User);
+const userModel = model<UserInterface>('User', User);
+
+/**
+ * Creates and returns an empty UserModel object
+ * @param userID 
+ * @returns 
+ */
+export const createNewUser = async (discordId: string) => {
+    const newUser = userModel.create({
+        userID: discordId,
+        numPokes: 0,
+        numPoked: 0,
+        wordleDataID: null,
+    })
+    return newUser;
+}
+
+export default userModel;

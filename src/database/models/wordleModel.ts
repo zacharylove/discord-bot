@@ -1,5 +1,6 @@
 // Database model for a user's wordle data
 import { Document, model, Schema, ObjectId, Types } from 'mongoose';
+import { getUserData } from '../userData';
 
 
 export interface WordleDataInterface extends Document {
@@ -21,7 +22,6 @@ export interface WordleDataInterface extends Document {
     
 }
 
-
 export const WordleData = new Schema({
     _id: Types.ObjectId,
     userID: String,
@@ -33,4 +33,36 @@ export const WordleData = new Schema({
     weightedScore: Number,
 });
 
-export default model<WordleDataInterface>('WordleData', WordleData, "wordle");
+const wordleModel = model<WordleDataInterface>('WordleData', WordleData, "wordle");
+
+/**
+ * Creates and returns an empty WordleData object
+ * @param userID 
+ * @returns 
+ */
+export const createNewWordleData = async (userID: string) => {
+    console.log(`Creating new WordleData object for user ${userID}...`)
+    const newWordle = wordleModel.create({
+        _id: new Types.ObjectId(),
+        userID: userID,
+        results: new Array({
+            puzzleID: Number,
+            results: new Array<String>(),
+            scores: new Array<Number>(),
+        }),
+        totalGuesses: 0,
+        totalPuzzles: 0,
+        numComplete: 0,
+        totalAverage: 0,
+        weightedScore: 0,
+    });
+
+    // Set user's db entry to point to this new wordle data
+    const user = await getUserData(userID);
+    user.wordleDataID = (await newWordle)._id;
+    await user.save();
+
+    return newWordle;
+}
+
+export default wordleModel;

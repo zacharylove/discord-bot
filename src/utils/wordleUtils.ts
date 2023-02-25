@@ -114,8 +114,8 @@ export class wordle {
         }
 
         // Log result
-        if (match) console.log("Wordle result is legitimate.");
-        else console.log("Wordle result is illegitimate.");
+        if (match) console.debug("Wordle result is legitimate.");
+        else console.debug("Wordle result is illegitimate.");
 
         return match;
     }
@@ -135,7 +135,7 @@ export class wordle {
      * @param wordleInfo 
      */
     storeWordleResult = async (wordleInfo: wordleInfo) => {
-        console.log("Storing wordle result into database...");
+        console.debug("Storing wordle result into database...");
         const userData = await getWordleDataByUserID(wordleInfo.authorID);
 
         // Check if user has a wordle data entry for this puzzle
@@ -164,7 +164,7 @@ export class wordle {
         userData.weightedScore = averages[1];
 
         // Update user data
-        console.log("Updating user data...");
+        console.debug("Updating user data...");
         await update(userData);
     }
     
@@ -181,11 +181,11 @@ export class wordle {
         // Whether the number of lines in message is correct
         const numLinesMatch = messageContent.split("\n").length <= this.numGuesses + 2;
 
-        console.log(`Pattern match: ${patternMatch}, numLinesMatch: ${numLinesMatch}`);
+        console.debug(`Pattern match: ${patternMatch}, numLinesMatch: ${numLinesMatch}`);
 
         // If match
         if (patternMatch && numLinesMatch) {
-            console.log("Message matches wordle pattern.");
+            console.debug("Message matches wordle pattern.");
             const cleanedMessage = this.cleanMessage(message);
             if ( this.checkWordleResult(cleanedMessage) ) {
                 await message.react("✅");

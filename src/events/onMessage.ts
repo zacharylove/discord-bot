@@ -8,7 +8,8 @@ export const onMessage = async (Message: Message, WordleUtil: wordle) => {
     // Ignore messages from bots
     if (Message.author.bot) return;
     const messageContent = Message.content;
-    console.log(`Received message from ${Message.author.username}: ${messageContent}`);
+    
+    console.debug(`Received message from ${Message.author.username}: ${messageContent}`);
 
     // Check if message is a wordle result
     WordleUtil.parseMessage(Message);

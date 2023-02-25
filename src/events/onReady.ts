@@ -53,4 +53,6 @@ export const onReady = async (BOT: Client) => {
     }, parseInt(process.env.TICK_INTERVAL as string));
 
     console.log("Registered onReady event.");
+
+    console.log("Bot ready.\n\n")
 };

@@ -1,3 +1,8 @@
+# Cinnamon
+A rewrite of Cinnamon in Typescript, merging the old functionality with the Synonym wordle bot I've been working on.
+
+
+
 ## Directories
  - `./src/` = source files
    - `./src/config/` = config files
