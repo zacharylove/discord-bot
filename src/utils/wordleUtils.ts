@@ -1,7 +1,8 @@
+import { WordleDataInterface } from "database/models/wordleModel";
 import { Message } from "discord.js";
 import { wordleConfig } from "../config/config.json"
 
-import { getWordleDataByUserID, update } from "../database/wordleData";
+import { getWordleDataByUserID, update, getRanking } from "../database/wordleData";
 
 interface wordleInfo {
     authorID: string;
@@ -122,12 +123,13 @@ export class wordle {
 
     computeAverages = (totalGuesses: number, totalPuzzles: number, numComplete: number): [number, number] => {
         if (numComplete == 0 || totalPuzzles == 0) return [0, 0];
-        const totalAverage = totalGuesses / (this.wordLength * totalPuzzles);
+        const totalAverage = totalGuesses / (totalPuzzles);
         const weightedScore = Math.round(1000 * (1 / totalAverage) * Math.log(totalPuzzles * numComplete / totalPuzzles));
 
         return [totalAverage, weightedScore];
 
     }
+
 
 
     /**

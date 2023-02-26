@@ -3,9 +3,11 @@
 import { CommandInterface } from "../interfaces/Command";
 import { avatar } from "./avatar";
 import { poke } from "./poke";
+import { wordleStats } from "./wordleStats";
 
 export const CommandList: CommandInterface[] = [
     // Add commands here
     poke,
-    avatar
+    avatar,
+    wordleStats
 ];
