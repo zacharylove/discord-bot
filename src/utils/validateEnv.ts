@@ -10,6 +10,21 @@ export const validateEnv = () => {
         console.warn("Missing MongoDB Atlas connection string!");
         return false;
     }
+    if (!process.env.GUILD_ID) {
+        console.warn("Missing guild ID!");
+        // No return, not a big deal
+    }
+    if (!process.env.TICK_INTERVAL) {
+        console.warn("Missing tick interval!");
+        return false;
+    }
+    if (!process.env.DEBUG_MODE) {
+        console.warn("Missing debug mode!");
+    } else {
+        if (process.env.DEBUG_MODE.toLowerCase() === "true") {
+            console.log("Debug mode is enabled!");
+        }
+    }
     console.log("Environment variables look OK!")
     return true;
 }
