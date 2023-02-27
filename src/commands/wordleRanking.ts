@@ -27,6 +27,7 @@ export const wordleRanking: CommandInterface = {
     properties:  {
         Name: 'Wordle Ranking',
         Scope: 'global',
+        GuildOnly: false,
         Enabled: true,
         Intents: []
 

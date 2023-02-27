@@ -9,8 +9,10 @@ export interface CommandProperties {
     Name: string;
     // Any aliases for command
     Aliases?: string[];
-    // Whether command is global or guild only
+    // Whether command is global or in test guild only
     Scope: "global" | "guild";
+    // Whether command is restricted to guilds (no DMs)
+    GuildOnly: boolean;
     // Whether command is enabled or disabled
     Enabled: boolean;
     // Any intents required for command to function

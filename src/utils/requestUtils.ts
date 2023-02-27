@@ -70,6 +70,19 @@ const formCdnURL = (info: requestInfo) => {
 
 }
 
+export const hasServerAvatar = async (targetId: string, guildId: string): Promise<boolean> => {
+    const info = {
+        guildID: guildId,
+        userID: targetId,
+        type: requestType.GuildMember,
+    } as requestInfo;
+    
+    const URL = formBaseURL(info);
+    const res = await makeRequest(URL);
+    if (!res.data.avatar) return false;
+    return true;
+}
+
 /**
  * Gets the URL of a user's server profile avatar
  * @param info 
@@ -84,6 +97,8 @@ export const getServerAvatarURLs = async (guildId: string, targetId: string): Pr
     
     const URL = formBaseURL(info);
     const res = await makeRequest(URL);
+
+    if (!res.data.avatar) return new Map<ImageExtension, string>();
 
     
     // This new base url will be used to get the avatar

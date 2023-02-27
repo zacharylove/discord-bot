@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import userModel from "./models/userModel";
 
 
 // Makes mongoose connection to MongoDB Atlas database
@@ -13,6 +14,7 @@ export const connectDatabase = async() => {
         console.error(err);
     }
 
-    console.log("Connected to database!")
+    const numRecords = await userModel.countDocuments();
+    console.log(`Connected to database, loaded ${numRecords} user records.`);
 
 }

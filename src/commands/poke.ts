@@ -43,6 +43,7 @@ export const poke: CommandInterface = {
     properties: {
         Name: 'Poke',
         Scope: 'global',
+        GuildOnly: false,
         Enabled: true,
         Intents: []
 

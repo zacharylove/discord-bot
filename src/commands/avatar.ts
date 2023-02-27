@@ -89,6 +89,7 @@ export const avatar: CommandInterface = {
         Name: 'Avatar',
         Aliases: ['Profile Picture', "Banner"],
         Scope: 'global',
+        GuildOnly: true,
         Enabled: true,
         Intents: []
     }

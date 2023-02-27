@@ -1,9 +1,12 @@
 // Utility functions for images
+import { Canvas } from 'canvas';
 import { ALLOWED_EXTENSIONS, CommandInteraction, ImageExtension, User } from 'discord.js';
+import path from 'path';
 
 // Valid image formats according to Discord
 const validFormats : ImageExtension[] = ["webp", "png", "jpg", "jpeg"];
 
+export const imagePath = path.join(__dirname, '..', '..', 'assets', 'img');
 
 /**
  * Forms a map containing all valid image urls

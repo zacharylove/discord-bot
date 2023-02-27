@@ -81,6 +81,7 @@ export const wordleStats: CommandInterface = {
         properties: {
             Name: 'Wordle Stats',
             Scope: 'global',
+            GuildOnly: true,
             Enabled: true,
             Intents: []
     
