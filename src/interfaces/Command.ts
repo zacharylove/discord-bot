@@ -1,17 +1,23 @@
 import { SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder } from "@discordjs/builders";
+import { GatewayIntentBits } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
 
+// Interface for all commands, defines requirements and some additional properties
 
-export enum CommandProperties {
+export interface CommandProperties {
     // Name of command
-    Name,
+    Name: string;
+    // Any aliases for command
+    Aliases?: string[];
     // Whether command is global or guild only
-    Scope,
+    Scope: "global" | "guild";
     // Whether command is enabled or disabled
-    Enabled,
+    Enabled: boolean;
+    // Any intents required for command to function
+    Intents?: GatewayIntentBits[];
 }
 
-// Defines interface for command
+
 export interface CommandInterface {
     // Holds command data to send to Discord
     data: Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand"> | SlashCommandSubcommandsOnlyBuilder;
@@ -19,5 +25,5 @@ export interface CommandInterface {
     run: (interaction: CommandInteraction) => Promise<void>;
 
     // Holds information about the command
-    properties: Map<CommandProperties, string>;
+    properties: CommandProperties;
 }

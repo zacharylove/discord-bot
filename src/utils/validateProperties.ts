@@ -1,5 +1,9 @@
 // Validates environment variables to ensure they are not undefined
 
+import { GatewayIntentBits } from "discord.js";
+import { IntentOptions } from "../config/IntentOptions";
+import { toTitleCase } from "./utils";
+
 export const validateEnv = () => {
     console.log("Validating environment variables...")
     if (!process.env.BOT_TOKEN) {
@@ -26,5 +30,22 @@ export const validateEnv = () => {
         }
     }
     console.log("Environment variables look OK!")
+    return true;
+}
+
+/**
+ * Validates whether the intents requested by an event or command are registered by the client
+ * @param requestedIntents 
+ * @param name 
+ * @returns 
+ */
+export const validateIntents = (requestedIntents: GatewayIntentBits[] | undefined, name?: string, type?: string) => {
+    if (!requestedIntents) return true;
+    else if (!requestedIntents.every(val => IntentOptions.includes(val))) {
+        if (!name) name = "Item";
+        if (!type) type = "Event/Command";
+        console.warn(`${toTitleCase(type)} ${name} was not registered because it requires intents that are not enabled.`);
+        return false;
+    }
     return true;
 }

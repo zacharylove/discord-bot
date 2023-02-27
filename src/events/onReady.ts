@@ -5,6 +5,9 @@ import { REST } from "@discordjs/rest";
 import { CommandList } from "../commands/_CommandList";
 import { CommandProperties } from "../interfaces/Command";
 import { onTick } from "../events/onTick";
+import { IntentOptions } from "config/IntentOptions";
+import { EventInterface } from "interfaces/Event";
+import { validateIntents } from "../utils/validateProperties";
 
 const registerCommands = async (BOT: Client) => {
     const rest = new REST({ version: "9" }).setToken(process.env.BOT_TOKEN as string);
@@ -12,11 +15,15 @@ const registerCommands = async (BOT: Client) => {
     var guildCommands = [];
     var globalCommands = [];
     for (const Command of CommandList) {
-        if (Command.properties.get(CommandProperties.Scope) === 'guild') {
+        // Check if we have the correct intents for the command
+        if (!validateIntents(Command.properties.Intents, "onReady")) continue;
+
+        if (Command.properties.Scope === 'guild') {
             guildCommands.push(Command.data.toJSON());
-        } else if (Command.properties.get(CommandProperties.Scope) === 'global') {
+        } else if (Command.properties.Scope === 'global') {
             globalCommands.push(Command.data.toJSON());
         }
+        
     }
 
     // Register guild commands
@@ -40,19 +47,24 @@ const registerCommands = async (BOT: Client) => {
 };
 
 
-export const onReady = async (BOT: Client) => {
-    console.log(`Logged in as ${BOT.user?.tag}!`);
-    console.log("Registering onReady event...");
-    // Register commands
-    registerCommands(BOT).catch(console.error);
+export const onReady : EventInterface = {
+    run: async (BOT: Client) => {
+        console.log(`Logged in as ${BOT.user?.tag}!`);
+        console.log("Registering onReady event...");
+        // Register commands
+        registerCommands(BOT).catch(console.error);
 
-    // Set tick event to run every set interval
-    console.log("Setting tick event to run every " + process.env.TICK_INTERVAL + "ms.")
-    setInterval(() => {
-        onTick(BOT);
-    }, parseInt(process.env.TICK_INTERVAL as string));
+        // Set tick event to run every set interval
+        if (onTick.properties.Enabled && validateIntents(onTick.properties.Intents, "onTick", "event")) {
+            console.log("Setting tick event to run every " + process.env.TICK_INTERVAL + "ms.")
+            setInterval(() => onTick.run(BOT), parseInt(process.env.TICK_INTERVAL as string));
+        }
+        console.log("Registered onReady event.");
 
-    console.log("Registered onReady event.");
-
-    console.log("Bot ready.\n\n")
-};
+        console.log("Bot ready.\n\n")
+    },
+    properties: {
+        Name: "ready",
+        Enabled: true,
+    }
+}

@@ -40,9 +40,11 @@ export const poke: CommandInterface = {
     },
 
     // Define command properties
-    properties: new Map<CommandProperties, string>([
-        [CommandProperties.Name, 'Poke'],
-        [CommandProperties.Scope, 'global'],
-        [CommandProperties.Enabled, 'true']
-    ])
+    properties: {
+        Name: 'Poke',
+        Scope: 'global',
+        Enabled: true,
+        Intents: []
+
+    }
 };

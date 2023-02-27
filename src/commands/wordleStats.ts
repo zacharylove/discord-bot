@@ -78,9 +78,11 @@ export const wordleStats: CommandInterface = {
 
 
         },
-        properties: new Map<CommandProperties, string>([
-            [CommandProperties.Name, 'Wordle Stats'],
-            [CommandProperties.Scope, 'global'],
-            [CommandProperties.Enabled, 'true']
-        ])
+        properties: {
+            Name: 'Wordle Stats',
+            Scope: 'global',
+            Enabled: true,
+            Intents: []
+    
+        }
 }

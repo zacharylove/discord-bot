@@ -40,7 +40,7 @@ const makeUserRequest = async (guildId: string, targetId: string): Promise<Axios
 const getServerAvatar = (guildId: string, targetId: string, results: AvatarResult, res: AxiosResponse<any, any>): Map<ImageExtension, string> => {
     let avatarURLs = new Map<ImageExtension, string>();
     if ( res.data.avatar !== undefined && res.data.avatar !== null ) {
-        console.debug('Server avatar found!');
+        // console.debug('Server avatar found!');
         let baseURL = `https://cdn.discordapp.com/guilds/${guildId}/users/${targetId}/avatars/${res.data.avatar}.`;
 
         let avatarFormats = [...validFormats];
@@ -58,9 +58,9 @@ const getServerAvatar = (guildId: string, targetId: string, results: AvatarResul
 // Discord API does not support server banners :(
 const getServerBanner = (guildId: string, targetId: string, results: AvatarResult, res: AxiosResponse<any, any>): Map<ImageExtension, string> => {
     let bannerURLs = new Map<ImageExtension, string>();
-    console.debug(`Banner: ${res.data.}`);
+    // console.debug(`Banner: ${res.data.}`);
     if ( res.data.banner !== undefined && res.data.banner !== null ) {
-        console.debug('Server banner found!');
+        // console.debug('Server banner found!');
         let baseURL = `https://cdn.discordapp.com/guilds/${guildId}/users/${targetId}/banners/${res.data.banner}.`;
         const bannerFormat = (res.data.banner).startsWith('a_') ? "gif" : "png";
         let bannerFormats = validFormats;
@@ -86,17 +86,17 @@ const getGlobalAvatar = (target: User): Map<ImageExtension, string> => {
 }
 
 const getGlobalBanner = (target: User): Map<ImageExtension, string> => {
-    console.debug(`Banner: ${target.banner}`);
+    // console.debug(`Banner: ${target.banner}`);
     let bannerURLs = new Map<ImageExtension, string>();
     if ( target.banner !== undefined && target.banner !== null ) {
-        console.debug('Global banner found!');
+        // console.debug('Global banner found!');
         let bannerFormats = [...validFormats];
         if (target.banner.startsWith('a_')) bannerFormats.push("gif");
 
         
         for ( const format of bannerFormats ) {
             let bannerUrl = target.bannerURL({ extension: format });
-            console.debug(`Banner URL: ${bannerUrl}`)
+            // console.debug(`Banner URL: ${bannerUrl}`)
             if (typeof bannerUrl === "string") {
                 bannerURLs.set(format, bannerUrl);
             }
@@ -135,42 +135,42 @@ export const avatar: CommandInterface = {
 
         // Server Avatar
         if ( interaction.guild != null ) {
-            console.debug(`Getting server avatar/banner for ${target.tag}`);
+            // console.debug(`Getting server avatar/banner for ${target.tag}`);
             const res = await makeUserRequest(interaction.guild.id, target.id);
             results.serverAvatar = getServerAvatar(interaction.guild.id, target.id, results, res);
             //results.serverBanner = getServerBanner(interaction.guild.id, target.id, results, res);
             
         }
         // Global avatar
-        console.debug(`Getting global avatar/banner for ${target.tag}`);
+        // console.debug(`Getting global avatar/banner for ${target.tag}`);
         results.globalAvatar = getGlobalAvatar(target);
         results.globalBanner = getGlobalBanner(target);
 
         // Create description
         let description = "";
         if ( results.globalAvatar ) {
-            console.debug('Writing global avatar')
+            // console.debug('Writing global avatar')
             description += "**Global Avatar:**\n";
             for ( const [format, url] of results.globalAvatar ) {
                 description += `[${format}](${url}) `;
             }
         }
         if ( results.serverAvatar && results.serverAvatar.size > 0 ) {
-            console.debug('Writing server avatar')
+            // console.debug('Writing server avatar')
             description += "\n**Server Avatar:**\n";
             for ( const [format, url] of results.serverAvatar ) {
                 description += `[${format}](${url}) `;
             }
         }
         if ( results.globalBanner && results.globalBanner.size > 0) {
-            console.debug('Writing global banner')
+            // console.debug('Writing global banner')
             description += "\n**Global Banner:**\n";
             for ( const [format, url] of results.globalBanner ) {
                 description += `[${format}](${url}) `;
             }
         }
         /*if ( results.serverBanner && results.serverBanner.size > 0) {
-            console.debug('Writing server banner')
+            // console.debug('Writing server banner')
             description += "\n**Server Banner:**\n";
             for ( const [format, url] of results.serverBanner ) {
                 description += `[${format}](${url}) `;
@@ -188,9 +188,11 @@ export const avatar: CommandInterface = {
         await interaction.editReply({ embeds: [embed] });
         return;
     },
-    properties: new Map<CommandProperties, string>([
-        [CommandProperties.Name, 'Avatar'],
-        [CommandProperties.Scope, 'global'],
-        [CommandProperties.Enabled, 'true']
-    ])
+    properties: {
+        Name: 'Avatar',
+        Aliases: ['Profile Picture', "Banner"],
+        Scope: 'global',
+        Enabled: true,
+        Intents: []
+    }
 }
