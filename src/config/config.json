@@ -7,5 +7,10 @@
         "letterClose": ["🟨", "🟦"],
         "letterWrong": ["⬛", "⬜"],
         "maxPuzzles": 2315
+    },
+    "discordAPI": {
+        "baseURL": "https://discord.com/api",
+        "version": "10",
+        "cdnURL": "https://cdn.discordapp.com"
     }
 }
