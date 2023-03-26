@@ -6,6 +6,8 @@ import { createCanvas, loadImage } from 'canvas';
 import { getAvatarURL, getGlobalAvatar, getServerProfileAvatar } from '../utils/userUtils';
 import { imagePath } from '../utils/imageUtils';
 
+import { parseGIF, decompressFrames } from 'gifuct-js';
+
 
 /**
  * Generates a number based on the given users' IDs and the current timestamp
@@ -142,6 +144,7 @@ export const ship: CommandInterface = {
         Scope: 'global',
         GuildOnly: true,
         Enabled: true,
+        DefaultEnabled: true,
         Intents: []
     }
  

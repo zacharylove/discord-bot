@@ -29,6 +29,7 @@ export const wordleRanking: CommandInterface = {
         Scope: 'global',
         GuildOnly: false,
         Enabled: true,
+        DefaultEnabled: false,
         Intents: []
 
     }

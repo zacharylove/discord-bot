@@ -1,6 +1,6 @@
 // Utility functions that involve users
 
-import { ImageExtension, User } from "discord.js";
+import { Guild, ImageExtension, PermissionsBitField, User } from "discord.js";
 import { getAllImagesFromUser } from "./imageUtils";
 import { getServerAvatarURLs, hasServerAvatar } from "./requestUtils"
 
@@ -22,7 +22,14 @@ export const getGlobalBanner = (target: User): Map<ImageExtension, string> => {
     return getAllImagesFromUser(target, "banner");
 }
 
-// Loads avater, prioritizing server avatar and gif format
+/**
+ * Gets an avatar URL for a user.
+ * Prioritizes server avatar over global avatar.
+ * Formats are prioritized in the following order: gif, png, jpg, webp
+ * @param target 
+ * @param guildId 
+ * @returns avatar image URL
+ */
 export const getAvatarURL = async (target: User, guildId?: string): Promise<[string, string]> => {
     let avatar;
     if (guildId) {
@@ -44,3 +51,21 @@ export const getAvatarURL = async (target: User, guildId?: string): Promise<[str
     return ["", target.displayAvatarURL()];
 }
 
+/* -----------------------------
+ * Permission Functions
+ * Used in guilds
+  ----------------------------- */
+
+  /**
+   * Checks if the given user in the given guild has a permission or set of permissions
+   * Returns true if the user has the permission(s) and false if not
+   * @param permissions 
+   * @param guild 
+   * @param user 
+   * @returns 
+   */
+export const hasPermissions = ( permissions: PermissionsBitField[] | PermissionsBitField, guild: Guild, user: User ): boolean => {
+    const member = guild.members.cache.get(user.id);
+    if (!member) return false;
+    return member.permissions.has(permissions);
+}

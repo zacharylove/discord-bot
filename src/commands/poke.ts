@@ -45,6 +45,7 @@ export const poke: CommandInterface = {
         Scope: 'global',
         GuildOnly: false,
         Enabled: true,
+        DefaultEnabled: true,
         Intents: []
 
     }

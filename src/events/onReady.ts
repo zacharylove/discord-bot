@@ -19,8 +19,10 @@ const registerCommands = async (BOT: Client) => {
         if (!validateIntents(Command.properties.Intents, "onReady")) continue;
 
         if (Command.properties.Scope === 'guild') {
+            console.log('Registering guild command: ' + Command.properties.Name + '...');
             guildCommands.push(Command.data.toJSON());
         } else if (Command.properties.Scope === 'global') {
+            console.log('Registering global command: ' + Command.properties.Name + '...');
             globalCommands.push(Command.data.toJSON());
         }
         

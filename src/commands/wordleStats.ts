@@ -83,7 +83,7 @@ export const wordleStats: CommandInterface = {
             Scope: 'global',
             GuildOnly: true,
             Enabled: true,
+            DefaultEnabled: false,
             Intents: []
-    
         }
 }

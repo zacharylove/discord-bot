@@ -36,7 +36,7 @@ export const getAllImagesFromUser = (user: User, type: "avatar" | "banner"): Map
         if (type === "avatar") url = user.displayAvatarURL({ extension: format });
         else if (type === "banner") {
             url = user.bannerURL({ extension: format });
-            console.debug(`Banner URL: ${url}`);
+            //console.debug(`Banner URL: ${url}`);
         }
 
         if (typeof url === "string") imageURLS.set(format, url);

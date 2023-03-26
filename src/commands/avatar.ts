@@ -91,6 +91,7 @@ export const avatar: CommandInterface = {
         Scope: 'global',
         GuildOnly: true,
         Enabled: true,
+        DefaultEnabled: true,
         Intents: []
     }
 }
