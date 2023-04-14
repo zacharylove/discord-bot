@@ -4,8 +4,7 @@
   "description": "Cinnamon, rewritten!",
   "main": "./src/index.ts",
   "scripts": {
-    "tsc": "./node_modules/typescript/bin/tsc",
-    "build": "tsc",
+    "postinstall": "tsc",
     "start": "node -r dotenv/config ./prod/index.js",
     "deploy": "tsc && node -r dotenv/config ./prod/index.js"
   },
