@@ -13,7 +13,6 @@ export const poke: CommandInterface = {
                 .setRequired(false)
         ),
     run: async (interaction) => {
-        await interaction.deferReply();
         // Get user to poke
         const userToPoke = interaction.options.getUser('user');
         const callingUser = await getUserData(interaction.user.id);

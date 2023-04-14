@@ -46,7 +46,6 @@ export const wordleStats: CommandInterface = {
                 .setRequired(false)
         ),
         run: async (interaction) => {
-            await interaction.deferReply();
             
 
             // Check if wordle features are enabled (only if on server)

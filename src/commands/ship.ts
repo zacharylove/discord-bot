@@ -51,7 +51,6 @@ export const ship: CommandInterface = {
             .setRequired(false)
     ),
     run: async (interaction) => {
-        interaction.deferReply();
         // If only one user is specified, assume the other is the calling user
         let user2 = interaction.options.getUser('user2');
         if (!user2) user2 = interaction.user;

@@ -22,6 +22,9 @@ export const onInteraction : EventInterface = {
                         errorList.push("Command " + Command.data.name + " is disabled globally.");
                     }
 
+                    // Defer reply!
+                    interaction.deferReply();
+
                     // If sent in guild
                     if (interaction.guild) {
 

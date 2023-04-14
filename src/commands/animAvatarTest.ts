@@ -18,7 +18,6 @@ export const animAvatarTest: CommandInterface = {
                 .setRequired(true)
         ),
     run: async (interaction) => {
-        await interaction.deferReply();
         let user = interaction.options.getUser('user');
         if (!user || !interaction.guild) {
             return;

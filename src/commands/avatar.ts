@@ -19,7 +19,6 @@ export const avatar: CommandInterface = {
                 .setRequired(true)
         ),
     run: async (interaction) => {
-        await interaction.deferReply();
         
 
         const target = await interaction.options.getUser('user')?.fetch(true);
