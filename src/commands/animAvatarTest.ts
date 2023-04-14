@@ -157,7 +157,7 @@ export const animAvatarTest: CommandInterface = {
         Name: 'AnimAvatarTest',
         Scope: 'global',
         GuildOnly: false,
-        Enabled: true,
+        Enabled: false,
         DefaultEnabled: false,
         Intents: []
     }

@@ -17,6 +17,8 @@ const registerCommands = async (BOT: Client) => {
     for (const Command of CommandList) {
         // Check if we have the correct intents for the command
         if (!validateIntents(Command.properties.Intents, "onReady")) continue;
+        // Check if command is not globally disabled
+        if (!Command.properties.Enabled) continue;
 
         if (Command.properties.Scope === 'guild') {
             console.log('Registering guild command: ' + Command.properties.Name + '...');

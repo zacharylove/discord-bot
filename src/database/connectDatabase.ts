@@ -14,7 +14,14 @@ export const connectDatabase = async() => {
         console.error(err);
     }
 
-    const numRecords = await userModel.countDocuments();
-    console.log(`Connected to database, loaded ${numRecords} user records.`);
+    try {
+        const numRecords = await userModel.countDocuments();
+        console.log(`Connected to database, loaded ${numRecords} user records.`);
+    } catch (err) {
+        console.log(`Error loading user records- make sure you've whitelisted your IP address in MongoDB Atlas!`)
+        console.error(err);
+    }
+    
+    
 
 }
