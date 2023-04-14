@@ -64,7 +64,7 @@ export const getAvatarURL = async (target: User, guildId?: string): Promise<[str
    * @param user 
    * @returns 
    */
-export const hasPermissions = ( permissions: PermissionsBitField[] | PermissionsBitField, guild: Guild, user: User ): boolean => {
+export const hasPermissions = ( permissions: PermissionsBitField[] | PermissionsBitField | bigint | bigint[], guild: Guild, user: User ): boolean => {
     const member = guild.members.cache.get(user.id);
     if (!member) return false;
     return member.permissions.has(permissions);

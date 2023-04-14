@@ -4,9 +4,114 @@ import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
 import { getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID } from "../database/guildData";
 import { GuildDataInterface } from "../database/models/guildModel";
 import { getCommandListAsString } from "../utils/commandUtils";
+import { CommandInteraction, PermissionsBitField, User } from "discord.js";
+import { hasPermissions } from "../utils/userUtils";
+
+
+// Required permission to enable/disable
+const requiredPermissions = PermissionsBitField.Flags.ManageGuild;
 
 // Settings command
 // If no arguments are provided, display a list of all guild-specific settings
+
+const displaySettingsOverview = async (interaction: CommandInteraction, embed: EmbedBuilder): Promise<EmbedBuilder> => {
+    // shut up typescript
+    if ( !interaction.guild ) { return embed; }
+
+    let description: string = "";
+    description += "Using the settings command and subcommands, you can edit server-specific settings and turn features and commands on/off.\n";
+    description += "Features are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.\n";
+    description += "Some commands/features are enabled by default, and some are disabled by default.\n";
+    description += "In order to enable a command or feature, you must have the `Manage Server` permission.\n";
+    
+
+    embed.addFields({name: 'Enable/disable a command', value: "`/settings command <enable/disable> <command name>`"});
+    embed.addFields({name: 'Enable/disable a feature', value: "`/settings feature <enable/disable> <feature name>`"});
+    embed.addFields({name: 'List all commands', value: "`/settings command list`"});
+    embed.addFields({name: 'List all features', value: "`/settings feature list`"});
+    embed.addFields({name: 'List all commands and features', value: "`/settings list`"});
+
+    return embed;
+}
+
+
+/**
+ * Sends a list of available/enabled/disabled commands and feature settings for the guild
+ * @param interaction 
+ */
+const displaySettingsList = async (interaction: CommandInteraction, embed: EmbedBuilder): Promise<EmbedBuilder>  => {
+    // shut up typescript
+    if ( !interaction.guild || !interaction.guildId ) { return embed; }
+
+    // List all settings
+    const guildData: GuildDataInterface = await getGuildDataByGuildID(interaction.guildId);
+
+    let description: string = "Configuration for " + interaction.guild.name;
+    description += "Here, you can enable and disable commands and features for this server. \n"
+    description += "For more information, use `/settings help`.\n"
+
+    // Now remember:
+    // - Globally disabled commands are disabled everywhere
+    // - Globally enabled commands are enabled UNLESS they are specifically disabled
+    // 
+
+    // This loops twice, but who cares- there's not gonna be THAT many commands
+    const enabledCommandList: string[] = await getEnabledCommandListAsString(interaction.guildId);
+    const disabledCommandList: string[] = await getDisabledCommandListAsString(interaction.guildId);
+    const availableCommandList: string[] = await getCommandListAsString();
+
+
+    let enabledCommandsString: string = 'None';
+    let disabledCommandsString: string = 'None';
+    let availableCommandsString: string = 'None';
+    let contentScanningString: string = '';
+
+    if ( availableCommandList.length > 0 ) {
+        availableCommandsString = " - " + availableCommandList.join('\n - ');
+    }
+    embed.addFields({name: 'Available Commands', value: availableCommandsString, inline: true});
+
+    if ( enabledCommandList.length > 0 ) {
+        enabledCommandsString = " - " + enabledCommandList.join('\n - ');
+    }
+    embed.addFields({name: 'Enabled', value: enabledCommandsString, inline: true});
+    if ( disabledCommandList.length > 0 ) {
+        disabledCommandsString = " - " + disabledCommandList.join('\n - ');
+    }
+    embed.addFields({name: 'Disabled', value: disabledCommandsString, inline: true});
+    
+    // ======
+    // Features
+    
+
+    contentScanningString += "Wordle Results Scanning: ";
+    if ( guildData.messageScanning.wordleResultScanning ) {
+        contentScanningString += "Enabled\n";
+    } else { contentScanningString += "Disabled\n"; }
+
+    embed.addFields({name: 'Available Features', value: contentScanningString});
+
+    return embed;
+}
+
+const checkPermission = async ( interaction: CommandInteraction ): Promise<boolean> => {
+    if (!interaction.guild) {
+        await interaction.reply({content: "This command can only be used in a server.", ephemeral: true});
+        return false;
+    }
+    if (!hasPermissions(requiredPermissions, interaction.guild, interaction.user)) {
+        await interaction.reply({content: "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, uh, manage the server.", ephemeral: true});
+        return false;
+    }
+    console.log("Permission check passed.")
+    return true;
+
+}
+
+const apologizeForFailure = async ( interaction: CommandInteraction, commandName: string ): Promise<void> => {
+    interaction.editReply("Yeah, uh, the `" + commandName + "` command isn't implemented yet. Sorry.");
+    return;
+}
 
 /* Example usage:
     /settings enableCommand poke
@@ -92,11 +197,18 @@ export const guildSettings: CommandInterface = {
                 )
         )
         
-        // View all settings
+        // List all settings
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('list')
                 .setDescription('List all settings for this server')
+        )
+
+        // Help
+        .addSubcommand((subcommand) =>
+            subcommand
+                .setName('help')
+                .setDescription('Get help on this command')
         )
         ,
     run: async (interaction) => {
@@ -112,21 +224,29 @@ export const guildSettings: CommandInterface = {
             return;
         }
 
+        let embedToSend: EmbedBuilder = new EmbedBuilder();
+        embedToSend
+            .setTitle('Server Settings')
+            .setDescription('Configuration for ' + interaction.guild.name)
+            .setTimestamp()
+            .setFooter({text: "To modify these settings, use the /settings subcommands."});
         switch (interaction.options.getSubcommandGroup()) {
             case 'command':
                 switch (interaction.options.getSubcommand()) {
                     case 'enable':
                         // Enable a command
-                        interaction.editReply('Enable command');
-                        break;
+                        if (!checkPermission(interaction)) return;
+                        apologizeForFailure(interaction, 'enableCommand');
+                        return;
                     case 'disable':
                         // Disable a command
-                        interaction.editReply('Disable command');
-                        break;
+                        if (!checkPermission(interaction)) return;
+                        apologizeForFailure(interaction, 'disableCommand');
+                        return;
                     case 'list':
                         // List all commands
-                        interaction.editReply('List commands');
-                        break;
+                        apologizeForFailure(interaction, 'listCommands');
+                        return;
                 }
                 break;
             
@@ -134,87 +254,40 @@ export const guildSettings: CommandInterface = {
                 switch (interaction.options.getSubcommand()) {
                     case 'enable':
                         // Enable a feature
-                        interaction.editReply('Enable feature');
-                        break;
+                        if (!checkPermission(interaction)) return;
+                        apologizeForFailure(interaction, 'enableFeature');
+                        return;
                     case 'disable':
                         // Disable a feature
-                        interaction.editReply('Disable feature');
-                        break;
+                        if (!checkPermission(interaction)) return;
+                        apologizeForFailure(interaction, 'disableFeature');
+                        return;
                     case 'list':
                         // List all features
-                        interaction.editReply('List features');
+                        apologizeForFailure(interaction, 'listFeatures');
+                        return;
                 }
                 break;
 
             default:
-                if (interaction.options.getSubcommand() === 'list') {
-                    // List all settings
-                    const guildData: GuildDataInterface = await getGuildDataByGuildID(interaction.guildId);
-
-                    let description: string = "Configuration for " + interaction.guild.name;
-                    description += "Here, you can enable and disable commands and features for this server. Features are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.Some commands/features are enabled by default, and some are disabled by default.\n"
-                    description += "To enable/disable a command, use `/settings command <enable/disable> <command name>`.\n";
-                    description += "To enable/disable a feature, use `/settings feature <enable/disable> <feature name>`.\n";
-
-
-                    const embed = new EmbedBuilder()
-                        .setTitle('Server Settings')
-                        .setDescription('Configuration for ' + interaction.guild.name)
-                        .setTimestamp()
-                        .setFooter({text: "To modify these settings, use the /settings subcommands."});
-
-                    // Now remember:
-                    // - Globally disabled commands are disabled everywhere
-                    // - Globally enabled commands are enabled UNLESS they are specifically disabled
-                    // 
-
-                    // This loops twice, but who cares- there's not gonna be THAT many commands
-                    const enabledCommandList: string[] = await getEnabledCommandListAsString(interaction.guildId);
-                    const disabledCommandList: string[] = await getDisabledCommandListAsString(interaction.guildId);
-                    const availableCommandList: string[] = await getCommandListAsString();
-
-
-                    let enabledCommandsString: string = 'None';
-                    let disabledCommandsString: string = 'None';
-                    let availableCommandsString: string = 'None';
-                    let contentScanningString: string = '';
-
-                    if ( availableCommandList.length > 0 ) {
-                        availableCommandsString = " - " + availableCommandList.join('\n - ');
-                    }
-                    embed.addFields({name: 'Available Commands', value: availableCommandsString, inline: true});
-
-                    if ( enabledCommandList.length > 0 ) {
-                        enabledCommandsString = " - " + enabledCommandList.join('\n - ');
-                    }
-                    embed.addFields({name: 'Enabled', value: enabledCommandsString, inline: true});
-                    if ( disabledCommandList.length > 0 ) {
-                        disabledCommandsString = " - " + disabledCommandList.join('\n - ');
-                    }
-                    embed.addFields({name: 'Disabled', value: disabledCommandsString, inline: true});
-                    
-                    // ======
-                    // Features
-                    
-
-                    contentScanningString += "Wordle Results Scanning: ";
-                    if ( guildData.messageScanning.wordleResultScanning ) {
-                        contentScanningString += "Enabled\n";
-                    } else { contentScanningString += "Disabled\n"; }
-
-                    embed.addFields({name: 'Available Features', value: contentScanningString});
-
-
-                    interaction.editReply({ embeds: [embed] });
-                    break;
+                switch (interaction.options.getSubcommand()) {
+                    case 'list':
+                        embedToSend = await displaySettingsList(interaction, embedToSend);
+                        break;
+                    case 'help':
+                        embedToSend = await displaySettingsOverview(interaction, embedToSend);
+                        break;
                 }
-                else {
-                    // Invalid subcommand
-                    interaction.editReply('An error has occurred!!');
-                    break;
-                }
-
         }
+        if (embedToSend !== undefined) {
+            interaction.editReply({ embeds: [embedToSend] });
+            return;
+        } else {
+            console.error('No embed to send');
+            interaction.editReply('An error occurred');
+            return;
+        }
+        
         
 
     },
