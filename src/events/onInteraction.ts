@@ -1,7 +1,7 @@
 import { CommandList } from '../commands/_CommandList';
 import { Interaction } from 'discord.js';
 import { EventInterface } from '../interfaces/Event';
-import { isCommandDisabled, isCommandEnabled } from '../database/guildData';
+import { isCommandDisabled, isCommandEnabled } from '../utils/commandUtils';
 import { hasPermissions } from '../utils/userUtils';
 
 // Handles onInteraction event
@@ -35,11 +35,13 @@ export const onInteraction : EventInterface = {
                             }
                         }
 
-                        // If disabled in guild
-                        if (commandDisabled) {
+                        // If enabled globally and disabled in guild
+                        if (Command.properties.DefaultEnabled && commandDisabled) {
                             console.debug("Command " + Command.data.name + " has been disabled in guild " + interaction.guild.id + ".");
                             errorList.push("Command `" + Command.data.name + "` has been disabled in this server.");
-                        } else if (!commandEnabled) {
+                        } 
+                        // If disabled globally
+                        else if (!commandEnabled) {
                             console.debug("Command " + Command.data.name + " is not enabled in guild " + interaction.guild.id + ".");
                             errorList.push("Command `" + Command.data.name + "` is disabled by default and has not been enabled in this server.");
                         }

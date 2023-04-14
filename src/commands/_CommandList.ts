@@ -20,12 +20,4 @@ export const CommandList: CommandInterface[] = [
     guildSettings,
 ];
 
-/**
- * Gets a list of all command names as strings
- * @returns an array of all command names as strings
- */
-export const commandListAsString = () : string[] => {
-    return CommandList.map(command => command.properties.Name);
-}
-
 export default CommandList;

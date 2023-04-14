@@ -1,9 +1,9 @@
 // View a list of guild-specific settings and enable/disable commands and features.
-import { CommandInterface, CommandProperties } from "../interfaces/Command";
+import { CommandInterface } from "../interfaces/Command";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { convertCommandListToString, getGuildDataByGuildID } from "../database/guildData";
+import { getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID } from "../database/guildData";
 import { GuildDataInterface } from "../database/models/guildModel";
-import CommandList, { commandListAsString } from "./_CommandList";
+import { getCommandListAsString } from "../utils/commandUtils";
 
 // Settings command
 // If no arguments are provided, display a list of all guild-specific settings
@@ -151,17 +151,27 @@ export const guildSettings: CommandInterface = {
                     // List all settings
                     const guildData: GuildDataInterface = await getGuildDataByGuildID(interaction.guildId);
 
+                    let description: string = "Configuration for " + interaction.guild.name;
+                    description += "Here, you can enable and disable commands and features for this server. Features are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.Some commands/features are enabled by default, and some are disabled by default.\n"
+                    description += "To enable/disable a command, use `/settings command <enable/disable> <command name>`.\n";
+                    description += "To enable/disable a feature, use `/settings feature <enable/disable> <feature name>`.\n";
+
+
                     const embed = new EmbedBuilder()
                         .setTitle('Server Settings')
                         .setDescription('Configuration for ' + interaction.guild.name)
                         .setTimestamp()
                         .setFooter({text: "To modify these settings, use the /settings subcommands."});
 
-                    const enabledCommandList: string[] = convertCommandListToString(guildData.commands.enabledCommands);
-                    const disabledCommandList: string[] = convertCommandListToString(guildData.commands.disabledCommands);
-                    const availableCommandList: string[] = commandListAsString().filter( (command: string) => {
-                        return !enabledCommandList.includes(command) && !disabledCommandList.includes(command);
-                    })
+                    // Now remember:
+                    // - Globally disabled commands are disabled everywhere
+                    // - Globally enabled commands are enabled UNLESS they are specifically disabled
+                    // 
+
+                    // This loops twice, but who cares- there's not gonna be THAT many commands
+                    const enabledCommandList: string[] = await getEnabledCommandListAsString(interaction.guildId);
+                    const disabledCommandList: string[] = await getDisabledCommandListAsString(interaction.guildId);
+                    const availableCommandList: string[] = await getCommandListAsString();
 
 
                     let enabledCommandsString: string = 'None';
@@ -175,21 +185,24 @@ export const guildSettings: CommandInterface = {
                     embed.addFields({name: 'Available Commands', value: availableCommandsString, inline: true});
 
                     if ( enabledCommandList.length > 0 ) {
-                        enabledCommandsString = " - " + guildData.commands.enabledCommands.join('\n - ');
+                        enabledCommandsString = " - " + enabledCommandList.join('\n - ');
                     }
                     embed.addFields({name: 'Enabled', value: enabledCommandsString, inline: true});
                     if ( disabledCommandList.length > 0 ) {
-                        disabledCommandsString = " - " + guildData.commands.disabledCommands.join('\n - ');
+                        disabledCommandsString = " - " + disabledCommandList.join('\n - ');
                     }
                     embed.addFields({name: 'Disabled', value: disabledCommandsString, inline: true});
                     
-                    contentScanningString += "Wordle Results: ";
+                    // ======
+                    // Features
+                    
+
+                    contentScanningString += "Wordle Results Scanning: ";
                     if ( guildData.messageScanning.wordleResultScanning ) {
                         contentScanningString += "Enabled\n";
                     } else { contentScanningString += "Disabled\n"; }
 
-
-                    embed.addFields({name: 'Content Scanning', value: contentScanningString});
+                    embed.addFields({name: 'Available Features', value: contentScanningString});
 
 
                     interaction.editReply({ embeds: [embed] });
