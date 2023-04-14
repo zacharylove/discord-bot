@@ -4,9 +4,9 @@
   "description": "Cinnamon, rewritten!",
   "main": "./src/index.ts",
   "scripts": {
-    "postinstall": "tsc",
     "start": "node -r dotenv/config ./prod/index.js",
-    "deploy": "tsc && node -r dotenv/config ./prod/index.js"
+    "build": "tsc",
+    "postinstall": "npm run build"
   },
   "author": "inco",
   "license": "ISC",
