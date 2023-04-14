@@ -70,7 +70,6 @@ export const ship: CommandInterface = {
             message = "Bots aren't capable of love! (...yet)";
         } else {
             shipNum = generateMatchNumber(user1, user2);
-            shipNum = 99;
 
             if (shipNum == 0) message = "No chance.";
             else if (shipNum < 25) message = "Not looking good...";
