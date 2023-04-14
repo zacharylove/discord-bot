@@ -15,7 +15,7 @@ export const onMessage : EventInterface = {
 
         const messageContent = Message.content;
         
-        console.debug(`Received message from ${Message.author.username}: ${messageContent}`);
+        
     
         // Check if message is a wordle result
         if (await areWordleFeaturesEnabled(Message.guildId)) WordleUtil.parseMessage(Message);

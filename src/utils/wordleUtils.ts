@@ -183,10 +183,11 @@ export class wordle {
         // Whether the number of lines in message is correct
         const numLinesMatch = messageContent.split("\n").length <= this.numGuesses + 2;
 
-        console.debug(`Pattern match: ${patternMatch}, numLinesMatch: ${numLinesMatch}`);
+        
 
         // If match
         if (patternMatch && numLinesMatch) {
+            console.debug(`Pattern match: ${patternMatch}, numLinesMatch: ${numLinesMatch}`);
             console.debug("Message matches wordle pattern.");
             const cleanedMessage = this.cleanMessage(message);
             if ( this.checkWordleResult(cleanedMessage) ) {

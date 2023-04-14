@@ -24,10 +24,15 @@ export const validateEnv = () => {
     }
     if (!process.env.DEBUG_MODE) {
         console.warn("Missing debug mode!");
-    } else {
-        if (process.env.DEBUG_MODE.toLowerCase() === "true") {
-            console.log("Debug mode is enabled!");
-        }
+    } else if (process.env.DEBUG_MODE.toLowerCase() === "true") {
+        console.log("Debug mode is enabled!");
+    }
+    
+    if (!process.env.DEBUG_MODE || process.env.DEBUG_MODE.toLowerCase() !== "true") {
+        // Disable debug logging if not in debug mode
+        console.debug = () => {};
+        console.log("==Debug logging disabled==");
+        console.debug("test");
     }
     console.log("Environment variables look OK!")
     return true;
