@@ -1,7 +1,7 @@
 import { CommandList } from '../commands/_CommandList';
 import { Interaction } from 'discord.js';
 import { EventInterface } from '../interfaces/Event';
-import { isCommandDisabled, isCommandEnabled } from '../utils/commandUtils';
+import { broadcastCommandFailed, isCommandDisabled, isCommandEnabled } from '../utils/commandUtils';
 import { hasPermissions } from '../utils/userUtils';
 
 // Handles onInteraction event
@@ -10,11 +10,11 @@ export const onInteraction : EventInterface = {
         console.log("Registering onInteraction event...")
         // If interaction is a command
         if (interaction.isCommand()) {
+            let errorList: string[] = [];
             // Check if command matches any registered commands
             for (const Command of CommandList) {
                 // If command matches and is not globally disabled
                 if (interaction.commandName === Command.data.name) {
-                    let errorList: string[] = [];
                     console.debug("User " + interaction.user.tag + " called command " + Command.data.name + ", validating...");
                     // If disabled globally
                     if (!Command.properties.Enabled) {
@@ -61,33 +61,11 @@ export const onInteraction : EventInterface = {
                         return;
                     }
 
-                    // Send command failed output (if any)
-                    if (errorList.length > 0) {
-                        let errorMessage: string = "**Command failed"
-
-                        // Send a bulleted list of reasons if there are many
-                        if (errorList.length > 1) {
-                            errorMessage += " for " + errorList.length + " reasons:**";
-                            for (const error of errorList) {
-                                errorMessage += "\n - " + error;
-                            }
-
-                            // Add another reason just for funsies
-                            if ( errorList.length > 2 ) errorMessage += "\n - And a partridge in a pear tree!";
-                        }
-                        // If there's only one reason, just send it
-                        else {
-                            errorMessage += ":** " + errorList[0];
-                        }
-                        await interaction.reply(errorMessage);
-                        return;
-                    } else {
-                        console.error("Command " + Command.data.name + " failed validation but no error was logged!");
-                    }
+                    console.error("Command " + Command.data.name + " failed validation but no error was logged!");
                 }
             }
 
-            await interaction.reply("Oopsie woopsy! Something made a lil' fucky wucky in the backy-endy >w<\nThis weawwy shouldn't happen... pwease contact inco for a fix :3c")
+            await broadcastCommandFailed(interaction, errorList);
             console.debug("Command failed!");
         }
         console.log("Registered onInteraction event.")

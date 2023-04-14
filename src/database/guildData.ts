@@ -66,6 +66,11 @@ export const disableWordleFeatures = async (guildID: string): Promise<string> =>
     return "Wordle features have been disabled.";
 }
 
+export const areWordleFeaturesEnabled = async (guildID: string): Promise<boolean> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    return guildData.messageScanning.wordleResultScanning;
+}
+
 /**
  * Attempts to add a command to the list of enabled commands for the given guild
  * Returns a status message that is sent to the user

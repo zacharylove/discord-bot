@@ -13,7 +13,7 @@ export interface GuildDataInterface extends Document {
         disabledCommands: CommandInterface[];
     }
     messageScanning: {
-        wordleResultScanning: Boolean;
+        wordleResultScanning: boolean;
     }
 }
 

@@ -1,5 +1,5 @@
 // On bot startup
-import { Client } from "discord.js";
+import { ActivityType, Client } from "discord.js";
 import { Routes } from "discord-api-types/v9";
 import { REST } from "@discordjs/rest";
 import { CommandList } from "../commands/_CommandList";
@@ -57,6 +57,10 @@ export const onReady : EventInterface = {
         console.log("Registering onReady event...");
         // Register commands
         registerCommands(BOT).catch(console.error);
+
+        BOT.user?.setActivity("Back from the dead!", {
+            type: ActivityType.Competing
+          });
 
         // Set tick event to run every set interval
         if (onTick.properties.Enabled && validateIntents(onTick.properties.Intents, "onTick", "event")) {

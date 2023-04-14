@@ -1,5 +1,6 @@
 // Utility function for commands
 
+import { CommandInteraction } from "discord.js";
 import CommandList from "../commands/_CommandList";
 import { getGuildDataByGuildID } from "../database/guildData";
 import { CommandInterface } from "../interfaces/Command";
@@ -82,4 +83,50 @@ export const isCommandEnabled = async (command: CommandInterface, guildID: strin
 
     console.error("CommandUtils.isCommandEnabled() failed to determine whether command is disabled. This should never happen. Please report this bug to the bot owner.");
     return false;
+}
+
+
+export const broadcastCommandFailed = async (interaction: CommandInteraction, reason?: string[]|string, command?: CommandInterface,): Promise<void> => {
+    let commandName: string = "";
+    let errorMessage: string = "**Command `";
+    if (command) commandName = command.properties.Name;
+    else commandName = interaction.commandName;
+    errorMessage += commandName + "` failed"
+
+    let fuckyWuckyOccurred: boolean = false;
+    
+    // Send command failed output (if any)
+    if (reason) {
+        if (Array.isArray(reason)) {
+            if (reason.length > 0) {
+                // Send a bulleted list of reasons if there are many
+                if (reason.length > 1) {
+                    errorMessage += " for " + reason.length + " reasons:**";
+                    for (const error of reason) {
+                        errorMessage += "\n - " + error;
+                    }
+
+                    // Add another reason just for funsies
+                    if ( reason.length > 2 ) errorMessage += "\n - And a partridge in a pear tree!";
+                }
+                // If there's only one reason, just send it
+                else {
+                    errorMessage += ":** " + reason[0];
+                }
+            } else { fuckyWuckyOccurred = true; }
+        } else if (reason.length > 0) {
+            errorMessage += ":** " + reason;
+        } else {
+            fuckyWuckyOccurred = true;
+        }
+    } else fuckyWuckyOccurred = true;
+    
+    if (fuckyWuckyOccurred) {
+        console.error("Command " + commandName + " failed validation but no error was logged!");
+        errorMessage += ":**\n";
+        errorMessage += "Oopsie woopsy! Something made a lil' fucky wucky in the backy-endy >w<\nThis weawwy shouldn't happen... pwease contact inco for a fix :3c";
+    }
+
+    if (interaction.replied) interaction.editReply(errorMessage,);
+    else interaction.reply({ content: errorMessage, ephemeral: true});
 }

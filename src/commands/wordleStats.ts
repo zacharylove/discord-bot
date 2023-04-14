@@ -3,6 +3,8 @@ import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import { getUserData } from '../database/userData';
 import { getRanking, getWordleDataByUserID } from '../database/wordleData';
 import { APIEmbedField } from 'discord.js';
+import { areWordleFeaturesEnabled } from '../database/guildData';
+import { broadcastCommandFailed } from '../utils/commandUtils';
 
 /**
      * Gets wordle stats for a user
@@ -45,6 +47,17 @@ export const wordleStats: CommandInterface = {
         ),
         run: async (interaction) => {
             await interaction.deferReply();
+            
+
+            // Check if wordle features are enabled (only if on server)
+            if (interaction.guild && interaction.guild) {
+                if (await areWordleFeaturesEnabled(interaction.guild.id) == false) {
+                    await broadcastCommandFailed(interaction, "Wordle features are not enabled on this server!");
+                    return;
+                }
+            }
+
+
             const target = interaction.options.getUser('user');
             let user;
             if (!target) {

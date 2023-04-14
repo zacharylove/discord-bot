@@ -1,10 +1,10 @@
 // View a list of guild-specific settings and enable/disable commands and features.
 import { CommandInterface } from "../interfaces/Command";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID } from "../database/guildData";
+import { areWordleFeaturesEnabled, disableWordleFeatures, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID } from "../database/guildData";
 import { GuildDataInterface } from "../database/models/guildModel";
 import { getCommandListAsString } from "../utils/commandUtils";
-import { CommandInteraction, PermissionsBitField, User } from "discord.js";
+import { CommandInteraction, Embed, PermissionsBitField, User } from "discord.js";
 import { hasPermissions } from "../utils/userUtils";
 
 
@@ -106,6 +106,42 @@ const checkPermission = async ( interaction: CommandInteraction ): Promise<boole
     console.log("Permission check passed.")
     return true;
 
+}
+
+const enableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
+    if ( !interaction.guild || !interaction.guildId ) { return embed; }
+
+    if (featureName == "wordle") {
+        // Check if feature is already enabled
+        if (await areWordleFeaturesEnabled(interaction.guildId)) {
+            embed.setDescription("Wordle features are already enabled.");
+        } else {
+            await enableWordleFeatures(interaction.guildId);
+            embed.setDescription("Wordle features are now enabled.");
+        }
+    } else{
+        embed.setDescription("That feature doesn't exist. It's just wordle right now lol");
+    }
+
+    return embed;
+}
+
+const disableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
+    if ( !interaction.guild || !interaction.guildId ) { return embed; }
+
+    if (featureName == "wordle") {
+        // Check if feature is already disabled
+        if (!await areWordleFeaturesEnabled(interaction.guildId)) {
+            embed.setDescription("Wordle features are already disabled.");
+        } else {
+            await disableWordleFeatures(interaction.guildId);
+            embed.setDescription("Wordle features are now disabled.");
+        }
+    } else{
+        embed.setDescription("That feature doesn't exist. It's just wordle right now lol");
+    }
+
+    return embed;
 }
 
 const apologizeForFailure = async ( interaction: CommandInteraction, commandName: string ): Promise<void> => {
@@ -255,8 +291,8 @@ export const guildSettings: CommandInterface = {
                     case 'enable':
                         // Enable a feature
                         if (!checkPermission(interaction)) return;
-                        apologizeForFailure(interaction, 'enableFeature');
-                        return;
+                        await enableFeature(interaction, interaction.options.getString('feature', true), embedToSend);
+                        break;
                     case 'disable':
                         // Disable a feature
                         if (!checkPermission(interaction)) return;
