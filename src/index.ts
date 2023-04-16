@@ -2,7 +2,7 @@
 
 import { Client, Message } from "discord.js";
 import { onInteraction } from "./events/onInteraction";
-import { IntentOptions } from "./config/IntentOptions";
+import { IntentOptions, PartialsOptions } from "./config/IntentOptions";
 import { connectDatabase } from "./database/connectDatabase";
 import { validateEnv, validateIntents } from "./utils/validateProperties";
 import { onReady } from "./events/onReady";
@@ -24,7 +24,7 @@ const registerEvents = async (BOT: Client) => {
     } else { console.log("interactionCreate event is disabled. Skipping..."); }
 
     if (onMessage.properties.Enabled && validateIntents(onMessage.properties.Intents, "onMessage", "event")) {
-        BOT.on("messageCreate", async (Message) => await onMessage.run(Message, WordleUtil))
+        BOT.on("messageCreate", async (Message) => await onMessage.run(Message, WordleUtil, BOT))
     } else { console.log("messageCreate event is disabled. Skipping..."); }
 }
 
@@ -32,7 +32,7 @@ const registerEvents = async (BOT: Client) => {
 (async () => {
     if (!validateEnv()) return; 
 
-    const BOT = new Client({ intents: IntentOptions });
+    const BOT = new Client({ intents: IntentOptions, partials: PartialsOptions });
 
     await connectDatabase();
 
