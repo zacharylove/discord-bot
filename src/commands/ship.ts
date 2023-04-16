@@ -16,7 +16,7 @@ import { parseGIF, decompressFrames } from 'gifuct-js';
  * @param user2 
  * @returns A number between 0 and 100
  */
-const generateMatchNumber = (user1: User, user2: User): number => {
+const generateMatchNumber = async (user1: User, user2: User): Promise<number> => {
     // Generate a string of the two sorted user IDs, separated by the first 5 digits of the current timestamp
     // Sorted so it doesn't matter who calls the ship command
     const ids = [user1.id, user2.id].sort().join(String(Date.now()).substring(0, 5));
@@ -69,7 +69,7 @@ export const ship: CommandInterface = {
             shipNum = 0;
             message = "Bots aren't capable of love! (...yet)";
         } else {
-            shipNum = generateMatchNumber(user1, user2);
+            shipNum = await generateMatchNumber(user1, user2);
 
             if (shipNum == 0) message = "No chance.";
             else if (shipNum < 25) message = "Not looking good...";
