@@ -24,7 +24,7 @@ const generateMatchNumber = async (user1: User, user2: User): Promise<number> =>
     // Generate a string of the two sorted user IDs, separated by the first 5 digits of the current timestamp
     // Sorted so it doesn't matter who calls the ship command
     const timestamp = new Date().getDay();
-    const data = [user1.id.substring(0,2), user2.id.substring(0,2)].sort().join(String(timestamp));
+    const data = [user1.id, user2.id].sort().join(String(timestamp));
     const hash = createHash('sha256').update(data).digest('hex');
     const num = parseInt(hash, 16);
     const hour = new Date(timestamp).getHours();
