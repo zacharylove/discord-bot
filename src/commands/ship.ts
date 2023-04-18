@@ -1,13 +1,17 @@
 import { CommandInterface, CommandProperties } from '../interfaces/Command';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import { User } from 'discord.js';
-import { createHash } from 'crypto';
 import { createCanvas, loadImage } from 'canvas';
 import { getAvatarURL, getGlobalAvatar, getServerProfileAvatar } from '../utils/userUtils';
 import { imagePath } from '../utils/imageUtils';
 
+import { createHash } from 'crypto';
+
 import { parseGIF, decompressFrames } from 'gifuct-js';
 
+
+
+  
 
 /**
  * Generates a number based on the given users' IDs and the current timestamp
@@ -19,19 +23,16 @@ import { parseGIF, decompressFrames } from 'gifuct-js';
 const generateMatchNumber = async (user1: User, user2: User): Promise<number> => {
     // Generate a string of the two sorted user IDs, separated by the first 5 digits of the current timestamp
     // Sorted so it doesn't matter who calls the ship command
-    const ids = [user1.id, user2.id].sort().join(String(Date.now()).substring(0, 5));
-    // Next, create a sha256 hash of the string
-    let shipNum = parseInt(
-        createHash('sha256')
-            .update(ids)
-            .digest('base64')
-            .toLowerCase()
-            .substring(0,3)
-        ,36);
-    // Finally, clip to a number between 0 and 100
-    if (shipNum > 100) shipNum = parseInt(shipNum.toString().substring(0,2));
-    if (shipNum < 0) shipNum = 0;
-    return shipNum;
+    const timestamp = new Date().getDay();
+    const data = [user1.id.substring(0,2), user2.id.substring(0,2)].sort().join(String(timestamp));
+    const hash = createHash('sha256').update(data).digest('hex');
+    const num = parseInt(hash, 16);
+    const hour = new Date(timestamp).getHours();
+    const modifiedNum = num + hour;
+    const scaledNum = ((modifiedNum % 100) + 100) % 100 + 1; 
+    // ensure result is between 1 and 100
+    return scaledNum;
+   
 }
 
 export const ship: CommandInterface = {
