@@ -12,5 +12,44 @@
         "baseURL": "https://discord.com/api",
         "version": "10",
         "cdnURL": "https://cdn.discordapp.com"
+    },
+    "shipMessages": {
+        "reallybad": [
+            "No chance.",
+            "Dude...",
+            "Haha.... no."
+        ],
+        "bad": [
+            "Maybe? If you close your eyes?",
+            "I don't think so.",
+            "Yeah, looking rough.",
+            "Jeez."
+        ],
+        "kindofbad": [
+            "I don't know about that.",
+            "I'm not feeling it.",
+            "I'm not sure about that."
+        ],
+        "okay": [
+            "You could make it work!",
+            "It'd take some work, but it could be done.",
+            "Maybe!"
+        ],
+        "good": [
+            "Looking good.",
+            "Very nice.",
+            "Pretty solid."
+        ],
+        "great": [
+            "Looking like a good combo.",
+            "I like it!",
+            "Oh yeah, I'm feeling it!"
+        ],
+        "reallygreat": [
+            "A match made in heaven!",
+            "It was meant to be!",
+            "Yoooooo!",
+            "Damn."
+        ]
     }
 }

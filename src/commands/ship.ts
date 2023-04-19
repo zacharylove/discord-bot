@@ -9,6 +9,8 @@ import { createHash } from 'crypto';
 
 import { parseGIF, decompressFrames } from 'gifuct-js';
 
+import { shipMessages } from "../config/config.json";
+
 
 
   
@@ -27,11 +29,21 @@ const generateMatchNumber = async (user1: User, user2: User): Promise<number> =>
     const data = [user1.id, user2.id].sort().join(String(timestamp));
     const hash = createHash('sha256').update(data).digest('hex');
     const num = parseInt(hash, 16);
+
+    // ensure result is between 1 and 70
+    const scaledNum = ((num % 70) + 70) % 70 + 1; 
+
+    // Get secondary number
     const hour = new Date(timestamp).getHours();
-    const modifiedNum = num + hour;
-    const scaledNum = ((modifiedNum % 100) + 100) % 100 + 1; 
-    // ensure result is between 1 and 100
-    return scaledNum;
+    const secondaryNum = String(hour) + String(timestamp);
+    const secondaryHash = createHash('sha256').update(secondaryNum).digest('hex');
+    const numSecondary = parseInt(secondaryHash, 16);
+
+    // ensure result is between 1 and 30
+    const scaledNumSecondary = ((numSecondary % 30) + 30) % 30 + 1; 
+
+    
+    return scaledNum + scaledNumSecondary;
    
 }
 
@@ -72,13 +84,26 @@ export const ship: CommandInterface = {
         } else {
             shipNum = await generateMatchNumber(user1, user2);
 
-            if (shipNum == 0) message = "No chance.";
-            else if (shipNum < 25) message = "Not looking good...";
-            else if (shipNum < 40) message = "...Maybe?";
-            else if (shipNum < 65) message = "You could make it work!";
-            else if (shipNum < 85) message = "You two are a good combo!";
-            else if (shipNum < 95) message = "Looking great!";
-            else if (shipNum <= 100) message = "It was meant to be!";
+            let messageList: string[];
+
+            // Really bad
+            if (shipNum < 10) messageList = shipMessages.reallybad;
+            // Bad
+            else if (shipNum < 25) messageList = shipMessages.bad;
+            // Kind of bad
+            else if (shipNum < 40) messageList = shipMessages.kindofbad;
+            // Okay
+            else if (shipNum < 60) messageList = shipMessages.okay;
+            // Good
+            else if (shipNum < 85) messageList = shipMessages.good;
+            //Great
+            else if (shipNum < 95) messageList = shipMessages.great;
+            // Really great
+            else if (shipNum <= 100) messageList = shipMessages.reallygreat;
+            else messageList = shipMessages.okay;
+
+            // Randomly select message
+            message = messageList[Math.floor(Math.random() * messageList.length)];
         }
 
         const canvas = createCanvas(750, 300);
