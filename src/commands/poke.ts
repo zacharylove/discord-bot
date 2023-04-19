@@ -32,8 +32,9 @@ export const poke: CommandInterface = {
             if (pokedMe) replyString += `me! I've `;
             else replyString += `<@${userToPoke.id}>! They have `;
             targetUser.numPoked++;
-            replyString += `been poked ${targetUser.numPoked} time!`
+            replyString += `been poked ${targetUser.numPoked} time`
             if ( targetUser.numPoked > 1 ) replyString += 's!';
+            else replyString += '!';
             await targetUser.save();
 
             // Add some text for milestone poke recipient numbers
