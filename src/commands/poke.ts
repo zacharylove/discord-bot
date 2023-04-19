@@ -29,7 +29,7 @@ export const poke: CommandInterface = {
         if (userToPoke) {
             const targetUser = await getUserData(userToPoke.id);
             if (pokedMe) replyString += `me! I've `;
-            else replyString += `${userToPoke.tag}! They have `;
+            else replyString += `<@${userToPoke.id}>! They have `;
             targetUser.numPoked++;
             replyString += `been poked ${targetUser.numPoked} times!`
             await targetUser.save();
