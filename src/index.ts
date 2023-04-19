@@ -10,6 +10,8 @@ import { onMessage } from "./events/onMessage";
 // Load config
 import { initializeWordleUtil } from "./utils/wordleUtils";
 
+let BOT: Client;
+
 const registerEvents = async (BOT: Client) => {
 
     // Initialize wordle
@@ -32,7 +34,7 @@ const registerEvents = async (BOT: Client) => {
 (async () => {
     if (!validateEnv()) return; 
 
-    const BOT = new Client({ intents: IntentOptions, partials: PartialsOptions });
+    BOT = new Client({ intents: IntentOptions, partials: PartialsOptions });
 
     await connectDatabase();
 
@@ -41,3 +43,5 @@ const registerEvents = async (BOT: Client) => {
     console.log("Setup complete. Logging in...");
     await BOT.login(process.env.BOT_TOKEN);
 })();
+
+export { BOT }

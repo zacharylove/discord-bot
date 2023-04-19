@@ -17,13 +17,16 @@
         "reallybad": [
             "No chance.",
             "Dude...",
-            "Haha.... no."
+            "Haha.... no.",
+            "Is this even possible..?"
         ],
         "bad": [
             "Maybe? If you close your eyes?",
             "I don't think so.",
             "Yeah, looking rough.",
-            "Jeez."
+            "Jeez.",
+            "Unfortunate.",
+            "Yikes..."
         ],
         "kindofbad": [
             "I don't know about that.",
@@ -33,7 +36,8 @@
         "okay": [
             "You could make it work!",
             "It'd take some work, but it could be done.",
-            "Maybe!"
+            "Maybe!",
+            "I've seen worse."
         ],
         "good": [
             "Looking good.",
