@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node -r dotenv/config ./prod/index.js",
     "build": "tsc",
-    "postinstall": "npm run build",
     "deploy": "npm run build && npm run start"
   },
   "author": "inco",
