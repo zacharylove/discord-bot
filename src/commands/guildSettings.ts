@@ -290,7 +290,7 @@ export const guildSettings: CommandInterface = {
                     case 'enable':
                         // Enable a feature
                         if (!checkPermission(interaction)) return;
-                        await enableFeature(interaction, interaction.options.getString('feature', true), embedToSend);
+                        embedToSend = await enableFeature(interaction, interaction.options.getString('feature', true), embedToSend);
                         break;
                     case 'disable':
                         // Disable a feature
