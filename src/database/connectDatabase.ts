@@ -7,7 +7,7 @@ export const connectDatabase = async() => {
     console.log("Connecting to database...")
     mongoose.set("strictQuery", false);
     try {
-        mongoose.connect(process.env.MONGO_URI as string, () => {
+        mongoose.connect(process.env.MONGO_URI as string).then(() => {
             console.log("Connection established.");
         });
     } catch (err) {
