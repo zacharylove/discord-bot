@@ -19,7 +19,7 @@
     "discord.js": "^14.10.2",
     "dotenv": "^16.0.3",
     "gifuct-js": "^2.1.2",
-    "mongoose": "^6.9.2"
+    "mongoose": "^7.1.0"
   },
   "devDependencies": {
     "@types/node": "^18.16.3",
