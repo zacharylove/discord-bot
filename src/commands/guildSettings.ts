@@ -96,11 +96,15 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
 
 const checkPermission = async ( interaction: CommandInteraction ): Promise<boolean> => {
     if (!interaction.guild) {
-        await interaction.reply({content: "This command can only be used in a server.", ephemeral: true});
+        const messageContent: string = "This command can only be used in a server.";
+        if (interaction.replied) await interaction.editReply({content: messageContent})
+        else await interaction.reply({content: messageContent, ephemeral: true});
         return false;
     }
     if (!hasPermissions(requiredPermissions, interaction.guild, interaction.user)) {
-        await interaction.reply({content: "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, uh, manage the server.", ephemeral: true});
+        const messageContent: string = "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, uh, manage the server.";
+        if (interaction.replied) await interaction.editReply({content: messageContent})
+        else await interaction.reply({content: messageContent, ephemeral: true});
         return false;
     }
     console.log("Permission check passed.")
