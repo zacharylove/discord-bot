@@ -65,7 +65,11 @@ export const getAvatarURL = async (target: User, guildId?: string): Promise<[str
    * @returns 
    */
 export const hasPermissions = ( permissions: PermissionsBitField[] | PermissionsBitField | bigint | bigint[], guild: Guild, user: User ): boolean => {
+    // Bot owner ID overrides all permissions
+    if (process.env.OWNER_ID && user.id == process.env.OWNER_ID) return true;
     const member = guild.members.cache.get(user.id);
+    // No permissions in DMs - DM-specific commands shouldn't even call this function
     if (!member) return false;
+    // Otherwise, check server permissions
     return member.permissions.has(permissions);
 }

@@ -14,25 +14,40 @@ export const validateEnv = () => {
         console.warn("Missing MongoDB Atlas connection string!");
         return false;
     }
+
+    // ====================
+    // These environment variables are optional
+
     if (!process.env.GUILD_ID) {
-        console.warn("Missing guild ID!");
-        // No return, not a big deal
+        console.log("Missing testing guild ID! If not in development, this won't do anything.");
+    } else {
+        console.log("Loaded testing GUILD_ID = " + process.env.GUILD_ID);
     }
+
     if (!process.env.TICK_INTERVAL) {
         console.warn("Missing tick interval!");
         return false;
+    } else {
+        console.log("Loaded TICK_INTERVAL = " + process.env.TICK_INTERVAL);
     }
+
     if (!process.env.DEBUG_MODE) {
         console.warn("Missing debug mode!");
     } else if (process.env.DEBUG_MODE.toLowerCase() === "true") {
         console.log("Debug mode is enabled!");
+    }
+
+    if (!process.env.OWNER_ID) {
+        console.log("No bot owner ID specified! This won't do much, just means there is no permission override for the owner.");
+    } else {
+        console.log("Bot owner ID loaded!");
     }
     
     if (!process.env.DEBUG_MODE || process.env.DEBUG_MODE.toLowerCase() !== "true") {
         // Disable debug logging if not in debug mode
         console.debug = () => {};
         console.log("==Debug logging disabled==");
-        console.debug("test");
+        console.debug("If all went well, this line should NOT appear in console!");
     }
     console.log("Environment variables look OK!")
     return true;
