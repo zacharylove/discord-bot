@@ -120,8 +120,7 @@ const enableFeature = async ( interaction: CommandInteraction, featureName: stri
         if (await areWordleFeaturesEnabled(interaction.guildId)) {
             embed.setDescription("Wordle features are already enabled.");
         } else {
-            await enableWordleFeatures(interaction.guildId);
-            embed.setDescription("Wordle features are now enabled.");
+            embed.setDescription(await enableWordleFeatures(interaction.guildId));
         }
     } else{
         embed.setDescription("That feature doesn't exist. It's just wordle right now lol");
