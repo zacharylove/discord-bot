@@ -251,6 +251,7 @@ export const guildSettings: CommandInterface = {
         )
         ,
     run: async (interaction) => {
+        interaction.deferReply();
         // Disable context menu
         if (!interaction.isChatInputCommand()) {
             interaction.editReply('This command cannot be used in a context menu');
