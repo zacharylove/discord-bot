@@ -1,3 +1,4 @@
+import { FilterQuery } from "mongoose";
 import userModel, { UserInterface, createNewUser } from "../database/models/userModel";
 
 
@@ -21,4 +22,13 @@ export const getUserData = async (userID: string): Promise<UserInterface> => {
     ( await createNewUser(userID) );
 
     return userData;
+}
+
+/**
+ * Counts the number of user documents matching the given filter
+ * @param filter 
+ * @returns 
+ */
+export const countUsers = async ( filter?: FilterQuery<UserInterface>) => {
+    return filter ? await userModel.countDocuments(filter) : await userModel.countDocuments({});
 }

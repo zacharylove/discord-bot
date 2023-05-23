@@ -6,6 +6,7 @@ import { avatar } from "./avatar";
 import { guildSettings } from "./guildSettings";
 import { poke } from "./poke";
 import { ship } from "./ship";
+import { stats } from "./stats";
 import { wordleStats } from "./wordleStats";
 
 // List of all commands registered to the bot
@@ -18,6 +19,7 @@ export const CommandList: CommandInterface[] = [
     ship,
     animAvatarTest,
     guildSettings,
+    stats
 ];
 
 export default CommandList;

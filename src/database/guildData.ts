@@ -4,6 +4,7 @@ import { validateIntents } from "../utils/validateProperties";
 import { wordleStats } from "../commands/wordleStats";
 import guildModel, { GuildDataInterface, createNewGuildData } from "./models/guildModel";
 import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils";
+import { FilterQuery } from "mongoose";
 
 /**
  * Updates an existing GuildData object in the database
@@ -137,4 +138,13 @@ export const getDisabledCommandListAsString = async (guildID: string): Promise<s
         if ( await isCommandDisabled(command, guildID) ) { disabledCommands.push(command.properties.Name); }
     }
     return disabledCommands;
+}
+
+/**
+ * Counts the number of guild documents matching the given filter
+ * @param filter 
+ * @returns 
+ */
+export const countGuilds = async ( filter?: FilterQuery<GuildDataInterface>) => {
+    return filter ? await guildModel.countDocuments(filter) : await guildModel.countDocuments({});
 }
