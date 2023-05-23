@@ -67,5 +67,6 @@ export const validateIntents = (requestedIntents: GatewayIntentBits[] | undefine
         console.warn(`${toTitleCase(type)} ${name} was not registered because it requires intents that are not enabled.`);
         return false;
     }
+    console.log("Intents check passed.");
     return true;
 }

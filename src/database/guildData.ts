@@ -36,7 +36,7 @@ export const enableWordleFeatures = async (guildID: string): Promise<string> => 
     // If already enabled
     if ( guildData.messageScanning.wordleResultScanning ) { return "Wordle features are already enabled."; }
     // If intent is not available
-    if (validateIntents([GatewayIntentBits.MessageContent], "EnableWordleFeatures", "Command")) { return "Wordle features require the Message Content intent to scan messages. Please enable it in your server and try again.";}
+    if (!validateIntents([GatewayIntentBits.MessageContent], "EnableWordleFeatures", "Command")) { return "Wordle features require the Message Content intent to scan messages. Please enable it in your server and try again.";}
     // Enable result scanning
     guildData.messageScanning.wordleResultScanning = true;
     // Enable commands
