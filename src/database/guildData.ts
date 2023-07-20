@@ -5,6 +5,7 @@ import { wordleStats } from "../commands/wordleStats";
 import guildModel, { GuildDataInterface, createNewGuildData } from "./models/guildModel";
 import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils";
 import { FilterQuery } from "mongoose";
+import { wordleConfig } from "../config/config.json"
 
 /**
  * Updates an existing GuildData object in the database
@@ -41,7 +42,10 @@ export const enableWordleFeatures = async (guildID: string): Promise<string> => 
     // Enable result scanning
     guildData.messageScanning.wordleResultScanning = true;
     // Enable commands
-    guildData.commands.enabledCommands.push(wordleStats.data.name);
+    for( const command of wordleConfig.wordleCommands) {
+        guildData.commands.enabledCommands.push(command);
+    }
+    
 
     await update(guildData);
     return "Wordle features have been enabled.";
@@ -61,7 +65,10 @@ export const disableWordleFeatures = async (guildID: string): Promise<string> =>
     // Disable result scanning
     guildData.messageScanning.wordleResultScanning = false;
     // Disable commands
-    guildData.commands.enabledCommands = guildData.commands.enabledCommands.filter(command => command !== wordleStats.data.name);
+    guildData.commands.enabledCommands.filter( function( el ) {
+        return !wordleConfig.wordleCommands.includes( el );
+      } );
+
 
     await update(guildData);
     return "Wordle features have been disabled.";

@@ -6,7 +6,10 @@
         "letterMatch": ["🟩", "🟧"],
         "letterClose": ["🟨", "🟦"],
         "letterWrong": ["⬛", "⬜"],
-        "maxPuzzles": 2315
+        "maxPuzzles": 2315,
+        "wordleCommands": [
+            "wordleStats"
+        ]
     },
     "discordAPI": {
         "baseURL": "https://discord.com/api",
