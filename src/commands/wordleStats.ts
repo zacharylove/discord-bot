@@ -83,7 +83,7 @@ export const wordleStats: CommandInterface = {
 
             embed.addFields(fields);
             embed.setTitle(`Wordle stats for ${user.username}`);
-            embed.setThumbnail(interaction.user.avatarURL());
+            embed.setThumbnail(user.avatarURL());
 
             await interaction.editReply({embeds: [embed]});
             
