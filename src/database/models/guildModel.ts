@@ -9,8 +9,8 @@ export interface GuildDataInterface extends Document {
     registeredAt: Date;
     updatedAt?: Date;
     commands: {
-        enabledCommands: CommandInterface[];
-        disabledCommands: CommandInterface[];
+        enabledCommands: String[];
+        disabledCommands: String[];
     }
     messageScanning: {
         wordleResultScanning: boolean;
@@ -55,8 +55,8 @@ export const createNewGuildData = async (guildID: string) => {
         registeredAt: new Date(),
         updatedAt: new Date(),
         commands: {
-            enabledCommands: new Array<CommandInterface>(),
-            disabledCommands: new Array<CommandInterface>(),
+            enabledCommands: new Array<String>(),
+            disabledCommands: new Array<String>(),
         },
         messageScanning: {
             // Wordle scanning is disabled by default

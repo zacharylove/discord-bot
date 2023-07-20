@@ -147,9 +147,8 @@ export const animAvatarTest: CommandInterface = {
         encoder.finish();
         const buffer = encoder.out.getData();
 
-        interaction.editReply(
-            { files: [{attachment: buffer, name: 'test.gif'}]}
-        );
+        if (interaction.replied || interaction.deferred ) await interaction.editReply({ files: [{attachment: buffer, name: 'test.gif'}]})
+        else await interaction.reply({ files: [{attachment: buffer, name: 'test.gif'}]});
 
     },
     properties: {

@@ -97,13 +97,13 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
 const checkPermission = async ( interaction: CommandInteraction ): Promise<boolean> => {
     if (!interaction.guild) {
         const messageContent: string = "This command can only be used in a server.";
-        if (interaction.replied) await interaction.editReply({content: messageContent})
+        if (interaction.replied || interaction.deferred ) await interaction.editReply({content: messageContent})
         else await interaction.reply({content: messageContent, ephemeral: true});
         return false;
     }
     if (!hasPermissions(requiredPermissions, interaction.guild, interaction.user)) {
         const messageContent: string = "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, uh, manage the server.";
-        if (interaction.replied) await interaction.editReply({content: messageContent})
+        if (interaction.replied || interaction.deferred ) await interaction.editReply({content: messageContent})
         else await interaction.reply({content: messageContent, ephemeral: true});
         return false;
     }
@@ -148,7 +148,7 @@ const disableFeature = async ( interaction: CommandInteraction, featureName: str
 }
 
 const apologizeForFailure = async ( interaction: CommandInteraction, commandName: string ): Promise<void> => {
-    interaction.editReply("Yeah, uh, the `" + commandName + "` command isn't implemented yet. Sorry.");
+    await interaction.editReply("Yeah, uh, the `" + commandName + "` command isn't implemented yet. Sorry.");
     return;
 }
 
@@ -253,12 +253,12 @@ export const guildSettings: CommandInterface = {
     run: async (interaction) => {
         // Disable context menu
         if (!interaction.isChatInputCommand()) {
-            interaction.editReply('This command cannot be used in a context menu');
+            await interaction.editReply('This command cannot be used in a context menu');
             return;
         }
         // Disable DMS
         if (!interaction.guildId || !interaction.guild) {
-            interaction.editReply('This command cannot be used in DMs');
+            await interaction.editReply('This command cannot be used in DMs');
             return;
         }
 
@@ -298,8 +298,8 @@ export const guildSettings: CommandInterface = {
                     case 'disable':
                         // Disable a feature
                         if (!checkPermission(interaction)) return;
-                        apologizeForFailure(interaction, 'disableFeature');
-                        return;
+                        embedToSend = await disableFeature(interaction, interaction.options.getString('feature', true), embedToSend);
+                        break;
                     case 'list':
                         // List all features
                         apologizeForFailure(interaction, 'listFeatures');
@@ -318,11 +318,11 @@ export const guildSettings: CommandInterface = {
                 }
         }
         if (embedToSend !== undefined) {
-            interaction.editReply({ embeds: [embedToSend] });
+            await interaction.editReply({ embeds: [embedToSend] });
             return;
         } else {
             console.error('No embed to send');
-            interaction.editReply('An error occurred');
+            await interaction.editReply('An error occurred');
             return;
         }
         

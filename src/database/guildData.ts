@@ -35,13 +35,13 @@ export const getGuildDataByGuildID = async (guildID: string): Promise<GuildDataI
 export const enableWordleFeatures = async (guildID: string): Promise<string> => {
     const guildData = await getGuildDataByGuildID(guildID);
     // If already enabled
-    if ( guildData.messageScanning.wordleResultScanning ) { return "Wordle features are already enabled."; }
+    if ( await areWordleFeaturesEnabled(guildID) ) { return "Wordle features are already enabled."; }
     // If intent is not available
     if (!validateIntents([GatewayIntentBits.MessageContent], "EnableWordleFeatures", "Command")) { return "Wordle features require the Message Content intent to scan messages. Please enable it in your server and try again.";}
     // Enable result scanning
     guildData.messageScanning.wordleResultScanning = true;
     // Enable commands
-    guildData.commands.enabledCommands.push(wordleStats);
+    guildData.commands.enabledCommands.push(wordleStats.data.name);
 
     await update(guildData);
     return "Wordle features have been enabled.";
@@ -61,7 +61,7 @@ export const disableWordleFeatures = async (guildID: string): Promise<string> =>
     // Disable result scanning
     guildData.messageScanning.wordleResultScanning = false;
     // Disable commands
-    guildData.commands.enabledCommands = guildData.commands.enabledCommands.filter(command => command !== wordleStats);
+    guildData.commands.enabledCommands = guildData.commands.enabledCommands.filter(command => command !== wordleStats.data.name);
 
     await update(guildData);
     return "Wordle features have been disabled.";
@@ -69,7 +69,7 @@ export const disableWordleFeatures = async (guildID: string): Promise<string> =>
 
 export const areWordleFeaturesEnabled = async (guildID: string): Promise<boolean> => {
     const guildData = await getGuildDataByGuildID(guildID);
-    return guildData.messageScanning.wordleResultScanning;
+    return guildData.messageScanning.wordleResultScanning && guildData.commands.enabledCommands.includes( wordleStats.data.name );
 }
 
 /**
@@ -86,8 +86,8 @@ export const addEnabledCommand = async (command: CommandInterface, guildID: stri
     if ( !command.properties.Enabled ) { return "This command is globally disabled. Please contact the bot owner to enable it."; }
     const guildData = await getGuildDataByGuildID(guildID);
     // If command is already enabled, do nothing
-    if ( guildData.commands.enabledCommands.includes(command) ) { return "This command is already enabled in this guild."; }
-    guildData.commands.enabledCommands.push(command);
+    if ( guildData.commands.enabledCommands.includes(command.data.name) ) { return "This command is already enabled in this guild."; }
+    guildData.commands.enabledCommands.push(command.data.name);
     await update(guildData);
     return "Command successfully enabled.";
 }
@@ -105,8 +105,8 @@ export const addDisabledCommand = async (command: CommandInterface, guildID: str
     if ( !command.properties.Enabled ) { return "This command is globally disabled, so disabling it for your guild is redundant."; }
     const guildData = await getGuildDataByGuildID(guildID);
     // If command is already disabled, do nothing
-    if ( guildData.commands.disabledCommands.includes(command) ) { return "This command is already disabled in this guild."; }
-    guildData.commands.disabledCommands.push(command);
+    if ( guildData.commands.disabledCommands.includes(command.data.name) ) { return "This command is already disabled in this guild."; }
+    guildData.commands.disabledCommands.push(command.data.name);
     await update(guildData);
     return "Command successfully disabled.";
 }

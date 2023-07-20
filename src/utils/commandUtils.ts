@@ -1,6 +1,6 @@
 // Utility function for commands
 
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, InteractionReplyOptions, MessagePayload } from "discord.js";
 import CommandList from "../commands/_CommandList";
 import { getGuildDataByGuildID } from "../database/guildData";
 import { CommandInterface } from "../interfaces/Command";
@@ -34,8 +34,8 @@ export const isCommandDisabled = async (command: CommandInterface, guildID: stri
     const guildData = await getGuildDataByGuildID(guildID);
     const enabledGlobally: boolean = command.properties.Enabled;
     const enabledByDefault: boolean = command.properties.DefaultEnabled;
-    const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command);
-    const disabledInGuild: boolean = guildData.commands.disabledCommands.includes(command);
+    const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command.data.name);
+    const disabledInGuild: boolean = guildData.commands.disabledCommands.includes(command.data.name);
     let cannotBeDisabled: boolean = false;
     if ( command.properties.CanBeDisabled === false ) cannotBeDisabled = true;
 
@@ -67,8 +67,8 @@ export const isCommandEnabled = async (command: CommandInterface, guildID: strin
     const guildData = await getGuildDataByGuildID(guildID);
     const enabledGlobally: boolean = command.properties.Enabled;
     const enabledByDefault: boolean = command.properties.DefaultEnabled;
-    const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command);
-    const disabledInGuild: boolean = guildData.commands.disabledCommands.includes(command);
+    const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command.data.name);
+    const disabledInGuild: boolean = guildData.commands.disabledCommands.includes(command.data.name);
     let cannotBeDisabled: boolean = false;
     if ( command.properties.CanBeDisabled === false ) cannotBeDisabled = true;
 
@@ -127,6 +127,10 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
         errorMessage += "Oopsie woopsy! Something made a lil' fucky wucky in the backy-endy >w<\nThis weawwy shouldn't happen... pwease contact inco for a fix :3c";
     }
 
-    if (interaction.replied) interaction.editReply(errorMessage,);
-    else interaction.reply({ content: errorMessage, ephemeral: true});
+
+    if (interaction.replied || interaction.deferred) {
+        interaction.editReply(errorMessage);
+    } else {
+        interaction.reply({ content: errorMessage, ephemeral: true });
+    }
 }

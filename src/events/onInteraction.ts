@@ -8,8 +8,11 @@ import { hasPermissions } from '../utils/userUtils';
 export const onInteraction : EventInterface = {
     run: async (interaction: Interaction) => {
         console.log("Registering onInteraction event...")
+        
         // If interaction is a command
         if (interaction.isCommand()) {
+            // Defer reply!
+            await interaction.deferReply();
             let errorList: string[] = [];
             // Check if command matches any registered commands
             for (const Command of CommandList) {
@@ -22,8 +25,6 @@ export const onInteraction : EventInterface = {
                         errorList.push("Command " + Command.data.name + " is disabled globally.");
                     }
 
-                    // Defer reply!
-                    interaction.deferReply();
 
                     // If sent in guild
                     if (interaction.guild) {
@@ -64,7 +65,7 @@ export const onInteraction : EventInterface = {
                         return;
                     }
 
-                    console.error("Command " + Command.data.name + " failed validation but no error was logged!");
+                    console.error(" === Command " + Command.data.name + " failed onInteraction validation- logging error! ===");
                 }
             }
 
