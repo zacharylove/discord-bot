@@ -7,7 +7,7 @@ import { hasPermissions } from '../utils/userUtils';
 // Handles onInteraction event
 export const onInteraction : EventInterface = {
     run: async (interaction: Interaction) => {
-        console.log("Registering onInteraction event...")
+        console.debug("Received onInteraction event...")
         
         // If interaction is a command
         if (interaction.isCommand()) {
@@ -72,7 +72,6 @@ export const onInteraction : EventInterface = {
             await broadcastCommandFailed(interaction, errorList);
             console.debug("Command failed!");
         }
-        console.log("Registered onInteraction event.")
     },
     properties: {
         Name: "interactionCreate",

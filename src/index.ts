@@ -1,22 +1,16 @@
 
 
-import { Client, Message } from "discord.js";
+import { Bot } from "./bot";
 import { onInteraction } from "./events/onInteraction";
 import { IntentOptions, PartialsOptions } from "./config/IntentOptions";
 import { connectDatabase } from "./database/connectDatabase";
 import { validateEnv, validateIntents } from "./utils/validateProperties";
 import { onReady } from "./events/onReady";
 import { onMessage } from "./events/onMessage";
-// Load config
-import { initializeWordleUtil } from "./utils/wordleUtils";
 
-let BOT: Client;
+let BOT: Bot;
 
-const registerEvents = async (BOT: Client) => {
-
-    // Initialize wordle
-    const WordleUtil = initializeWordleUtil();
-
+const registerEvents = async (BOT: Bot) => {
     if (onReady.properties.Enabled && validateIntents(onReady.properties.Intents, "onReady", "event")) {
         BOT.on("ready", async () => await onReady.run(BOT));
     } else { console.log("onReady event is disabled. Skipping..."); }
@@ -26,7 +20,7 @@ const registerEvents = async (BOT: Client) => {
     } else { console.log("interactionCreate event is disabled. Skipping..."); }
 
     if (onMessage.properties.Enabled && validateIntents(onMessage.properties.Intents, "onMessage", "event")) {
-        BOT.on("messageCreate", async (Message) => await onMessage.run(Message, WordleUtil, BOT))
+        BOT.on("messageCreate", async (Message) => await onMessage.run(Message, BOT))
     } else { console.log("messageCreate event is disabled. Skipping..."); }
 }
 
@@ -34,7 +28,7 @@ const registerEvents = async (BOT: Client) => {
 (async () => {
     if (!validateEnv()) return; 
 
-    BOT = new Client({ intents: IntentOptions, partials: PartialsOptions });
+    BOT = new Bot({ intents: IntentOptions, partials: PartialsOptions });
 
     await connectDatabase();
 

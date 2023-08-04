@@ -1,5 +1,5 @@
 // On bot startup
-import { ActivityType, Client } from "discord.js";
+import { ActivityType } from "discord.js";
 import { Routes } from "discord-api-types/v9";
 import { REST } from "@discordjs/rest";
 import { CommandList } from "../commands/_CommandList";
@@ -8,8 +8,9 @@ import { onTick } from "../events/onTick";
 import { IntentOptions } from "config/IntentOptions";
 import { EventInterface } from "interfaces/Event";
 import { validateIntents } from "../utils/validateProperties";
+import { Bot } from "bot";
 
-const registerCommands = async (BOT: Client) => {
+const registerCommands = async (BOT: Bot) => {
     const rest = new REST({ version: "9" }).setToken(process.env.BOT_TOKEN as string);
     // Separate commands into guild and global commands
     var guildCommands = [];
@@ -52,7 +53,7 @@ const registerCommands = async (BOT: Client) => {
 
 
 export const onReady : EventInterface = {
-    run: async (BOT: Client) => {
+    run: async (BOT: Bot) => {
         console.log(`Logged in as ${BOT.user?.tag}!`);
         console.log("Registering onReady event...");
         // Register commands

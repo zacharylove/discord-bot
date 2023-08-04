@@ -1,34 +1,118 @@
-import { WordleDataInterface } from "database/models/wordleModel";
+import { WordleDataInterface } from "../database/models/wordleModel";
 import { Message } from "discord.js";
-import { wordleConfig } from "../config/config.json"
+import { wordleConfig, tradleConfig } from "../config/config.json"
 
-import { getWordleDataByUserID, update, getRanking } from "../database/wordleData";
+import { getWordleDataByUserID, update as wordleUpdate, getRanking } from "../database/wordleData";
+import { getTradleDataByUserID, update as tradleUpdate } from "../database/tradleData";
 
-interface wordleInfo {
+
+class sharedWordleUtils {
+
+    /**
+     * Takes in a cleaned wordle result and runs a series of logical checks to ensure it is legitimate
+     * Returns a boolean indicating whether the result is legitimate
+     * @param wordleInfo 
+     */
+    static checkWordleResult = (puzzleInfo: puzzleInfo, gameInfo: gameInfo): boolean => {
+        // Did user complete the puzzle?
+        const puzzleComplete = puzzleInfo.score > 0;
+        puzzleInfo.puzzleComplete = puzzleComplete;
+
+        let match: boolean;
+        // If completed puzzle, last row should be full of match emojis
+        if (puzzleComplete) {
+            match = false;
+            for (const matchEmoji of gameInfo.letterMatch) {
+                // If the last row is all match emojis
+                if (puzzleInfo.emojis[puzzleInfo.score - 1] == matchEmoji.repeat(gameInfo.solutionLength)) {
+                    match = true;
+                    break;
+                }
+            }
+        } 
+        // If failed puzzle, no line should be full of match emojis
+        else {
+            match = true;
+            for (const matchEmoji of gameInfo.letterMatch) {
+                for (const emojiLine of puzzleInfo.emojis) {
+                    if (emojiLine != matchEmoji.repeat(gameInfo.solutionLength)) {
+                        match = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // If completed, no other guesses should be shown beyond the line full of match emojis
+        if (puzzleComplete && match && puzzleInfo.score != 6) {
+            // Select all lines beyond score
+            const extraLines = puzzleInfo.emojis.slice(puzzleInfo.score);
+            if (extraLines.length > 0) {
+                match = false;
+            }
+        }
+
+        // Can't have more than 6 guesses
+        if (puzzleInfo.score > 6) {
+            match = false;
+        }
+
+        // Can't complete puzzles beyond the maximum number of wordle puzzles available
+        if (gameInfo.maxPuzzles && puzzleInfo.puzzleNum > gameInfo.maxPuzzles) {
+            match = false;
+        }
+
+        // Log result
+        if (match) console.debug("Wordle result is legitimate.");
+        else console.debug("Wordle result is illegitimate.");
+
+        return match;
+    }
+
+    static computeAverages = (totalGuesses: number, totalPuzzles: number, numComplete: number): [number, number] => {
+        if (numComplete == 0 || totalPuzzles == 0) return [0, 0];
+        const totalAverage = totalGuesses / (totalPuzzles);
+        const weightedScore = Math.round(1000 * (1 / totalAverage) * Math.log(totalPuzzles * numComplete / totalPuzzles));
+
+        return [totalAverage, weightedScore];
+
+    }
+}
+
+interface gameInfo {
+    solutionLength: number;
+    letterMatch: string[];
+    letterClose: string[];
+    letterWrong: string[];
+    numAllowedGuesses: number;
+    maxPuzzles?: number;
+}
+
+interface puzzleInfo {
     authorID: string;
-    wordleNum: number;
+    puzzleNum: number;
     score: number;
     emojis: string[];
     puzzleComplete: boolean;
 
 }
 
+// Wordle
 export class wordle {
-    wordLength: number;
-    numGuesses: number;
-    letterMatch: string[];
-    letterClose: string[];
-    letterWrong: string[];
-    maxPuzzles: number;
+    info: gameInfo;
+    
 
     constructor() {
         // Load wordle info from config
-        this.wordLength = wordleConfig.wordLength;
-        this.numGuesses = wordleConfig.numGuesses;
-        this.letterMatch = wordleConfig.letterMatch;
-        this.letterClose = wordleConfig.letterClose;
-        this.letterWrong = wordleConfig.letterWrong;
-        this.maxPuzzles = wordleConfig.maxPuzzles;
+        this.info = {
+            solutionLength: wordleConfig.wordLength,
+            letterMatch: wordleConfig.letterMatch,
+            letterClose: wordleConfig.letterClose,
+            letterWrong: wordleConfig.letterWrong,
+            maxPuzzles: wordleConfig.maxPuzzles,
+            numAllowedGuesses: wordleConfig.numGuesses
+        }
+        
     }
 
     /**
@@ -37,7 +121,7 @@ export class wordle {
      * @param message Message to be cleaned
      */
     cleanMessage = (message: Message) => {
-        let output = {} as wordleInfo;
+        let output = {} as puzzleInfo;
         output.authorID = message.author.id;
 
         // Split message into lines
@@ -53,7 +137,7 @@ export class wordle {
         const emojis = messageLines.slice(-score);
 
         // Store into output
-        output.wordleNum = puzzleNum;
+        output.puzzleNum = puzzleNum;
         output.score = score;
         output.emojis = emojis;
 
@@ -61,113 +145,41 @@ export class wordle {
     }
 
     /**
-     * Takes in a cleaned wordle result and runs a series of logical checks to ensure it is legitimate
-     * Returns a boolean indicating whether the result is legitimate
-     * @param wordleInfo 
-     */
-    checkWordleResult = (wordleInfo: wordleInfo): boolean => {
-        // Did user complete the puzzle?
-        const puzzleComplete = wordleInfo.score > 0;
-        wordleInfo.puzzleComplete = puzzleComplete;
-
-        let match: boolean;
-        // If completed puzzle, last row should be full of match emojis
-        if (puzzleComplete) {
-            match = false;
-            for (const matchEmoji of this.letterMatch) {
-                // If the last row is all match emojis
-                if (wordleInfo.emojis[wordleInfo.score - 1] == matchEmoji.repeat(this.wordLength)) {
-                    match = true;
-                    break;
-                }
-            }
-        } 
-        // If failed puzzle, no line should be full of match emojis
-        else {
-            match = true;
-            for (const matchEmoji of this.letterMatch) {
-                for (const emojiLine of wordleInfo.emojis) {
-                    if (emojiLine != matchEmoji.repeat(this.wordLength)) {
-                        match = false;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // If completed, no other guesses should be shown beyond the line full of match emojis
-        if (puzzleComplete && match && wordleInfo.score != 6) {
-            // Select all lines beyond score
-            const extraLines = wordleInfo.emojis.slice(wordleInfo.score);
-            if (extraLines.length > 0) {
-                match = false;
-            }
-        }
-
-        // Can't have more than 6 guesses
-        if (wordleInfo.score > 6) {
-            match = false;
-        }
-
-        // Can't complete puzzles beyond the maximum number of wordle puzzles available
-        if (wordleInfo.wordleNum > this.maxPuzzles) {
-            match = false;
-        }
-
-        // Log result
-        if (match) console.debug("Wordle result is legitimate.");
-        else console.debug("Wordle result is illegitimate.");
-
-        return match;
-    }
-
-    computeAverages = (totalGuesses: number, totalPuzzles: number, numComplete: number): [number, number] => {
-        if (numComplete == 0 || totalPuzzles == 0) return [0, 0];
-        const totalAverage = totalGuesses / (totalPuzzles);
-        const weightedScore = Math.round(1000 * (1 / totalAverage) * Math.log(totalPuzzles * numComplete / totalPuzzles));
-
-        return [totalAverage, weightedScore];
-
-    }
-
-
-
-    /**
      * Stores a new wordle result into the database
      * @param wordleInfo 
      */
-    storeWordleResult = async (wordleInfo: wordleInfo) => {
+    storeWordleResult = async (puzzleInfo: puzzleInfo) => {
         console.debug("Storing wordle result into database...");
-        const userData = await getWordleDataByUserID(wordleInfo.authorID);
+        const userData = await getWordleDataByUserID(puzzleInfo.authorID);
 
         // Check if user has a wordle data entry for this puzzle
-        const puzzleData = userData.results.find( (result) => result.puzzleID == wordleInfo.wordleNum );
+        const puzzleData = userData.results.find( (result) => result.puzzleID == puzzleInfo.puzzleNum );
         if (puzzleData) {
-            puzzleData.results.push(wordleInfo.emojis);
-            puzzleData.scores.push(wordleInfo.score);
+            puzzleData.results.push(puzzleInfo.emojis);
+            puzzleData.scores.push(puzzleInfo.score);
 
             
         } else {
             userData.results.push({
-                puzzleID: wordleInfo.wordleNum,
-                results: [wordleInfo.emojis],
-                scores: [wordleInfo.score]
+                puzzleID: puzzleInfo.puzzleNum,
+                results: [puzzleInfo.emojis],
+                scores: [puzzleInfo.score]
             });
         }
 
         // Update stats
-        if (wordleInfo.puzzleComplete) userData.numComplete++;
+        if (puzzleInfo.puzzleComplete) userData.numComplete++;
         userData.totalPuzzles++;
-        userData.totalGuesses += wordleInfo.score;
+        userData.totalGuesses += puzzleInfo.score;
 
         // Compute and update averages
-        const averages = this.computeAverages(userData.totalGuesses, userData.totalPuzzles, userData.numComplete);
+        const averages = sharedWordleUtils.computeAverages(userData.totalGuesses, userData.totalPuzzles, userData.numComplete);
         userData.totalAverage = averages[0];
         userData.weightedScore = averages[1];
 
         // Update user data
         console.debug("Updating user data...");
-        await update(userData);
+        await wordleUpdate(userData);
     }
     
 
@@ -181,7 +193,7 @@ export class wordle {
         // Whether message matches wordle pattern
         const patternMatch = messageContent.match("Wordle [0-9]+ [X|0-9]/6");
         // Whether the number of lines in message is correct
-        const numLinesMatch = messageContent.split("\n").length <= this.numGuesses + 2;
+        const numLinesMatch = messageContent.split("\n").length <= this.info.numAllowedGuesses + 2;
 
         
 
@@ -190,7 +202,7 @@ export class wordle {
             console.debug(`Pattern match: ${patternMatch}, numLinesMatch: ${numLinesMatch}`);
             console.debug("Message matches wordle pattern.");
             const cleanedMessage = this.cleanMessage(message);
-            if ( this.checkWordleResult(cleanedMessage) ) {
+            if ( sharedWordleUtils.checkWordleResult(cleanedMessage, this.info ) ) {
                 await message.react("✅");
                 await this.storeWordleResult(cleanedMessage);
             } else {
@@ -200,6 +212,107 @@ export class wordle {
     }
 }
 
+// Tradle
+// Very similar to Wordle in a lot of ways... TODO: merge functionality?
+export class tradle {
+    info: gameInfo;
+
+    constructor() {
+        this.info = {
+            solutionLength: tradleConfig.outputLength,
+            letterMatch: tradleConfig.letterMatch,
+            letterClose: tradleConfig.letterClose,
+            letterWrong: tradleConfig.letterWrong,
+            maxPuzzles: tradleConfig.maxPuzzles,
+            numAllowedGuesses: tradleConfig.numGuesses
+        }
+    }
+
+    /**
+     * Cleans a tradle message and forms a dictionary with relevant info
+     * 
+     * @param message Message to be cleaned
+     */
+    cleanMessage = (message: Message) => {
+        let output = {} as puzzleInfo;
+        output.authorID = message.author.id;
+
+        // Split message into lines
+        const messageLines = message.content.split("\n");
+        // Remove last line
+        messageLines.pop();
+        // Status
+        const status = messageLines[0].split(" ");
+        const puzzleNum = parseInt(status[1].replace("#", ""));
+        // Score
+        let score;
+        if (status[2].split("/")[0] == "X") score = 0;
+        else score = parseInt(status[2].split("/")[0]);
+        // Emojis
+        const emojis = messageLines.slice(-score);
+
+        // Store into output
+        output.puzzleNum = puzzleNum;
+        output.score = score;
+        output.emojis = emojis;
+
+        return output;
+    }
+
+    storeTradleResult = async (puzzleInfo: puzzleInfo) => {
+        console.debug("Storing tradle result into database...");
+        const userData = await getTradleDataByUserID(puzzleInfo.authorID);
+
+        // Update scores
+        const puzzleData = userData.results.find( (result) => result.puzzleID == puzzleInfo.puzzleNum );
+        if (puzzleData) {
+            puzzleData.scores.push(puzzleInfo.score);
+        } else {
+            userData.results.push({
+                puzzleID: puzzleInfo.puzzleNum,
+                scores: [puzzleInfo.score]
+            });
+        }
+
+        // Update stats
+        if (puzzleInfo.puzzleComplete) userData.numComplete++;
+        userData.totalPuzzles++;
+        userData.totalGuesses += puzzleInfo.score;
+
+        // Compute and update averages
+        const averages = sharedWordleUtils.computeAverages(userData.totalGuesses, userData.totalPuzzles, userData.numComplete);
+        userData.totalAverage = averages[0];
+        userData.weightedScore = averages[1];
+
+        // Update user data
+        console.debug("Updating user data...");
+        await tradleUpdate(userData);
+    
+    }
+
+    parseMessage = async (message: Message) => {
+        const messageContent = message.content;
+        const patternMatch = messageContent.match("#Tradle #[0-9]+ [X|0-9]/6");
+        const numLinesMatch = messageContent.split("\n").length <= this.info.numAllowedGuesses + 2;
+
+        console.debug(`Pattern match: ${patternMatch}, numLinesMatch: ${numLinesMatch}`);
+        if (patternMatch && numLinesMatch) {
+            console.debug("Message matches tradle pattern.");
+            const cleanedMessage = this.cleanMessage(message);
+            if ( sharedWordleUtils.checkWordleResult(cleanedMessage, this.info ) ) {
+                await message.react("✅");
+                await this.storeTradleResult(cleanedMessage);
+            } else {
+                await message.react("❎");
+            }
+        }
+    }
+}
+
 export const initializeWordleUtil = (): wordle => {
     return new wordle();
+}
+
+export const initializeTradleUtil = (): tradle => {
+    return new tradle();
 }

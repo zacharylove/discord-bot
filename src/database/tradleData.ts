@@ -1,35 +1,31 @@
-
-import { Aggregate } from "mongoose";
-import wordleModel, { WordleDataInterface, createNewWordleData } from "./models/wordleModel";
-
-
+import tradleModel, { TradleDataInterface, createNewTradleData } from "./models/tradleModel";
 
 /**
- * Updates an existing WordleData object in the database
- * @param wordleData 
+ * Updates an existing TradleData object in the database
+ * @param tradleData 
  * @returns 
  */
-export const update = async (wordleData: WordleDataInterface) => {
-    await wordleData.save();
+export const update = async (tradleData: TradleDataInterface) => {
+    await tradleData.save();
 }
 
 /**
- * Finds and returns a WordleData object from the database
- * Creates new WordleData object if none exists
+ * Finds and returns a TradleData object from the database
+ * Creates new TradleData object if none exists
  * @param userID 
  */
-export const getWordleDataByUserID = async (userID: string): Promise<WordleDataInterface> => {
-    return ( await wordleModel.findOne({ userID: userID}) ) || ( await createNewWordleData(userID) );
+export const getTradleDataByUserID = async (userID: string): Promise<TradleDataInterface> => {
+    return ( await tradleModel.findOne({ userID: userID}) ) || ( await createNewTradleData(userID) );
 }
 
 /**
- * Finds and returns a WordleData object with the (generated) ID matching the given ID
+ * Finds and returns a TradleData object with the (generated) ID matching the given ID
  * Throws error if none exists
- * @param id generated wordledata id
+ * @param id generated TradleData id
  * @throws Error
  */
-export const getWordleDataByID = async (id: string): Promise<WordleDataInterface> => {
-    const data = await wordleModel.findOne({ id: id});
+export const getTradleDataByID = async (id: string): Promise<TradleDataInterface> => {
+    const data = await tradleModel.findOne({ id: id});
     if (!data) {
         throw new Error(`No WordleData object with ID ${id} exists in the database.`);
     }
@@ -47,7 +43,7 @@ export const getWordleDataByID = async (id: string): Promise<WordleDataInterface
  * @returns 
  */
 export const getRanking = async ()  => {
-    return wordleModel.aggregate([
+    return tradleModel.aggregate([
         { "$sort": {"name": 1, "weightedScore": -1} },
         { "$group": {
             "_id": "$name",

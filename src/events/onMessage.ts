@@ -1,17 +1,17 @@
 // Runs on every message
 // Make sure bot has the correct scope and permissions!
 
+import { Bot } from "bot";
 import { areWordleFeaturesEnabled } from "../database/guildData";
-import { Client, Message, GatewayIntentBits, TextChannel, DMChannel } from "discord.js";
+import { Message, GatewayIntentBits, TextChannel, DMChannel } from "discord.js";
 import { EventInterface } from "interfaces/Event";
-import { wordle } from "utils/wordleUtils";
 
 const sayCommand = async (Message: Message) => {
 
 }
 
 export const onMessage : EventInterface = {
-    run: async (Message: Message, WordleUtil: wordle, BOT: Client) => {
+    run: async (Message: Message, BOT: Bot) => {
         // Ignore messages from bots
         if (Message.author.bot) return;
         if (Message.channel instanceof DMChannel) {
@@ -47,7 +47,10 @@ export const onMessage : EventInterface = {
         
     
         // Check if message is a wordle result
-        if (await areWordleFeaturesEnabled(Message.guildId)) WordleUtil.parseMessage(Message);
+        if (await areWordleFeaturesEnabled(Message.guildId)) {
+            BOT.getWordleUtil().parseMessage(Message);
+            BOT.getTradleUtil().parseMessage(Message);
+        }
         
     },
     properties: {

@@ -1,5 +1,5 @@
 {
-    "statuses": [ "Back and better than ever!" ],
+    "statuses": [ "Back and better than ever!", "Now supports Tradle!", "your mom" ],
     "wordleConfig": {
         "wordLength": 5,
         "numGuesses": 6,
@@ -8,7 +8,18 @@
         "letterWrong": ["⬛", "⬜"],
         "maxPuzzles": 2315,
         "wordleCommands": [
-            "wordleStats"
+            "wordlestats"
+        ]
+    },
+    "tradleConfig": {
+        "outputLength": 5,
+        "numGuesses": 6,
+        "letterMatch": ["🟩"],
+        "letterClose": ["🟨"],
+        "letterWrong": ["⬜"],
+        "maxPuzzles": 848, 
+        "tradleCommands": [
+            
         ]
     },
     "discordAPI": {

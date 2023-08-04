@@ -42,8 +42,9 @@ export const enableWordleFeatures = async (guildID: string): Promise<string> => 
     // Enable result scanning
     guildData.messageScanning.wordleResultScanning = true;
     // Enable commands
-    for( const command of wordleConfig.wordleCommands) {
-        guildData.commands.enabledCommands.push(command);
+    for( const command of wordleConfig. wordleCommands) {
+        if( guildData.commands.enabledCommands.includes(command.toLowerCase()) ) { continue; }
+        guildData.commands.enabledCommands.push(command.toLowerCase());
     }
     
 
@@ -66,7 +67,7 @@ export const disableWordleFeatures = async (guildID: string): Promise<string> =>
     guildData.messageScanning.wordleResultScanning = false;
     // Disable commands
     guildData.commands.enabledCommands.filter( function( el ) {
-        return !wordleConfig.wordleCommands.includes( el );
+        return !wordleConfig.wordleCommands.includes( el.toLowerCase() );
       } );
 
 
