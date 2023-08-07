@@ -24,7 +24,7 @@ export const onInteraction : EventInterface = {
                     } else {
                         interaction.deferReply();
                     }
-                    console.debug("User " + interaction.user.tag + " called command " + Command.data.name + ", validating...");
+                    console.debug("User " + interaction.user.username + " called command " + Command.data.name + ", validating...");
                     // If disabled globally
                     if (!Command.properties.Enabled) {
                         console.debug("Command " + Command.data.name + " is disabled globally.");

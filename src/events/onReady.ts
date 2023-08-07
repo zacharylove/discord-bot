@@ -9,6 +9,7 @@ import { IntentOptions } from "config/IntentOptions";
 import { EventInterface } from "interfaces/Event";
 import { validateIntents } from "../utils/validateProperties";
 import { Bot } from "bot";
+import { version } from "../config/config.json";
 
 const registerCommands = async (BOT: Bot) => {
     const rest = new REST({ version: "9" }).setToken(process.env.BOT_TOKEN as string);
@@ -59,8 +60,14 @@ export const onReady : EventInterface = {
         // Register commands
         registerCommands(BOT).catch(console.error);
 
-        BOT.user?.setActivity("Back from the dead!", {
-            type: ActivityType.Competing
+
+        var activityString = "you 👀";
+        if ( version != "" ) {
+            activityString += " | v" + version;
+        }
+
+        BOT.user?.setActivity(activityString, {
+            type: ActivityType.Watching
           });
 
         // Set tick event to run every set interval

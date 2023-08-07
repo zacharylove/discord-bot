@@ -31,3 +31,21 @@ export const intentEnumToString = ( intent: GatewayIntentBits ): string => {
         default: return "Unknown Intent!";
     }
 }
+
+/**
+ * Returns true if the string matches a valid URL pattern, false otherwise
+ * @param str 
+ */
+export const validURL = (str: string): boolean => {
+    const urlPattern = new RegExp("/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/");
+    
+    return urlPattern.test(str);
+}
+/**
+ * Returns true if the string matches a valid image URL pattern, false otherwise
+ * @param str 
+ */
+export const validImageURL = (str: string): boolean => {
+    const imageURLPattern = new RegExp("(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)");
+    return imageURLPattern.test(str);
+}

@@ -295,7 +295,6 @@ export class tradle {
         const patternMatch = messageContent.match("#Tradle #[0-9]+ [X|0-9]/6");
         const numLinesMatch = messageContent.split("\n").length <= this.info.numAllowedGuesses + 2;
 
-        console.debug(`Pattern match: ${patternMatch}, numLinesMatch: ${numLinesMatch}`);
         if (patternMatch && numLinesMatch) {
             console.debug("Message matches tradle pattern.");
             const cleanedMessage = this.cleanMessage(message);

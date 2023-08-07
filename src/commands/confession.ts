@@ -4,6 +4,7 @@ import { CommandInterface, CommandProperties } from '../interfaces/Command';
 import { getGuildDataByGuildID, update } from '../database/guildData';
 import { hasPermissions } from '../utils/userUtils';
 import { broadcastCommandFailed } from '../utils/commandUtils';
+import { validImageURL } from '../utils/utils';
 
 
 const createNewConfession = async (interaction: CommandInteraction) => {
@@ -19,16 +20,16 @@ const createNewConfession = async (interaction: CommandInteraction) => {
     const guildData = await getGuildDataByGuildID(interaction.guildId);
 
     // Check if the channel is the confession channel
-    const confessionChannelID = guildData.channels.confessionChannelId;
+    var confessionChannelID = guildData.channels.confessionChannelId;
     // Get confession number
     var confessionNumber = guildData.counters.numConfessions;
     var dataUpdated: boolean = false;
     if ( guildData.counters.numConfessions == null ) {
-        guildData.counters.numConfessions = 1;
+        guildData.counters.numConfessions, confessionNumber = 1;
         dataUpdated = true;
     }
     if (guildData.channels.confessionChannelId == null) {
-        guildData.channels.confessionChannelId = "";
+        guildData.channels.confessionChannelId,confessionChannelID = "";
         dataUpdated = true;
     }
     if (dataUpdated) update(guildData);
@@ -44,17 +45,39 @@ const createNewConfession = async (interaction: CommandInteraction) => {
     // Get confession content
     const confession = interaction.options.getString('confession');
     
-
+    const footers = [
+        "To create a confession of your own, run /confess new in this channel",
+        "Confessions are not logged or saved anywhere",
+        "❗ If this confession is ToS-breaking or overtly hateful, just delete it",
+    ];
     
     let embedToSend: EmbedBuilder = new EmbedBuilder();
+    let message: string = "";
     embedToSend
         .setTitle('Anonymous Confession #' + confessionNumber)
         .setDescription(`"${confession}"`)
         .setTimestamp()
-        .setFooter({text: "❗ If this confession is ToS-breaking or overtly hateful, you can eat my shorts"});
+        .setFooter({text: footers[Math.floor(Math.random()*footers.length)]});
+
+    // Attach image if provided
+    const imageString = interaction.options.getString('image');
+    if ( imageString ) {
+        /*if ( !validImageURL( imageString ) ) {
+            await interaction.editReply('The image you provided is not a valid URL!');
+            return;
+        }*/
+        embedToSend.setImage(imageString);
+    }
+    // Ping user if one is provided
+    const userToPing = interaction.options.getUser('user');
+    if ( userToPing ) {
+        message += `<@${userToPing.id}> 👀`;
+    }
+    // Set color to random
+    embedToSend.setColor(Math.floor(Math.random()*16777215));
 
     await interaction.editReply(`Confession received!`);
-    await interaction.channel.send({embeds: [embedToSend]});
+    await interaction.channel.send({content: message, embeds: [embedToSend]});
     guildData.counters.numConfessions++;
     await update(guildData);
 }
@@ -97,6 +120,18 @@ export const confess: CommandInterface = {
                         .setName('confession')
                         .setDescription('Your confession')
                         .setRequired(true)
+                )
+                .addStringOption((option) =>
+                    option
+                        .setName('image')
+                        .setDescription('An image to attach to your confession (URLs only)')
+                        .setRequired(false)
+                )
+                .addUserOption((option) =>
+                    option
+                        .setName('user')
+                        .setDescription('The user to confess to (will ping them)')
+                        .setRequired(false)
                 )
         )
         .addSubcommand((subcommand) =>
