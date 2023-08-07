@@ -135,7 +135,7 @@ export const confess: CommandInterface = {
     },
     properties: {
         Name: 'Confess',
-        Scope: 'guild',
+        Scope: 'global',
         GuildOnly: true,
         DefaultEnabled: true,
         Enabled: true,
