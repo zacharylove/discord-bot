@@ -11,13 +11,19 @@ export const onInteraction : EventInterface = {
         
         // If interaction is a command
         if (interaction.isCommand()) {
-            // Defer reply!
-            await interaction.deferReply();
+            
             let errorList: string[] = [];
+
             // Check if command matches any registered commands
             for (const Command of CommandList) {
                 // If command matches and is not globally disabled
                 if (interaction.commandName === Command.data.name) {
+                    // Defer reply according to properties
+                    if ( Command.properties.Ephemeral && Command.properties.Ephemeral == true ) {
+                        interaction.deferReply({ephemeral: true});
+                    } else {
+                        interaction.deferReply();
+                    }
                     console.debug("User " + interaction.user.tag + " called command " + Command.data.name + ", validating...");
                     // If disabled globally
                     if (!Command.properties.Enabled) {
@@ -66,7 +72,7 @@ export const onInteraction : EventInterface = {
                     }
 
                     console.error(" === Command " + Command.data.name + " failed onInteraction validation- logging error! ===");
-                }
+                } 
             }
 
             await broadcastCommandFailed(interaction, errorList);

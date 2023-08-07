@@ -235,6 +235,7 @@ export const guildSettings: CommandInterface = {
                         .setDescription('List all features for this server')
                 )
         )
+
         
         // List all settings
         .addSubcommand((subcommand) =>

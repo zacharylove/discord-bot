@@ -23,6 +23,8 @@ export interface CommandProperties {
     Intents?: GatewayIntentBits[];
     // Any permissions required for command to function
     Permissions?: PermissionsBitField[];
+    // Whether response is ephemeral or not
+    Ephemeral?: boolean;
 }
 
 
