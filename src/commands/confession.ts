@@ -1,5 +1,6 @@
 // Confessions
-import { CommandInteraction, EmbedBuilder, PermissionsBitField, SlashCommandBuilder } from 'discord.js';
+// TODO: make modal
+import { CommandInteraction, EmbedBuilder, ModalBuilder, PermissionsBitField, SlashCommandBuilder, TextInputStyle } from 'discord.js';
 import { CommandInterface, CommandProperties } from '../interfaces/Command';
 import { getGuildDataByGuildID, update } from '../database/guildData';
 import { hasPermissions } from '../utils/userUtils';

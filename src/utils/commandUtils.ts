@@ -86,7 +86,7 @@ export const isCommandEnabled = async (command: CommandInterface, guildID: strin
 }
 
 
-export const broadcastCommandFailed = async (interaction: CommandInteraction, reason?: string[]|string, command?: CommandInterface,): Promise<void> => {
+export const broadcastCommandFailed = async (interaction: CommandInteraction, reason?: string[]|string, command?: CommandInterface, error?: any): Promise<void> => {
     let commandName: string = "";
     let errorMessage: string = "**Command `";
     if (command) commandName = command.properties.Name;
@@ -94,6 +94,7 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
     errorMessage += commandName + "` failed"
 
     let fuckyWuckyOccurred: boolean = false;
+    if ( error ) fuckyWuckyOccurred = true;
     
     // Send command failed output (if any)
     if (reason) {
@@ -122,9 +123,26 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
     } else fuckyWuckyOccurred = true;
     
     if (fuckyWuckyOccurred) {
-        console.error("Command " + commandName + " failed validation but no error was logged!");
         errorMessage += ":**\n";
         errorMessage += "Oopsie woopsy! Something made a lil' fucky wucky in the backy-endy >w<\nThis weawwy shouldn't happen... pwease contact inco for a fix :3c";
+        if (error) {
+            console.error("Command " + commandName + " caused an error!");
+            console.error(error);
+            let errorOutput: string = "";
+            if (typeof error === "string") {
+                errorOutput = error.toUpperCase();
+            } else if (error instanceof Error) {
+                errorOutput = error.message;
+            }
+            if (errorOutput.length != 0) {
+                errorMessage += "\nHere is the error message:\n";
+                errorMessage += errorOutput;
+            } else {
+                errorMessage += "\nNo error output.... uh oh...";
+            }
+        } else {
+            console.error("Command " + commandName + " failed validation but no error was logged!");
+        }
     }
 
 
