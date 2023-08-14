@@ -3,6 +3,7 @@ import { Document, model, ObjectId, Schema, Types } from 'mongoose';
 
 import { CommandList } from 'commands/_CommandList';
 import { CommandInterface } from "../../interfaces/Command";
+import { starboardConfig } from "../../config/config.json";
 
 export interface GuildDataInterface extends Document {
     _id: String;
@@ -20,6 +21,11 @@ export interface GuildDataInterface extends Document {
         confessionChannelId: string;
         starboardChannelId: string;
     },
+    starboard: {
+        emoji: string;
+        threshold: number;
+        successEmoji: string;
+    }
     counters: {
         numConfessions: number;
     }
@@ -56,6 +62,12 @@ export const GuildData = new Schema({
         confessionChannelId: String,
         starboardChannelId: String,
     },
+    // Starboard settings
+    starboard: {
+        emoji: String,
+        threshold: Number,
+        successEmoji: String,
+    },
 
     // Counters for the current guild
     counters: {
@@ -86,6 +98,11 @@ export const createNewGuildData = async (guildID: string) => {
         channels: {
             confessionChannelId: "",
             starboardChannelId: "",
+        },
+        starboard: {
+            emoji: starboardConfig.defaultEmoji,
+            threshold: starboardConfig.defaultThreshold,
+            successEmoji: starboardConfig.defaultSuccessEmoji,
         },
         counters: {
             numConfessions: 1,

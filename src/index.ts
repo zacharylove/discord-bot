@@ -8,7 +8,7 @@ import { validateEnv, validateEventPermissions, validateIntents } from "./utils/
 import { onReady } from "./events/onReady";
 import { onMessage } from "./events/onMessage";
 import { Events } from "discord.js";
-import { onMessageReactionAdd } from "./events/onMessageReaction";
+import { onMessageReactionAdd, onMessageReactionRemove } from "./events/onMessageReaction";
 
 let BOT: Bot;
 
@@ -28,7 +28,12 @@ const registerEvents = async (BOT: Bot) => {
     if (validateEventPermissions(onMessageReactionAdd.properties)) {
         BOT.on(Events.MessageReactionAdd, async (reaction, user) => await onMessageReactionAdd.run(reaction, user));
     } else { console.log("messageReactionAdd event is disabled. Skipping..."); }
+
+    if (validateEventPermissions(onMessageReactionRemove.properties)) {
+        BOT.on(Events.MessageReactionRemove, async (reaction, user) => await onMessageReactionRemove.run(reaction, user));
+    } else { console.log("messageReactionAdd event is disabled. Skipping..."); }
 }
+
 
 // This anonymous immediately-invoked function expression (IIFE) is the entry point of program
 (async () => {

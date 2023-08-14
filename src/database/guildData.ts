@@ -1,11 +1,13 @@
 import { GatewayIntentBits } from "discord.js";
 import { CommandInterface } from "../interfaces/Command";
-import { validateIntents } from "../utils/validateProperties";
+import { validateEventPermissions, validateIntents } from "../utils/validateProperties";
 import { wordleStats } from "../commands/wordleStats";
 import guildModel, { GuildDataInterface, createNewGuildData } from "./models/guildModel";
 import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils";
 import { FilterQuery } from "mongoose";
 import { wordleConfig } from "../config/config.json"
+import { onMessage } from "../events/onMessage";
+import { onMessageReactionAdd } from "../events/onMessageReaction";
 
 /**
  * Updates an existing GuildData object in the database
@@ -38,7 +40,7 @@ export const enableWordleFeatures = async (guildID: string): Promise<string> => 
     // If already enabled
     if ( await areWordleFeaturesEnabled(guildID) ) { return "Wordle features are already enabled."; }
     // If intent is not available
-    if (!validateIntents([GatewayIntentBits.MessageContent], "EnableWordleFeatures", "Command")) { return "Wordle features require the Message Content intent to scan messages. Please enable it in your server and try again.";}
+    if (!validateEventPermissions(onMessage.properties)) { return "Wordle features require the Message Content intent to scan messages. Please enable it in your server and try again.";}
     // Enable result scanning
     guildData.messageScanning.wordleResultScanning = true;
     // Enable commands
@@ -78,6 +80,89 @@ export const disableWordleFeatures = async (guildID: string): Promise<string> =>
 export const areWordleFeaturesEnabled = async (guildID: string): Promise<boolean> => {
     const guildData = await getGuildDataByGuildID(guildID);
     return guildData.messageScanning.wordleResultScanning && guildData.commands.enabledCommands.includes( wordleStats.data.name );
+}
+
+/**
+ * Enables starboard features for the given server
+ * Currently only enables message scanning for starboard and checks if the starboard channel has been set
+ * @param guildID 
+ * @returns 
+ */
+export const enableStarboardFeature = async (guildID: string): Promise<string> => {
+    var toReturn = "";
+
+    const guildData = await getGuildDataByGuildID(guildID);
+    // If already enabled
+    if ( await isStarboardEnabled(guildID) ) { return "Starboard is already enabled, dummy!"; }
+    if (!validateEventPermissions(onMessageReactionAdd.properties)) { return "Starboard requires the GuildMessageReactions intent to scan messages. Please enable it in your server and try again.";}
+     // Enable reaction scanning
+     guildData.messageScanning.starboardScanning = true;
+
+     await update(guildData);
+
+     toReturn += "Starboard feature has been enabled";
+     // Check if starboard channel has been set
+     if (guildData.channels.starboardChannelId == "") {
+        toReturn += ", BUT the Starboard channel has not been set. Please use `/starboard channel` command to set a channel";
+     }
+     toReturn += "!";
+     return toReturn;
+}   
+
+/**
+ * Disables starboard reaction scanning for the given server
+ * @param guildID 
+ * @returns 
+ */
+export const disableStarboardFeature = async (guildID: string): Promise<string> => {
+    var toReturn = "";
+
+    const guildData = await getGuildDataByGuildID(guildID);
+    // If already disabled
+    if ( !guildData.messageScanning.starboardScanning ) { return "Starboard is already disabled."; }
+    // Disable result scanning
+    guildData.messageScanning.starboardScanning = false;
+
+    await update(guildData);
+    toReturn += "Starboard feature has been disabled";
+    return toReturn;
+}
+
+export const setStarboardChannel = async (guildID: string, channelID: string): Promise<string> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    guildData.channels.starboardChannelId = channelID;
+    await update(guildData);
+    return "Starboard channel has been set to <#" + channelID + ">";
+}
+
+export const setStarboardThreshold = async (guildID: string, threshold: number): Promise<string> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    guildData.starboard.threshold = threshold;
+    await update(guildData);
+    return "Starboard threshold has been set to " + threshold;
+}
+
+export const setStarboardEmojis = async (guildID: string, starEmoji?: string, successEmoji?: string): Promise<string> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    if (starEmoji) guildData.starboard.emoji = starEmoji;
+    if (successEmoji) guildData.starboard.successEmoji = successEmoji;
+    await update(guildData);
+    return "Starboard emojis have been set to " + guildData.starboard.emoji + " and " + guildData.starboard.successEmoji;
+}
+
+export const isStarboardEnabled = async (guildID: string): Promise<boolean> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    return guildData.messageScanning.starboardScanning;
+}
+
+export const setStarboardDefaults = async (guildID: string): Promise<string> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    if (guildData.starboard.threshold == undefined) guildData.starboard.threshold = 5;
+    if (guildData.starboard.emoji == undefined) guildData.starboard.emoji = "⭐";
+    if (guildData.starboard.successEmoji == undefined) guildData.starboard.successEmoji = "🌟";
+    if (guildData.channels.starboardChannelId == undefined) guildData.channels.starboardChannelId = "";
+    await update(guildData);
+    return "Starboard defaults have been set";
 }
 
 /**

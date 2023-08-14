@@ -2,7 +2,10 @@
     "version": "1.2.2",
     "statuses": [ "Back and better than ever!", "Now supports Tradle!", "your mom" ],
     "starboardConfig": {
-        "fetchLimit": 100
+        "fetchLimit": 100,
+        "defaultEmoji": "⭐",
+        "defaultThreshold": 5,
+        "defaultSuccessEmoji": "🌟",
     },
     "wordleConfig": {
         "wordLength": 5,

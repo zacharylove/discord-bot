@@ -1,6 +1,7 @@
 // General-purpose utility functions
 
 import { GatewayIntentBits } from "discord.js";
+import { BOT } from "../index";
 
 export const toTitleCase = (text: string): string => {
     return text.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -48,4 +49,17 @@ export const validURL = (str: string): boolean => {
 export const validImageURL = (str: string): boolean => {
     const imageURLPattern = new RegExp("(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)");
     return imageURLPattern.test(str);
+}
+
+/**
+ * Truncates a string to a specified length, adding an ellipsis if the string is longer than the specified length
+ * @param str 
+ * @param num 
+ * @returns 
+ */
+export const truncateString = (str: string, num: number): string => {
+    if (str.length <= num) {
+      return str
+    }
+    return str.slice(0, num) + '...'
 }

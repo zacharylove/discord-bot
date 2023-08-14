@@ -1,7 +1,7 @@
 // View a list of guild-specific settings and enable/disable commands and features.
 import { CommandInterface } from "../interfaces/Command";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableWordleFeatures, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID } from "../database/guildData";
+import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled } from "../database/guildData";
 import { GuildDataInterface } from "../database/models/guildModel";
 import { getCommandListAsString } from "../utils/commandUtils";
 import { CommandInteraction, Embed, PermissionsBitField, User } from "discord.js";
@@ -67,16 +67,16 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
     let contentScanningString: string = '';
 
     if ( availableCommandList.length > 0 ) {
-        availableCommandsString = " - " + availableCommandList.join('\n - ');
+        availableCommandsString = " - " + availableCommandList.join('\n- ');
     }
     embed.addFields({name: 'Available Commands', value: availableCommandsString, inline: true});
 
     if ( enabledCommandList.length > 0 ) {
-        enabledCommandsString = " - " + enabledCommandList.join('\n - ');
+        enabledCommandsString = " - " + enabledCommandList.join('\n- ');
     }
     embed.addFields({name: 'Enabled', value: enabledCommandsString, inline: true});
     if ( disabledCommandList.length > 0 ) {
-        disabledCommandsString = " - " + disabledCommandList.join('\n - ');
+        disabledCommandsString = " - " + disabledCommandList.join('\n- ');
     }
     embed.addFields({name: 'Disabled', value: disabledCommandsString, inline: true});
     
@@ -96,6 +96,10 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
     } else { contentScanningString += "Disabled\n"; }
 
     embed.addFields({name: 'Available Features', value: contentScanningString});
+
+    if ( guildData.messageScanning.starboardScanning ) {
+        embed.addFields({name: 'Starboard Settings', value: ` - Channel: <#${guildData.channels.starboardChannelId}>\n- Emoji: ${guildData.starboard.emoji}\n- Threshold: ${guildData.starboard.threshold}\n- Success Emoji: ${guildData.starboard.successEmoji}`});
+    }
 
     return embed;
 }
@@ -131,6 +135,15 @@ const enableFeature = async ( interaction: CommandInteraction, featureName: stri
             }
             break;
 
+        case "starboard":
+            // Check if feature is already enabled
+            if (await isStarboardEnabled(interaction.guildId)) {
+                embed.setDescription("Starboard feature is already enabled.");
+            } else {
+                embed.setDescription(await enableStarboardFeature(interaction.guildId));
+            }
+            break;
+
         default:
             embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
             break;
@@ -143,16 +156,23 @@ const enableFeature = async ( interaction: CommandInteraction, featureName: stri
 const disableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
     if ( !interaction.guild || !interaction.guildId ) { return embed; }
 
-    if (featureName == "wordle") {
-        // Check if feature is already disabled
-        if (!await areWordleFeaturesEnabled(interaction.guildId)) {
-            embed.setDescription("Wordle features are already disabled.");
-        } else {
-            await disableWordleFeatures(interaction.guildId);
-            embed.setDescription("Wordle features are now disabled.");
-        }
-    } else{
-        embed.setDescription("That feature doesn't exist. It's just wordle right now lol");
+    switch (featureName) {
+        case "wordle":
+            // Check if feature is already disabled
+            if (!await areWordleFeaturesEnabled(interaction.guildId)) {
+                embed.setDescription("Wordle features are already disabled.");
+            } else embed.setDescription(await disableWordleFeatures(interaction.guildId));
+            break;
+        case "starboard":
+            // Check if feature is already disabled
+            if (!await isStarboardEnabled(interaction.guildId)) {
+                embed.setDescription("Starboard feature is already disabled.");
+            }
+            else embed.setDescription(await disableStarboardFeature(interaction.guildId));
+            break;
+        default:
+            embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
+            break;
     }
 
     return embed;
@@ -225,6 +245,10 @@ export const guildSettings: CommandInterface = {
                                 .setName('feature')
                                 .setDescription('The feature to enable')
                                 .setRequired(true)
+                                .addChoices(
+                                    { name: 'Wordle', value: 'wordle' },
+                                    { name: 'Starboard', value: 'starboard' }
+                                )
                         )
                 )
                 // Disable feature
@@ -237,6 +261,10 @@ export const guildSettings: CommandInterface = {
                                 .setName('feature')
                                 .setDescription('The feature to disable')
                                 .setRequired(true)
+                                .addChoices(
+                                    { name: 'Wordle', value: 'wordle' },
+                                    { name: 'Starboard', value: 'starboard' }
+                                )
                         )
                 )
                 // List features

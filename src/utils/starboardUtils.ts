@@ -16,7 +16,5 @@ export class starboard {
 
     }
 
-    parseMessage = async (message: Message) => {
-        
-    }
+    
 }
