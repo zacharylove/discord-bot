@@ -1,6 +1,7 @@
-import { Channel, SlashCommandBuilder } from "discord.js";
+import { Channel, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import { CommandInterface } from "../interfaces/Command";
 import { setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold } from "../database/guildData";
+import { hasPermissions } from "../utils/userUtils";
 
 const setStarboardChannel = async (interaction: any): Promise<string> => {
     const channel: Channel = interaction.options.getChannel('channel');
@@ -90,6 +91,12 @@ export const starboard: CommandInterface = {
             await interaction.editReply('This command cannot be used in DMs');
             return;
         }
+        // Check if user has permissions
+        if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
+            await interaction.editReply('You must be a mod to use this command!');
+            return;
+        }
+
         switch (interaction.options.getSubcommand()) {
             case 'channel':
                 await interaction.editReply(await setStarboardChannel(interaction));
