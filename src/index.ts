@@ -4,24 +4,30 @@ import { Bot } from "./bot";
 import { onInteraction } from "./events/onInteraction";
 import { IntentOptions, PartialsOptions } from "./config/IntentOptions";
 import { connectDatabase } from "./database/connectDatabase";
-import { validateEnv, validateIntents } from "./utils/validateProperties";
+import { validateEnv, validateEventPermissions, validateIntents } from "./utils/validateProperties";
 import { onReady } from "./events/onReady";
 import { onMessage } from "./events/onMessage";
+import { Events } from "discord.js";
+import { onMessageReactionAdd } from "./events/onMessageReaction";
 
 let BOT: Bot;
 
 const registerEvents = async (BOT: Bot) => {
-    if (onReady.properties.Enabled && validateIntents(onReady.properties.Intents, "onReady", "event")) {
-        BOT.on("ready", async () => await onReady.run(BOT));
+    if (validateEventPermissions(onReady.properties)) {
+        BOT.on(Events.ClientReady, async () => await onReady.run(BOT));
     } else { console.log("onReady event is disabled. Skipping..."); }
 
-    if (onInteraction.properties.Enabled && validateIntents(onInteraction.properties.Intents, "onInteraction", "event")) {
-        BOT.on("interactionCreate", async (interaction) => await onInteraction.run(interaction));
+    if (validateEventPermissions(onInteraction.properties)) {
+        BOT.on(Events.InteractionCreate, async (interaction) => await onInteraction.run(interaction));
     } else { console.log("interactionCreate event is disabled. Skipping..."); }
 
-    if (onMessage.properties.Enabled && validateIntents(onMessage.properties.Intents, "onMessage", "event")) {
-        BOT.on("messageCreate", async (Message) => await onMessage.run(Message, BOT))
+    if (validateEventPermissions(onMessage.properties)) {
+        BOT.on(Events.MessageCreate, async (Message) => await onMessage.run(Message, BOT))
     } else { console.log("messageCreate event is disabled. Skipping..."); }
+
+    if (validateEventPermissions(onMessageReactionAdd.properties)) {
+        BOT.on(Events.MessageReactionAdd, async (reaction, user) => await onMessageReactionAdd.run(reaction, user));
+    } else { console.log("messageReactionAdd event is disabled. Skipping..."); }
 }
 
 // This anonymous immediately-invoked function expression (IIFE) is the entry point of program

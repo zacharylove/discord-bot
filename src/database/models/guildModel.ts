@@ -14,9 +14,11 @@ export interface GuildDataInterface extends Document {
     }
     messageScanning: {
         wordleResultScanning: boolean;
+        starboardScanning: boolean;
     },
     channels: {
         confessionChannelId: string;
+        starboardChannelId: string;
     },
     counters: {
         numConfessions: number;
@@ -46,11 +48,13 @@ export const GuildData = new Schema({
     // Message scanning settings
     messageScanning: {
         wordleResultScanning: Boolean,
+        starboardScanning: Boolean,
     },
 
     // Channels for features
     channels: {
         confessionChannelId: String,
+        starboardChannelId: String,
     },
 
     // Counters for the current guild
@@ -77,9 +81,11 @@ export const createNewGuildData = async (guildID: string) => {
         messageScanning: {
             // Wordle scanning is disabled by default
             wordleResultScanning: false,
+            starboardScanning: false,
         },
         channels: {
             confessionChannelId: "",
+            starboardChannelId: "",
         },
         counters: {
             numConfessions: 1,

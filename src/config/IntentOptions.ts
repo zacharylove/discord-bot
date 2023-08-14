@@ -6,8 +6,12 @@ export const IntentOptions: GatewayIntentBits[] = [
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.GuildMessageReactions,
 ]
 
 export const PartialsOptions = [
     Partials.Channel,
+    Partials.Message,
+    Partials.Reaction,
+    Partials.User
 ]

@@ -83,9 +83,15 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
     // ======
     // Features
     
-
+    // Wordle
     contentScanningString += "Wordle Results Scanning: ";
     if ( guildData.messageScanning.wordleResultScanning ) {
+        contentScanningString += "Enabled\n";
+    } else { contentScanningString += "Disabled\n"; }
+
+    // Starboard
+    contentScanningString += "Starboard Reaction Scanning: ";
+    if ( guildData.messageScanning.starboardScanning ) {
         contentScanningString += "Enabled\n";
     } else { contentScanningString += "Disabled\n"; }
 
@@ -115,15 +121,20 @@ const checkPermission = async ( interaction: CommandInteraction ): Promise<boole
 const enableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
     if ( !interaction.guild || !interaction.guildId ) { return embed; }
 
-    if (featureName == "wordle") {
-        // Check if feature is already enabled
-        if (await areWordleFeaturesEnabled(interaction.guildId)) {
-            embed.setDescription("Wordle features are already enabled.");
-        } else {
-            embed.setDescription(await enableWordleFeatures(interaction.guildId));
-        }
-    } else{
-        embed.setDescription("That feature doesn't exist. It's just wordle right now lol");
+    switch (featureName) {
+        case "wordle":
+            // Check if feature is already enabled
+            if (await areWordleFeaturesEnabled(interaction.guildId)) {
+                embed.setDescription("Wordle features are already enabled.");
+            } else {
+                embed.setDescription(await enableWordleFeatures(interaction.guildId));
+            }
+            break;
+
+        default:
+            embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
+            break;
+
     }
 
     return embed;

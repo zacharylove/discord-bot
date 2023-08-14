@@ -1,8 +1,9 @@
 // Validates environment variables to ensure they are not undefined
 
-import { GatewayIntentBits } from "discord.js";
+import { GatewayIntentBits, Partials } from "discord.js";
 import { IntentOptions } from "../config/IntentOptions";
 import { toTitleCase } from "./utils";
+import { EventProperties } from "../interfaces/Event";
 
 export const validateEnv = () => {
     console.log("Validating environment variables...")
@@ -54,6 +55,24 @@ export const validateEnv = () => {
 }
 
 /**
+ * Validates whether the partial intents requested by an event or command are registered by the client
+ * @param requestedPartials 
+ * @param name 
+ * @param type 
+ */
+export const validatePartials = (requestedPartials: Partials[] | undefined, name?: string, type?: string) => {
+    if (!requestedPartials) return true;
+    else if (!requestedPartials.every(val => Object.values(Partials).includes(val))) {
+        if (!name) name = "Item";
+        if (!type) type = "Event/Command";
+        console.warn(`${toTitleCase(type)} ${name} was not registered because it requires disabled partial ${Partials[requestedPartials.find(val => !Object.values(Partials).includes(val))!]}.`);
+        return false;
+    }
+    console.log("Partials check passed.");
+    return true;
+}
+
+/**
  * Validates whether the intents requested by an event or command are registered by the client
  * @param requestedIntents 
  * @param name 
@@ -64,9 +83,24 @@ export const validateIntents = (requestedIntents: GatewayIntentBits[] | undefine
     else if (!requestedIntents.every(val => IntentOptions.includes(val))) {
         if (!name) name = "Item";
         if (!type) type = "Event/Command";
-        console.warn(`${toTitleCase(type)} ${name} was not registered because it requires intents that are not enabled.`);
+        console.warn(`${toTitleCase(type)} ${name} was not registered because it requires disabled intent ${GatewayIntentBits[requestedIntents.find(val => !IntentOptions.includes(val))!]}.`);
         return false;
     }
     console.log("Intents check passed.");
+    return true;
+}
+
+/**
+ * Validates both intents and partials for an event or command
+ * @param requestedIntents 
+ * @param requestedPartials 
+ * @param name 
+ * @param type 
+ * @returns 
+ */
+export const validateEventPermissions = (eventProperties: EventProperties) => {
+    if (!eventProperties.Enabled) return false;
+    if (!validateIntents(eventProperties.Intents, eventProperties.Name, "Event")) return false;
+    if (!validatePartials(eventProperties.Partials, eventProperties.Name, "Event")) return false;
     return true;
 }

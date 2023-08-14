@@ -1,6 +1,9 @@
 {
     "version": "1.2.2",
     "statuses": [ "Back and better than ever!", "Now supports Tradle!", "your mom" ],
+    "starboardConfig": {
+        "fetchLimit": 100
+    },
     "wordleConfig": {
         "wordLength": 5,
         "numGuesses": 6,
