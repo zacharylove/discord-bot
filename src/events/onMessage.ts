@@ -31,8 +31,13 @@ export const onMessage : EventInterface = {
                             (<TextChannel> channel).send(message);
                         }
                         
-                    } 
-                    
+                    }    
+                }
+                // Check whether it's a "kill" command
+                if (Message.content.startsWith('kill')) {
+                    console.log('Received kill command from bot owner')
+                    BOT.destroy();
+                    process.exit(0);
                 }
             }
         }
