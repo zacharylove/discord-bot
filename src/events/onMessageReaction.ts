@@ -87,6 +87,13 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
             } 
             // If starboard post does not exist and now above threshold
             else if (reaction.count >= guildData.starboard.threshold) {
+                // Deny starring own starboard posts
+                if (reaction.message.author == BOT.user && reaction.message.embeds[0].footer?.text?.includes("ID:")) {
+                    reaction.message.react("❌");
+                    return;
+                }
+
+
                 // Add success reaction to original message
                 if (guildData.starboard.successEmoji != null ) {
                     reaction.message.react(guildData.starboard.successEmoji);
@@ -144,7 +151,7 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                     }
                     // Add main embed description + image
                     reaction.message.embeds.forEach( e => {
-                        description += `**${e.title? e.title: "Description"}**: ${e.description}\n`;
+                        if (e.description) { description += `**${e.title? e.title: "Description"}**: ${e.description}\n` };
                         if (e.image) {
                             embed.setImage(e.image.url);
                         }
@@ -186,7 +193,6 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                                     embed.setImage(attachment.url);
                                 } else {
                                     attachmentsString += `[${attachment.name}](${attachment.url})\n`;
-                                    embed.addFields({ name: "Attachment", value: `[${attachment.name}](${attachment.url})`, inline: true});
                                 }
                             }
                         }
@@ -211,11 +217,13 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                     }
 
                 }
-                
 
-                
+                embed.addFields(
+                    { name: "Original", value: `[Jump!](${reaction.message.url})`, inline: true },
+                    { name: "Channel", value: `<#${reaction.message.channelId}>`, inline: true },
+                )
 
-                await starChannel.send({ content: messageContent, embeds: [embed] });
+                const message = await starChannel.send({ content: messageContent, embeds: [embed] });
             }
 
         }
