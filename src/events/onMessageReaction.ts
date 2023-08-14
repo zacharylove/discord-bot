@@ -133,6 +133,8 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                     }
                 }
 
+                let attachmentsString = "";
+
                 // Check if original message is an embed
                 if (reaction.message.embeds.length > 0) {
                     let description = "";
@@ -158,9 +160,17 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                         if (reaction.message.content.includes("tenor.com/view/")) {
                             const tenorURL = reaction.message.content.split("tenor.com/view/")[1].split(" ")[0];
                             embed.setImage(`https://media.tenor.com/images/${tenorURL}/tenor.gif`);
-                        } else {
-                            embed.setDescription(reaction.message.content);
+                            // Remove tenor url from message content
+                            messageContent = messageContent.replace(`https://tenor.com/view/${tenorURL}`, "");
+                        } 
+                        // Add attachment url if exists
+                        if (reaction.message.content.includes("cdn.discordapp.com/attachments/")) {
+                            const attachmentURL = reaction.message.content.split("cdn.discordapp.com/attachments/")[1].split(" ")[0];
+                            embed.setImage(`https://cdn.discordapp.com/attachments/${attachmentURL}`);
+                            // Remove attachment url from message content
+                            messageContent = messageContent.replace(`https://cdn.discordapp.com/attachments/${attachmentURL}`, "");
                         }
+                        embed.setDescription(reaction.message.content);
                     }
 
                     // Add image if exists
@@ -175,6 +185,7 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                                 if (attachment.contentType?.startsWith("image")) {
                                     embed.setImage(attachment.url);
                                 } else {
+                                    attachmentsString += `[${attachment.name}](${attachment.url})\n`;
                                     embed.addFields({ name: "Attachment", value: `[${attachment.name}](${attachment.url})`, inline: true});
                                 }
                             }
@@ -187,12 +198,16 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                                 embed.setImage(attachment.url);
                             }
 
-                            let attachmentString = "";
                             attachments.forEach( a => {
-                                attachmentString += `[${a.name}](${a.url})\n`;
+                                attachmentsString += `[${a.name}](${a.url})\n`;
                             });
-                            embed.addFields({ name: "Attachments", value: attachmentString, inline: true});
+                            
                         }
+                    }
+
+
+                    if ( attachmentsString.length > 0 ) {
+                        embed.addFields({ name: "Attachments", value: attachmentsString, inline: true});
                     }
 
                 }
