@@ -1,9 +1,18 @@
-import { Channel, PermissionsBitField, SlashCommandBuilder } from "discord.js";
+import { Channel, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import { CommandInterface } from "../interfaces/Command";
-import { setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold } from "../database/guildData";
+import { getGuildDataByGuildID, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold } from "../database/guildData";
 import { hasPermissions } from "../utils/userUtils";
+import { EmbedBuilder } from "@discordjs/builders";
+import { BOT } from "../index";
+import { truncateString } from "../utils/utils";
+import { StarboardLeaderboard } from "../database/models/guildModel";
 
 const setStarboardChannel = async (interaction: any): Promise<string> => {
+    // Check if user has permissions
+    if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
+        return 'You must be a mod to use this command!';
+    }
+
     const channel: Channel = interaction.options.getChannel('channel');
     var toReturn: string = "";
     if (!channel.isTextBased()) {
@@ -16,6 +25,11 @@ const setStarboardChannel = async (interaction: any): Promise<string> => {
 }
 
 const setStarboardThreshold = async (interaction: any): Promise<string> => {
+    // Check if user has permissions
+    if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
+        return 'You must be a mod to use this command!';
+    }
+
     const count: number = interaction.options.getInteger('count');
     var toReturn: string = "";
     if (count < 1) {
@@ -27,11 +41,69 @@ const setStarboardThreshold = async (interaction: any): Promise<string> => {
 }
 
 const setStarboardEmojis = async (interaction: any): Promise<string> => {
+    // Check if user has permissions
+    if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
+        return 'You must be a mod to use this command!';
+    }
+
     if (!interaction.options.getString('emoji') && !interaction.options.getString('success')) {
         return 'You must provide at least one emoji';
     } else {
         return setEmojis(interaction.guildId, interaction.options.getString('emoji'), interaction.options.getString('success'));
     }
+}
+
+const retrieveStarboardLeaderboard = async (interaction: any): Promise<EmbedBuilder> => {
+    const leaderboard = new EmbedBuilder()
+        .setTitle("Starboard Leaderboard");
+
+    const guildIconURL = interaction.guild.iconURL();
+    if(guildIconURL) leaderboard.setThumbnail(guildIconURL);
+
+    let topUsersString = "";
+    let topPostsString = "";
+        
+    let originalLink = "";
+    let starboardPostLink = "";
+    let originalContent = "";
+    let counter = 0;
+
+    let channel: Channel | null;
+    let message: Message | null;
+
+    const guildData = await getGuildDataByGuildID(interaction.guildId);
+    if (!guildData.messageScanning.starboardScanning) {
+        topPostsString += 'Starboard is currently disabled on this server';
+    } else if (guildData.starboard.leaderboard.length == 0) {
+        topPostsString += 'No posts have been added to the starboard yet';
+    } else {
+        // Fill out the top 10 posts
+        const topTen: StarboardLeaderboard[] = guildData.starboard.leaderboard.slice(0,10);
+
+        for ( const post of topTen ) {
+            counter++;
+            originalLink = `https://discord.com/channels/${interaction.guildId}/${post.originalChannelID}/${post.originalMessageID}`;
+            starboardPostLink = `https://discord.com/channels/${interaction.guildId}/${post.channelID}/${post.messageID}`;
+
+            channel = await BOT.channels.fetch(post.originalChannelID);
+            if (channel && channel.isTextBased()) {
+                message = await channel.messages.fetch(post.originalMessageID);
+                if (message) {
+                    originalContent = message.content;
+                }
+            }
+            leaderboard.addFields({ 
+                name: `${guildData.starboard.emoji} ${post.numReactions} - ${starboardPostLink}`, 
+                value: `**<@${post.authorID}>:** ${truncateString(originalContent, 150)} \n\n`
+            });
+        }       
+    }
+    if (topPostsString.length == 0) {
+        topPostsString = `Top ${counter} posts in ${interaction.guild.name}`;
+    }
+    leaderboard.setDescription(topPostsString);
+    return leaderboard;
+
 }
 
 
@@ -79,6 +151,11 @@ export const starboard: CommandInterface = {
                         .setDescription('The emoji to react with when a message is successfully added to the starboard')
                 )
         )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('top')
+                .setDescription('View the top posts on the starboard')
+        )
     ,
     run: async (interaction) => {
         // Disable context menu
@@ -91,11 +168,6 @@ export const starboard: CommandInterface = {
             await interaction.editReply('This command cannot be used in DMs');
             return;
         }
-        // Check if user has permissions
-        if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
-            await interaction.editReply('You must be a mod to use this command!');
-            return;
-        }
 
         switch (interaction.options.getSubcommand()) {
             case 'channel':
@@ -106,6 +178,9 @@ export const starboard: CommandInterface = {
                 break;
             case 'emoji':
                 await interaction.editReply(await setStarboardEmojis(interaction));
+                break;
+            case 'top':
+                await interaction.editReply({ embeds: [await retrieveStarboardLeaderboard(interaction)] });
                 break;
         }
 

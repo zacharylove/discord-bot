@@ -13,6 +13,9 @@ export interface UserInterface extends Document {
     numPokes: number;
     numPoked: number;
 
+    // Number of times the user has made it onto the starboard
+    numStarboardMessages: number;
+
     // ID for WordleData
     wordleDataID: ObjectId;
     tradleDataID: ObjectId;
@@ -22,6 +25,7 @@ export const User = new Schema({
     userID: String,
     numPokes: Number,
     numPoked: Number,
+    numStarboardMessages: Number,
     wordleDataID: Types.ObjectId,
     tradleDataID: Types.ObjectId,
 });
@@ -38,6 +42,7 @@ export const createNewUser = async (discordId: string) => {
         userID: discordId,
         numPokes: 0,
         numPoked: 0,
+        numStarboardMessages: 0,
         wordleDataID: null,
         tradleDataID: null,
     })

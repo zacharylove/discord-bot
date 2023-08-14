@@ -25,10 +25,21 @@ export interface GuildDataInterface extends Document {
         emoji: string;
         threshold: number;
         successEmoji: string;
+        leaderboard: StarboardLeaderboard[];
     }
     counters: {
         numConfessions: number;
     }
+}
+
+export interface StarboardLeaderboard {
+    messageID: string;
+    channelID: string;
+    originalMessageID: string;
+    originalChannelID: string;
+    timestamp: Date;
+    authorID: string;
+    numReactions: number;
 }
 
 export const GuildData = new Schema({
@@ -67,6 +78,8 @@ export const GuildData = new Schema({
         emoji: String,
         threshold: Number,
         successEmoji: String,
+        leaderboard: new Array(),
+        numReactions: Number,
     },
 
     // Counters for the current guild
@@ -103,6 +116,15 @@ export const createNewGuildData = async (guildID: string) => {
             emoji: starboardConfig.defaultEmoji,
             threshold: starboardConfig.defaultThreshold,
             successEmoji: starboardConfig.defaultSuccessEmoji,
+            leaderboard: new Array({
+                messageID: String,
+                channelID: String,
+                originalMessageID: String,
+                originalChannelID: String,
+                timestamp: new Date(),
+                authorID: String,
+                numReactions: 0,
+            }),
         },
         counters: {
             numConfessions: 1,

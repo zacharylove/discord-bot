@@ -157,12 +157,14 @@ export const isStarboardEnabled = async (guildID: string): Promise<boolean> => {
 
 export const setStarboardDefaults = async (guildID: string): Promise<string> => {
     const guildData = await getGuildDataByGuildID(guildID);
-    if (guildData.starboard.threshold == undefined) guildData.starboard.threshold = 5;
-    if (guildData.starboard.emoji == undefined) guildData.starboard.emoji = "⭐";
-    if (guildData.starboard.successEmoji == undefined) guildData.starboard.successEmoji = "🌟";
-    if (guildData.channels.starboardChannelId == undefined) guildData.channels.starboardChannelId = "";
+    var numDefaulted = 0;
+    if (guildData.starboard.threshold == undefined) { guildData.starboard.threshold = 5; numDefaulted++; }
+    if (guildData.starboard.emoji == undefined) { guildData.starboard.emoji = "⭐"; numDefaulted++; }
+    if (guildData.starboard.successEmoji == undefined) { guildData.starboard.successEmoji = "🌟"; numDefaulted++; }
+    if (guildData.starboard.leaderboard == undefined) { guildData.starboard.leaderboard = new Array(); numDefaulted++; }
+    if (guildData.channels.starboardChannelId == undefined) { guildData.channels.starboardChannelId = ""; numDefaulted++; }
     await update(guildData);
-    return "Starboard defaults have been set";
+    return `${numDefaulted} starboard defaults have been set`;
 }
 
 /**

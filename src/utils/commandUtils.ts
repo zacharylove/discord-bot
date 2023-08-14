@@ -123,7 +123,7 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
     } else fuckyWuckyOccurred = true;
     
     if (fuckyWuckyOccurred) {
-        errorMessage += ":**\n";
+        errorMessage += "\n";
         errorMessage += "Oopsie woopsy! Something made a lil' fucky wucky in the backy-endy >w<\nThis weawwy shouldn't happen... pwease contact inco for a fix :3c";
         if (error) {
             console.error("Command " + commandName + " caused an error!");
@@ -135,7 +135,7 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
                 errorOutput = error.message;
             }
             if (errorOutput.length != 0) {
-                errorMessage += "\nHere is the error message:\n";
+                errorMessage += "\n=== Here is the error message: ===\n";
                 errorMessage += errorOutput;
             } else {
                 errorMessage += "\nNo error output.... uh oh...";

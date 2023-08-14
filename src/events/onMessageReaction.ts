@@ -1,10 +1,11 @@
 import { Channel, EmbedBuilder, GatewayIntentBits, Message, MessageManager, MessageReaction, Partials, TextChannel, User } from "discord.js";
 import { EventInterface } from "interfaces/Event";
 import { starboardConfig } from "../config/config.json";
-import { getGuildDataByGuildID, isStarboardEnabled, setStarboardDefaults, setStarboardEmojis } from "../database/guildData";
+import { getGuildDataByGuildID, isStarboardEnabled, setStarboardDefaults, setStarboardEmojis, update } from "../database/guildData";
 import { GuildDataInterface } from "../database/models/guildModel";
 import { BOT } from "../index";
 import { truncateString } from "../utils/utils";
+import { getUserData } from "../database/userData";
 
 
 const getStarChannel = async (guildData: GuildDataInterface): Promise<TextChannel | null> => {
@@ -34,9 +35,10 @@ const getExistingStarboardMessage = async (guildData: GuildDataInterface, messag
 
     // match embed pattern
     const starboardMessage = messageList.find( m => 
-        m.embeds[0].footer != null && m.embeds[0].footer.text.endsWith(`${messageId}`)
+        m.embeds[0].footer != null && m.embeds[0].footer.text.endsWith(`${messageId}`) && m.author == BOT.user
     );
     if (starboardMessage == undefined) {
+        console.debug("No existing starboard message found");
         return null;
     }
 
@@ -53,9 +55,7 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
         // Check if reaction matches starboard emoji
         const guildData: GuildDataInterface = await getGuildDataByGuildID(reaction.message.guildId);
         // Check if database has starboard emoji set- set to default if not
-        if (guildData.starboard.emoji == undefined || guildData.starboard.successEmoji == undefined) {
-            console.log(await setStarboardDefaults(reaction.message.guildId));
-        }
+        console.debug(await setStarboardDefaults(reaction.message.guildId));
 
         // Check if starboard channel has been set
         if (guildData.channels.starboardChannelId == "" || guildData.channels.starboardChannelId == undefined) {
@@ -71,6 +71,16 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
             if (!starChannel) return;
             const starboardMessage = await getExistingStarboardMessage(guildData, reaction.message.id, starChannel);
 
+            if ( reaction.message.author == null || !reaction.message.guild ) {
+                return;
+            }
+
+            // Check if one of the reactions is from the message author
+            let selfStar: boolean = false;
+            selfStar = reaction.users.cache.has(reaction.message.author.id);
+
+            let newPost = false;
+
             if (starboardMessage) {
                 let reactionCount: number = parseInt(starboardMessage.content.split(" ")[1]);
                 if (increment) reactionCount++;
@@ -79,11 +89,23 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                 if ( reactionCount < guildData.starboard.threshold ) {
                     starboardMessage.delete();
                     reaction.message.reactions.cache.get(guildData.starboard.successEmoji)?.remove();
+                    // decrement user's star count if not self-starred
+                    if (!selfStar) {
+                        getUserData(reaction.message.author.id).then( userData => {
+                            if (!userData) return;
+                            if (userData.numStarboardMessages == undefined) userData.numStarboardMessages = 0;
+                            else userData.numStarboardMessages--;
+                            userData.save();
+                        });
+                    }
                 } 
                 // Edit if above threshold
                 else {
                     starboardMessage.edit(`${reaction.emoji} ${reactionCount}`);
                 }
+
+                
+
             } 
             // If starboard post does not exist and now above threshold
             else if (reaction.count >= guildData.starboard.threshold) {
@@ -102,11 +124,6 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                 let footer = "";
                 let messageContent = `${guildData.starboard.emoji} ${reaction.count}`;
                 let author = "";
-                // Check if one of the reactions is from the message author
-                let selfStar: boolean = false;
-                if ( reaction.message.author == null || !reaction.message.guild ) {
-                    return;
-                }
 
                 const displayName = (await reaction.message.guild.members.fetch(reaction.message.author.id)).displayName;
                 if ( displayName != reaction.message.author.username ) {
@@ -117,7 +134,6 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
 
                 if (reaction.message.author.bot) author += " [Bot]";
 
-                selfStar = reaction.users.cache.has(reaction.message.author.id);
                 
                 if (selfStar) footer += "Self Starred | ";
                 footer += `ID: ${reaction.message.id}`;
@@ -224,6 +240,71 @@ const parseStarReact = async (reaction: MessageReaction, user: User, increment: 
                 )
 
                 const message = await starChannel.send({ content: messageContent, embeds: [embed] });
+                newPost = true;
+                // Increment user's star count if not self-starred
+                if (!selfStar) {
+                    getUserData(reaction.message.author.id).then( userData => {
+                        if (!userData) return;
+                        if (userData.numStarboardMessages == undefined) userData.numStarboardMessages = 0;
+                        userData.numStarboardMessages++;
+                        userData.save();
+                    });
+                }
+            }
+
+
+            if (starboardMessage || newPost) {
+                // Check reactionCount against guild leaderboard
+                // NOTE: leaderboard will hold the top 15 but will only show top 10- assume sorted
+                if (guildData.starboard.leaderboard == undefined) guildData.starboard.leaderboard = new Array();
+                // Update leaderboard entry if exists
+                const leaderboardEntry = guildData.starboard.leaderboard.find( e => e.messageID == reaction.message.id );
+                if (leaderboardEntry) {
+                    console.debug("Updating existing entry in leaderboard")
+                    leaderboardEntry.numReactions = reaction.count;
+                    leaderboardEntry.timestamp = new Date();
+                } 
+                // If reactionCount is above the minimum numReactions entry in guildData.starboard.leaderboard, add to leaderboard
+                else {
+                    // If no entries yet
+                    if (guildData.starboard.leaderboard.length == 0) {
+                        // Add new entry
+                        guildData.starboard.leaderboard.push({
+                            messageID: reaction.message.id,
+                            channelID: reaction.message.channelId,
+                            originalMessageID: reaction.message.id,
+                            originalChannelID: reaction.message.channelId,
+                            timestamp: new Date(),
+                            authorID: reaction.message.author.id,
+                            numReactions: reaction.count,
+                        });
+                        update(guildData);
+                    } else {
+                        // Select the smallest numReactions entry in the leaderboard
+                        const minEntry = guildData.starboard.leaderboard.reduce( (prev, curr) => prev.numReactions < curr.numReactions ? prev : curr );
+                        if (reaction.count > minEntry.numReactions || guildData.starboard.leaderboard.length < 15) {
+                            console.debug("New entry added to leaderboard")
+                            // Remove the smallest entry if there are already 15 entries
+                            if (guildData.starboard.leaderboard.length >= 15) {
+                                console.debug("Removing smallest entry from leaderboard")
+                                guildData.starboard.leaderboard = guildData.starboard.leaderboard.filter( e => e != minEntry );
+                            }
+                            // Add new entry
+                            guildData.starboard.leaderboard.push({
+                                messageID: reaction.message.id,
+                                channelID: reaction.message.channelId,
+                                originalMessageID: reaction.message.id,
+                                originalChannelID: reaction.message.channelId,
+                                timestamp: new Date(),
+                                authorID: reaction.message.author.id,
+                                numReactions: reaction.count,
+                            });
+                            // Sort leaderboard
+                            guildData.starboard.leaderboard.sort( (a, b) => b.numReactions - a.numReactions );
+                            update(guildData);
+                        }
+                    }
+                }
             }
 
         }
