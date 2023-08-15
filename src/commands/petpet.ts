@@ -1,0 +1,116 @@
+// Based on https://github.com/aDu/pet-pet-gif
+import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { CommandInterface } from "../interfaces/Command";
+import { broadcastCommandFailed } from "../utils/commandUtils";
+import { createCanvas, loadImage } from "canvas";
+import { imagePath } from '../utils/imageUtils';
+import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
+import path from 'path';
+import { getAvatarURL } from "../utils/userUtils";
+
+const gifOptions = {
+    resolution: 128,
+    delay: 20,
+    backgroundColor: null,
+    frames: 10
+}
+
+const createPetPetGif = async (targetURL: string) => {
+    
+    
+    // Encoder to build output gif
+    const GIFencoder = require('gif-encoder-2');
+
+
+
+    const encoder = new GIFencoder(gifOptions.resolution, gifOptions.resolution);
+    encoder.start();
+    encoder.setRepeat(0);
+    encoder.setDelay(gifOptions.delay);
+    if (!gifOptions.backgroundColor)encoder.setTransparent(1);
+
+    const canvas = createCanvas(gifOptions.resolution, gifOptions.resolution);
+    const ctx = canvas.getContext('2d');
+
+    const avatar = await loadImage(targetURL);
+    
+    let petGifCache = [];
+    for (let i = 0; i < gifOptions.frames; i++ ) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        if (gifOptions.backgroundColor) {
+            ctx.fillStyle = gifOptions.backgroundColor
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
+        }
+
+        const j = i < gifOptions.frames / 2 ? i : gifOptions.frames - i
+
+        const width = 0.8 + j * 0.02
+        const height = 0.8 - j * 0.05
+        const offsetX = (1 - width) * 0.5 + 0.1
+        const offsetY = (1 - height) - 0.08
+
+        if (i == petGifCache.length) petGifCache.push(await loadImage(path.resolve(path.join(__dirname, '..', '..', 'assets', 'img', 'petpet', `pet${i}.gif`))));
+
+        ctx.drawImage(avatar, gifOptions.resolution * offsetX, gifOptions.resolution * offsetY, gifOptions.resolution * width, gifOptions.resolution * height)
+        ctx.drawImage(petGifCache[i], 0, 0, gifOptions.resolution, gifOptions.resolution)
+
+        encoder.addFrame(ctx)
+    }
+    encoder.finish();
+    return encoder.out.getData();
+}
+
+
+export const petPet: CommandInterface = {
+    data: new SlashCommandBuilder()
+        .setName('petpet')
+        .setDescription("pet a user or image")
+        .addUserOption((option) =>
+            option
+                .setName('user')
+                .setDescription('The user to get the avatar for')
+        )
+        .addStringOption((option) =>
+            option
+                .setName('url')
+                .setDescription('Image URL')
+        ),
+    run: async (interaction: CommandInteraction) => {
+        if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
+            await broadcastCommandFailed(interaction, "Interaction is NOT poggers!");
+            return;
+        }
+
+        let targetURL: string | null;
+
+        const targetUser = await interaction.options.getUser('user')?.fetch(true)
+        if (targetUser) {
+            const avatar = await getAvatarURL(targetUser, interaction.guild.id, true);
+            targetURL = avatar[1];
+        } else {
+            targetURL = await interaction.options.getString('url');
+        }
+
+        if (targetURL == null) {
+            interaction.editReply('Please provide either a user or an image URL');
+            return;
+        }
+
+        const buffer = await createPetPetGif(targetURL);
+
+
+        if (interaction.replied || interaction.deferred ) await interaction.editReply({ files: [{attachment: buffer, name: 'test.gif'}]})
+        else await interaction.reply({ files: [{attachment: buffer, name: 'test.gif'}]});
+        
+
+    },
+    properties: {
+        Name: 'Petpet',
+        Scope: 'global',
+        GuildOnly: false,
+        Enabled: true,
+        DefaultEnabled: true,
+        Intents: []
+    }
+}

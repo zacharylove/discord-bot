@@ -5,6 +5,7 @@ import { animAvatarTest } from "./animAvatarTest";
 import { avatar } from "./avatar";
 import { confess } from "./confession";
 import { guildSettings } from "./guildSettings";
+import { petPet } from "./petpet";
 import { poke } from "./poke";
 import { ship } from "./ship";
 import { starboard } from "./starboard";
@@ -23,7 +24,8 @@ export const CommandList: CommandInterface[] = [
     guildSettings,
     stats,
     confess,
-    starboard
+    starboard,
+    petPet
 ];
 
 export default CommandList;

@@ -30,7 +30,7 @@ export const getGlobalBanner = (target: User): Map<ImageExtension, string> => {
  * @param guildId 
  * @returns avatar image URL
  */
-export const getAvatarURL = async (target: User, guildId?: string): Promise<[string, string]> => {
+export const getAvatarURL = async (target: User, guildId?: string, staticImg?: boolean): Promise<[string, string]> => {
     let avatar;
     if (guildId) {
         if (await hasServerAvatar(target.id, guildId)) {
@@ -41,7 +41,7 @@ export const getAvatarURL = async (target: User, guildId?: string): Promise<[str
     }
     if (!avatar) avatar = getGlobalAvatar(target);
 
-    if (avatar.has("gif")) return ["gif", avatar.get("gif") as string];
+    if (avatar.has("gif") && (staticImg == null || !staticImg)) return ["gif", avatar.get("gif") as string];
     else if (avatar.has("png")) return ["png", avatar.get("png") as string];
     else if (avatar.has("jpg")) ["jpg", avatar.get("jpg") as string];
     else if (avatar.has("webp")) ["webp", avatar.get("webp") as string];
