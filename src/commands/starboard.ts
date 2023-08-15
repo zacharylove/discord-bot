@@ -111,6 +111,8 @@ const retrieveRandomStarboardPost = async (interaction: any) => {
     let valid: boolean = false;
     let post: StarboardPost;
     let maxCounter = 0;
+
+    let message = null;
     while (!valid) {
         maxCounter++;
         if (maxCounter == 10) {
@@ -130,13 +132,17 @@ const retrieveRandomStarboardPost = async (interaction: any) => {
             removeStoredStarboardPost(interaction.guildId, post);
             continue;
         }
-        const message = await channel.messages.fetch(post.messageID);
+        message = await channel.messages.fetch(post.messageID);
         if (!message) {
             await interaction.editReply("ERROR: Invalid message found.");
             removeStoredStarboardPost(interaction.guildId, post);
             continue;
         }
         valid = true;
+    }
+    if (message == null || !message.embeds || message.embeds.length == 0) {
+        await interaction.editReply("ERROR: message invalid");
+        return;
     }
     await interaction.editReply({ content: `From <@${message.author.id}> - ${message.url}`,embeds: message.embeds });
 }

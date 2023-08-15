@@ -112,7 +112,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                     }
 
 
-                    removeStoredStarboardPost(guildData, postToRemove);
+                    removeStoredStarboardPost(guildData.id, postToRemove);
                     // decrement user's star count if not self-starred
                     if (!selfStar) {
                         getUserData(reaction.message.author.id).then( userData => {
