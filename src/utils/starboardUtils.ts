@@ -290,6 +290,8 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                             authorID: reaction.message.author.id,
                             numReactions: reaction.count,
                         });
+                        // Increment counter
+                        guildData.counters.numStarboardPosts++;
                         update(guildData);
                         entryAdded = true;
                     } else {

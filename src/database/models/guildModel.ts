@@ -29,6 +29,7 @@ export interface GuildDataInterface extends Document {
     }
     counters: {
         numConfessions: number;
+        numStarboardPosts: number;
     }
 }
 
@@ -85,6 +86,7 @@ export const GuildData = new Schema({
     // Counters for the current guild
     counters: {
         numConfessions: Number,
+        numStarboardPosts: Number,
     }
 });
 
@@ -128,6 +130,7 @@ export const createNewGuildData = async (guildID: string) => {
         },
         counters: {
             numConfessions: 1,
+            numStarboardPosts: 1,
         }
     });
 }

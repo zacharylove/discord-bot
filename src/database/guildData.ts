@@ -243,3 +243,19 @@ export const getDisabledCommandListAsString = async (guildID: string): Promise<s
 export const countGuilds = async ( filter?: FilterQuery<GuildDataInterface>) => {
     return filter ? await guildModel.countDocuments(filter) : await guildModel.countDocuments({});
 }
+
+export const getGlobalGuildCounterStats = async () => {
+    var numConfessions = 0;
+    var numStarboardMessages = 0;
+    const guilds = await guildModel.find({});
+    for (const guild of guilds) {
+        if (guild.counters) {
+            if (guild.counters.numConfessions) numConfessions += guild.counters.numConfessions;
+            if (guild.counters.numStarboardPosts) numStarboardMessages += guild.counters.numStarboardPosts;
+        }
+    }
+    return {
+        numConfessions: numConfessions,
+        numStarboardMessages: numStarboardMessages
+    }
+}

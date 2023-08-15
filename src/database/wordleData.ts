@@ -58,3 +58,18 @@ export const getRanking = async ()  => {
         { "$sort": { "weightedScore": -1, "name": 1 } },
     ]);
 }
+
+export const getGlobalWordleStats = async () => {
+    var numWordleResults = 0;
+    var numWordleGuesses = 0;
+    const users = await wordleModel.find({});
+    for (const user of users) {
+        numWordleResults += user.totalPuzzles;
+        numWordleGuesses += user.totalGuesses;
+    }
+
+    return {
+        numWordleResults: numWordleResults,
+        numWordleGuesses: numWordleGuesses
+    }
+}
