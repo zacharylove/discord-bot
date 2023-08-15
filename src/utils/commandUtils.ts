@@ -152,3 +152,8 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
         interaction.reply({ content: errorMessage, ephemeral: true });
     }
 }
+
+export const commandNotImplemented = async ( interaction: CommandInteraction, commandName: string ): Promise<void> => {
+    await interaction.editReply("Yeah, uh, the `" + commandName + "` command isn't implemented yet. Sorry.");
+    return;
+}

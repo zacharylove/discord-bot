@@ -155,7 +155,7 @@ export const isStarboardEnabled = async (guildID: string): Promise<boolean> => {
     return guildData.messageScanning.starboardScanning;
 }
 
-export const setStarboardDefaults = async (guildID: string): Promise<string> => {
+export const setStarboardDefaults = async (guildID: string) => {
     const guildData = await getGuildDataByGuildID(guildID);
     var numDefaulted = 0;
     if (guildData.starboard.threshold == undefined) { guildData.starboard.threshold = 5; numDefaulted++; }
@@ -164,8 +164,10 @@ export const setStarboardDefaults = async (guildID: string): Promise<string> => 
     if (guildData.starboard.leaderboard == undefined) { guildData.starboard.leaderboard = new Array(); numDefaulted++; }
     if (guildData.starboard.posts == undefined) { guildData.starboard.posts = new Array(); numDefaulted++; }
     if (guildData.channels.starboardChannelId == undefined) { guildData.channels.starboardChannelId = ""; numDefaulted++; }
+    if (guildData.starboard.blacklistEnabled == undefined) { guildData.starboard.blacklistEnabled = false; numDefaulted++; }
+    if (guildData.starboard.blacklistChannels == undefined) { guildData.starboard.blacklistChannels = new Array(); numDefaulted++; }
     await update(guildData);
-    return `${numDefaulted} starboard defaults have been set`;
+    if (numDefaulted > 0) console.debug(`${numDefaulted} starboard defaults have been set`);
 }
 
 export const removeStoredStarboardPost = async (guildID: string, post: StarboardPost) => {

@@ -65,15 +65,20 @@ export const getExistingStarboardMessage = async (guildData: GuildDataInterface,
 export const parseStarReact = async (reaction: MessageReaction, user: User, increment: boolean) => {
     // Check if starboard scanning is enabled
     if (reaction.message.guildId && await isStarboardEnabled(reaction.message.guildId)) {
+        // Check if reaction matches starboard emoji
+        const guildData: GuildDataInterface = await getGuildDataByGuildID(reaction.message.guildId);
+        // Ignore blacklisted channels
+        if (guildData.starboard.blacklistEnabled && guildData.starboard.blacklistChannels.includes(reaction.message.channelId)) {
+            return;
+        }
         // Now the message has been cached and is fully available
         if (increment) console.debug(`${reaction.message.author}'s message "${reaction.message.content}" gained a reaction!`);
         else console.debug(`${reaction.message.author}'s message "${reaction.message.content}" lost a reaction!`);
 
-        // Check if reaction matches starboard emoji
-        const guildData: GuildDataInterface = await getGuildDataByGuildID(reaction.message.guildId);
+        
         var guildDataUpdated: boolean = false;
         // Check if database has starboard emoji set- set to default if not
-        console.debug(await setStarboardDefaults(reaction.message.guildId));
+        await setStarboardDefaults(reaction.message.guildId);
 
         // Check if starboard channel has been set
         if (guildData.channels.starboardChannelId == "" || guildData.channels.starboardChannelId == undefined) {

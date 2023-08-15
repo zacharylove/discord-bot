@@ -3,7 +3,7 @@ import { CommandInterface } from "../interfaces/Command";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
 import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled } from "../database/guildData";
 import { GuildDataInterface } from "../database/models/guildModel";
-import { getCommandListAsString } from "../utils/commandUtils";
+import { commandNotImplemented, getCommandListAsString } from "../utils/commandUtils";
 import { CommandInteraction, Embed, PermissionsBitField, User } from "discord.js";
 import { hasPermissions } from "../utils/userUtils";
 
@@ -98,7 +98,7 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
     embed.addFields({name: 'Available Features', value: contentScanningString});
 
     if ( guildData.messageScanning.starboardScanning ) {
-        embed.addFields({name: 'Starboard Settings', value: ` - Channel: <#${guildData.channels.starboardChannelId}>\n- Emoji: ${guildData.starboard.emoji}\n- Threshold: ${guildData.starboard.threshold}\n- Success Emoji: ${guildData.starboard.successEmoji}`});
+        embed.addFields({name: 'Starboard Settings', value: ` - Channel: <#${guildData.channels.starboardChannelId}>\n- Emoji: ${guildData.starboard.emoji}\n- Threshold: ${guildData.starboard.threshold}\n- Success Emoji: ${guildData.starboard.successEmoji}\n- Blacklist?: ${guildData.starboard.blacklistEnabled}\n - Blacklisted Channels: ${guildData.starboard.blacklistChannels.map((channelId) => `<#${channelId}>`).join(', ')}`});
     }
 
     return embed;
@@ -178,10 +178,7 @@ const disableFeature = async ( interaction: CommandInteraction, featureName: str
     return embed;
 }
 
-const apologizeForFailure = async ( interaction: CommandInteraction, commandName: string ): Promise<void> => {
-    await interaction.editReply("Yeah, uh, the `" + commandName + "` command isn't implemented yet. Sorry.");
-    return;
-}
+
 
 /* Example usage:
     /settings enableCommand poke
@@ -314,16 +311,16 @@ export const guildSettings: CommandInterface = {
                     case 'enable':
                         // Enable a command
                         if (!checkPermission(interaction)) return;
-                        apologizeForFailure(interaction, 'enableCommand');
+                        commandNotImplemented(interaction, 'enableCommand');
                         return;
                     case 'disable':
                         // Disable a command
                         if (!checkPermission(interaction)) return;
-                        apologizeForFailure(interaction, 'disableCommand');
+                        commandNotImplemented(interaction, 'disableCommand');
                         return;
                     case 'list':
                         // List all commands
-                        apologizeForFailure(interaction, 'listCommands');
+                        commandNotImplemented(interaction, 'listCommands');
                         return;
                 }
                 break;
@@ -342,7 +339,7 @@ export const guildSettings: CommandInterface = {
                         break;
                     case 'list':
                         // List all features
-                        apologizeForFailure(interaction, 'listFeatures');
+                        commandNotImplemented(interaction, 'listFeatures');
                         return;
                 }
                 break;

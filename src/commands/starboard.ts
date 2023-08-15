@@ -1,11 +1,12 @@
-import { Channel, Embed, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
+import { Channel, CommandInteraction, Embed, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import { CommandInterface } from "../interfaces/Command";
-import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold } from "../database/guildData";
+import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold, update } from "../database/guildData";
 import { hasPermissions } from "../utils/userUtils";
 import { EmbedBuilder } from "@discordjs/builders";
 import { BOT } from "../index";
 import { truncateString } from "../utils/utils";
 import { StarboardLeaderboard, StarboardPost } from "../database/models/guildModel";
+import { commandNotImplemented } from "../utils/commandUtils";
 
 const setStarboardChannel = async (interaction: any): Promise<string> => {
     // Check if user has permissions
@@ -147,6 +148,147 @@ const retrieveRandomStarboardPost = async (interaction: any) => {
     await interaction.editReply({ content: `From <@${message.author.id}> - ${message.url}`,embeds: message.embeds });
 }
 
+const blacklistChannels = async (interaction: CommandInteraction) => {
+    if ( !interaction.guild || !interaction.guildId || !interaction.channel ) { return; }
+    // Check if user has permissions
+    if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
+        await interaction.editReply('You must be a mod to use this command!');
+        return;
+    }
+
+    const guildData = await getGuildDataByGuildID(interaction.guildId);
+    let isBlacklistEnabled: boolean = guildData.starboard.blacklistEnabled;
+    let isBlacklistChanged: boolean = false;
+    const replyMessage = await interaction.editReply('This command lets you set a blacklist of channels that will not be scanned for starboard posts.');
+    const filter = (reaction: any, user: any) => {
+        return ['✅', '❌'].includes(reaction.emoji.name) && user.id === interaction.user.id;
+    }
+    if (!isBlacklistEnabled) {
+        const replyMessage = await interaction.followUp({ content: 'Starboard channel blacklist is not enabled on this server. Would you like to enable it now? (React to respond)', fetchReply: true});
+        replyMessage.react('✅');
+        replyMessage.react('❌');
+        const collector = replyMessage.createReactionCollector({ filter, time: 15000 });
+
+        replyMessage.awaitReactions({ filter, time: 15000, errors: ['time'] }).catch((collected) => {
+            
+        });
+        collector.on('collect', async (reaction, user) => {
+            if (user != interaction.user) return;
+            if (reaction.emoji.name === '✅') {
+                await replyMessage.edit('Okay, starboard channel blacklist enabled.');
+                await replyMessage.reactions.removeAll();
+                isBlacklistChanged = true;
+                await collector.stop();
+                return;
+            } else {
+                await replyMessage.edit('Okay, starboard channel blacklist not enabled.');
+                await replyMessage.reactions.removeAll();
+                await collector.stop();
+                return;
+            }
+        });
+    }
+
+    let removeChannels: boolean = false;
+    if (isBlacklistEnabled || isBlacklistChanged) {
+        const blacklistedChannels = guildData.starboard.blacklistChannels;
+        let channelList = "";
+        if (blacklistedChannels.length == 0) {
+            channelList = "No channels are currently blacklisted.";
+        } else {
+            channelList = "The following channels are blacklisted:\n";
+            for (const channelID of blacklistedChannels) {
+                const channel = await BOT.channels.fetch(channelID);
+                channelList += `<#${channelID}> `;
+            }
+            channelList += `\n\nWould you like to add (➕) or remove (➖) channels from the blacklist? (React to respond)`;
+        }
+        let replyMessage = await interaction.followUp({ content: channelList, fetchReply: true});
+        // Only give option to remove if channels exist
+        if (blacklistedChannels.length > 0) {
+            replyMessage.react('➕');
+            replyMessage.react('➖');
+
+            const collector = replyMessage.createReactionCollector({ filter, time: 15000 });
+            collector.on('collect', async (reaction, user) => {
+                if (reaction.emoji.name === '✅') {
+                    await replyMessage.edit("Cool. Mention the channels you want to remove from the blacklist and say 'DONE' when you're done.");
+                    await replyMessage.reactions.removeAll();
+                    removeChannels = true;
+                    await collector.stop();
+                } else {
+                    await replyMessage.edit("Okay, mention all the channels you want to add to the blacklist and say 'DONE' when you're done.");
+                    await replyMessage.reactions.removeAll();
+                    await collector.stop();
+                    return;
+                }
+            });
+        } else {
+            replyMessage = await interaction.followUp("Let's add some! Mention all the channels you want to add to the blacklist and say 'DONE' when you're done.");
+        }
+        // Collect responses from the user until they say 'DONE'
+        const channelCollector = interaction.channel.createMessageCollector({ filter: (m: Message) => m.author.id === interaction.user.id });
+        let channelMentions: Channel[] = new Array();
+        channelCollector.on('collect', async (message: Message) => {
+            if (message.content.toLowerCase() === 'done') {
+                await channelCollector.stop();
+                return;
+            }
+            // Handle case where multiple channels are in one message
+            const mentions = message.mentions.channels;
+            if (mentions.size == 0 || !mentions) {
+                await interaction.followUp("That's not a valid channel. Try again or say 'DONE' to stop.");
+                return;
+            } else {
+                for (const channel of mentions.values()) {
+                    channelMentions.push(channel);
+                }   
+            }
+        });
+
+        if (channelMentions.length == 0) {
+            await interaction.followUp("Hmm, you didn't mention any channels, so I'll stop listening for now.");
+            return;
+        } else {
+            let feedback = "";
+            if (removeChannels) {
+                for (const channel of channelMentions) {
+                    if (blacklistedChannels.includes(channel.id)) {
+                        feedback += "<#" + channel.id + "> was removed successfully.\n";
+                        blacklistedChannels.splice(blacklistedChannels.indexOf(channel.id), 1);
+                    } else {
+                        feedback += "<#" + channel.id + "> is not in the blacklist!\n";
+                    }
+                }
+            } else {
+                for (const channel of channelMentions) {
+                    if (blacklistedChannels.includes(channel.id)) {
+                        feedback += "<#" + channel.id + "> is already in the blacklist!\n";
+                    } else {
+                        feedback += "<#" + channel.id + "> was added successfully.\n";
+                        blacklistedChannels.push(channel.id);
+                    }
+                }
+            }
+            guildData.starboard.blacklistChannels = blacklistedChannels;
+            if ( guildData.starboard.blacklistChannels.length == 0 ) {
+                feedback += "The blacklist is now empty, so I'll disable it.";
+                guildData.starboard.blacklistEnabled = false;
+            }
+            await interaction.followUp(feedback);
+        }
+
+        if (isBlacklistChanged) guildData.starboard.blacklistEnabled = isBlacklistEnabled;
+        try {
+            update(guildData);
+        } catch (error) {
+            interaction.followUp(`ERROR: Could not update database.`);
+            console.log(error);
+        }
+    }
+
+}
+
 
 
 
@@ -157,7 +299,7 @@ export const starboard: CommandInterface = {
         .setDescription('Manage starboard settings for the server')
         .addSubcommand(subcommand =>
             subcommand
-                .setName('channel')
+                .setName('setchannel')
                 .setDescription('Set the starboard channel')
                 .addChannelOption(option =>
                     option
@@ -202,8 +344,14 @@ export const starboard: CommandInterface = {
                 .setName('random')
                 .setDescription('View a random post on the starboard')
         )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('blacklist')
+                .setDescription('Set channels that will not be scanned for starboard posts')
+        )
     ,
-    run: async (interaction) => {
+    run: async (interaction: CommandInteraction) => {
+        if ( !interaction.guild ) { return; }
         // Disable context menu
         if (!interaction.isChatInputCommand()) {
             await interaction.editReply('This command cannot be used in a context menu');
@@ -216,7 +364,7 @@ export const starboard: CommandInterface = {
         }
 
         switch (interaction.options.getSubcommand()) {
-            case 'channel':
+            case 'setchannel':
                 await interaction.editReply(await setStarboardChannel(interaction));
                 break;
             case 'threshold':
@@ -230,6 +378,10 @@ export const starboard: CommandInterface = {
                 break;
             case 'random':
                 await retrieveRandomStarboardPost(interaction);
+                break;
+            case 'blacklist':
+                commandNotImplemented(interaction, 'blacklist');
+                //await blacklistChannels(interaction);
                 break;
 
         }

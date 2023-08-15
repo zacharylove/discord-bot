@@ -27,6 +27,8 @@ export interface GuildDataInterface extends Document {
         successEmoji: string;
         leaderboard: StarboardLeaderboard[];
         posts: StarboardPost[];
+        blacklistEnabled: boolean,
+        blacklistChannels: string[];
     }
     counters: {
         numConfessions: number;
@@ -88,6 +90,8 @@ export const GuildData = new Schema({
         leaderboard: new Array(),
         numReactions: Number,
         posts: new Array(),
+        blacklistEnabled: Boolean,
+        blacklistChannels: new Array(),
     },
 
     // Counters for the current guild
@@ -133,11 +137,13 @@ export const createNewGuildData = async (guildID: string) => {
                 timestamp: new Date(),
                 authorID: String,
                 numReactions: 0,
-                posts: new Array({
-                    messageID: String,
-                    channelID: String,
-                })
             }),
+            posts: new Array({
+                messageID: String,
+                channelID: String,
+            }),
+            blacklistEnabled: false,
+            blacklistChannels: new Array(),
         },
         counters: {
             numConfessions: 1,
