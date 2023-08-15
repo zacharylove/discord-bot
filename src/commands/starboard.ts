@@ -1,11 +1,11 @@
-import { Channel, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
+import { Channel, Embed, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import { CommandInterface } from "../interfaces/Command";
 import { getGuildDataByGuildID, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold } from "../database/guildData";
 import { hasPermissions } from "../utils/userUtils";
 import { EmbedBuilder } from "@discordjs/builders";
 import { BOT } from "../index";
 import { truncateString } from "../utils/utils";
-import { StarboardLeaderboard } from "../database/models/guildModel";
+import { StarboardLeaderboard, StarboardPost } from "../database/models/guildModel";
 
 const setStarboardChannel = async (interaction: any): Promise<string> => {
     // Check if user has permissions
@@ -106,6 +106,27 @@ const retrieveStarboardLeaderboard = async (interaction: any): Promise<EmbedBuil
 
 }
 
+const retrieveRandomStarboardPost = async (interaction: any) => {
+    const guildData = await getGuildDataByGuildID(interaction.guildId);
+    if (guildData.starboard.posts.length == 0) {
+        await interaction.editReply("No posts found.");
+        return;
+    }
+    let post: StarboardPost = guildData.starboard.posts[Math.floor(Math.random() * guildData.starboard.posts.length)]
+    // Retrieve embed from 
+    const channel = await BOT.channels.fetch(post.channelID);
+    if (!channel || !channel.isTextBased()) {
+        await interaction.editReply("ERROR: Invalid channel found.");
+        return;
+    }
+    const message = await channel.messages.fetch(post.messageID);
+    if (!message) {
+        await interaction.editReply("ERROR: Invalid message found.");
+        return;
+    }
+    await interaction.editReply({ content: `From <@${message.author.id}> - ${message.url}`,embeds: message.embeds });
+}
+
 
 
 
@@ -156,6 +177,11 @@ export const starboard: CommandInterface = {
                 .setName('top')
                 .setDescription('View the top posts on the starboard')
         )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('random')
+                .setDescription('View a random post on the starboard')
+        )
     ,
     run: async (interaction) => {
         // Disable context menu
@@ -182,6 +208,10 @@ export const starboard: CommandInterface = {
             case 'top':
                 await interaction.editReply({ embeds: [await retrieveStarboardLeaderboard(interaction)] });
                 break;
+            case 'random':
+                await retrieveRandomStarboardPost(interaction);
+                break;
+
         }
 
         

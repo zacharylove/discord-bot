@@ -162,6 +162,7 @@ export const setStarboardDefaults = async (guildID: string): Promise<string> => 
     if (guildData.starboard.emoji == undefined) { guildData.starboard.emoji = "⭐"; numDefaulted++; }
     if (guildData.starboard.successEmoji == undefined) { guildData.starboard.successEmoji = "🌟"; numDefaulted++; }
     if (guildData.starboard.leaderboard == undefined) { guildData.starboard.leaderboard = new Array(); numDefaulted++; }
+    if (guildData.starboard.posts == undefined) { guildData.starboard.posts = new Array(); numDefaulted++; }
     if (guildData.channels.starboardChannelId == undefined) { guildData.channels.starboardChannelId = ""; numDefaulted++; }
     await update(guildData);
     return `${numDefaulted} starboard defaults have been set`;
