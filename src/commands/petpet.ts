@@ -15,7 +15,7 @@ const gifOptions = {
     frames: 10
 }
 
-const createPetPetGif = async (targetURL: string) => {
+const createPetPetGif = async (targetURL: string, handedness: string) => {
     
     
     // Encoder to build output gif
@@ -52,8 +52,10 @@ const createPetPetGif = async (targetURL: string) => {
 
         if (i == petGifCache.length) petGifCache.push(await loadImage(path.resolve(path.join(__dirname, '..', '..', 'assets', 'img', 'petpet', `pet${i}.gif`))));
 
-        ctx.drawImage(avatar, gifOptions.resolution * offsetX, gifOptions.resolution * offsetY, gifOptions.resolution * width, gifOptions.resolution * height)
-        ctx.drawImage(petGifCache[i], 0, 0, gifOptions.resolution, gifOptions.resolution)
+        ctx.drawImage(avatar, handedness ? 0 : gifOptions.resolution * offsetX, gifOptions.resolution * offsetY, gifOptions.resolution * width, gifOptions.resolution * height)
+        ctx.scale(handedness ? -1 : 1, 1);
+        ctx.drawImage(petGifCache[i], handedness ? petGifCache[i].width * -1 : 0, 0, gifOptions.resolution, gifOptions.resolution)
+        ctx.restore();
 
         encoder.addFrame(ctx)
     }
@@ -75,6 +77,16 @@ export const petPet: CommandInterface = {
             option
                 .setName('url')
                 .setDescription('Image URL')
+        )
+        .addStringOption((option) =>
+            option
+                .setName('orientation')
+                .setDescription('Right or left handed? (default: left)')
+                .addChoices(
+                    { name: 'Left-handed', value: 'left' },
+                    { name: 'Right-handed', value: 'right' }
+                )
+                    
         ),
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
@@ -97,7 +109,8 @@ export const petPet: CommandInterface = {
             return;
         }
 
-        const buffer = await createPetPetGif(targetURL);
+        const handedness = await interaction.options.getString('orientation') || 'left';
+        const buffer = await createPetPetGif(targetURL, handedness);
 
 
         if (interaction.replied || interaction.deferred ) await interaction.editReply({ files: [{attachment: buffer, name: 'test.gif'}]})
