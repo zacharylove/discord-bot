@@ -172,6 +172,9 @@ export const removeStoredStarboardPost = async (guildID: string, post: Starboard
     const guildData = await getGuildDataByGuildID(guildID);
     const indexToRemove = guildData.starboard.posts.indexOf(post);
     if (indexToRemove != -1) guildData.starboard.posts.splice(indexToRemove, 1);
+    // Remove from leaderboard if it exists
+    const leaderboardIndexToRemove = guildData.starboard.leaderboard.findIndex( (element) => element.messageID == post.messageID );
+    if (leaderboardIndexToRemove != -1) guildData.starboard.leaderboard.splice(leaderboardIndexToRemove, 1);
 }
 
 /**
