@@ -2,7 +2,7 @@ import { GatewayIntentBits } from "discord.js";
 import { CommandInterface } from "../interfaces/Command";
 import { validateEventPermissions, validateIntents } from "../utils/validateProperties";
 import { wordleStats } from "../commands/wordleStats";
-import guildModel, { GuildDataInterface, createNewGuildData } from "./models/guildModel";
+import guildModel, { GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel";
 import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils";
 import { FilterQuery } from "mongoose";
 import { wordleConfig } from "../config/config.json"
@@ -166,6 +166,12 @@ export const setStarboardDefaults = async (guildID: string): Promise<string> => 
     if (guildData.channels.starboardChannelId == undefined) { guildData.channels.starboardChannelId = ""; numDefaulted++; }
     await update(guildData);
     return `${numDefaulted} starboard defaults have been set`;
+}
+
+export const removeStoredStarboardPost = async (guildID: string, post: StarboardPost) => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    const indexToRemove = guildData.starboard.posts.indexOf(post);
+    if (indexToRemove != -1) guildData.starboard.posts.splice(indexToRemove, 1);
 }
 
 /**

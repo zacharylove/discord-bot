@@ -2,7 +2,7 @@ import { EmbedBuilder, Message, MessageReaction, TextChannel, User } from "disco
 import { BOT } from "../index";
 import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "../database/models/guildModel";
 import { starboardConfig } from "../config/config.json";
-import { getGuildDataByGuildID, isStarboardEnabled, setStarboardDefaults, setStarboardEmojis, update } from "../database/guildData";
+import { getGuildDataByGuildID, isStarboardEnabled, removeStoredStarboardPost, setStarboardDefaults, setStarboardEmojis, update } from "../database/guildData";
 import { truncateString } from "../utils/utils";
 import { getUserData } from "../database/userData";
 
@@ -112,8 +112,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                     }
 
 
-                    const indexToRemove = guildData.starboard.posts.indexOf(postToRemove);
-                    if (indexToRemove != -1) guildData.starboard.posts.splice(indexToRemove, 1);
+                    removeStoredStarboardPost(guildData, postToRemove);
                     // decrement user's star count if not self-starred
                     if (!selfStar) {
                         getUserData(reaction.message.author.id).then( userData => {

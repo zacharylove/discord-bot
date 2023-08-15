@@ -1,6 +1,6 @@
 import { Channel, Embed, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import { CommandInterface } from "../interfaces/Command";
-import { getGuildDataByGuildID, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold } from "../database/guildData";
+import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold } from "../database/guildData";
 import { hasPermissions } from "../utils/userUtils";
 import { EmbedBuilder } from "@discordjs/builders";
 import { BOT } from "../index";
@@ -108,21 +108,35 @@ const retrieveStarboardLeaderboard = async (interaction: any): Promise<EmbedBuil
 
 const retrieveRandomStarboardPost = async (interaction: any) => {
     const guildData = await getGuildDataByGuildID(interaction.guildId);
-    if (guildData.starboard.posts.length == 0) {
-        await interaction.editReply("No posts found.");
-        return;
-    }
-    let post: StarboardPost = guildData.starboard.posts[Math.floor(Math.random() * guildData.starboard.posts.length)]
-    // Retrieve embed from 
-    const channel = await BOT.channels.fetch(post.channelID);
-    if (!channel || !channel.isTextBased()) {
-        await interaction.editReply("ERROR: Invalid channel found.");
-        return;
-    }
-    const message = await channel.messages.fetch(post.messageID);
-    if (!message) {
-        await interaction.editReply("ERROR: Invalid message found.");
-        return;
+    let valid: boolean = false;
+    let post: StarboardPost;
+    let maxCounter = 0;
+    while (!valid) {
+        maxCounter++;
+        if (maxCounter == 10) {
+            await interaction.editReply("ERROR: Could not find a valid post after 10 tries.");
+            return;
+        }
+        if (guildData.starboard.posts.length == 0) {
+            await interaction.editReply("No posts found.");
+            return;
+        }
+        post = guildData.starboard.posts[Math.floor(Math.random() * guildData.starboard.posts.length)]
+
+        // Retrieve embed from 
+        const channel = await BOT.channels.fetch(post.channelID);
+        if (!channel || !channel.isTextBased()) {
+            await interaction.editReply("ERROR: Invalid channel found.");
+            removeStoredStarboardPost(interaction.guildId, post);
+            continue;
+        }
+        const message = await channel.messages.fetch(post.messageID);
+        if (!message) {
+            await interaction.editReply("ERROR: Invalid message found.");
+            removeStoredStarboardPost(interaction.guildId, post);
+            continue;
+        }
+        valid = true;
     }
     await interaction.editReply({ content: `From <@${message.author.id}> - ${message.url}`,embeds: message.embeds });
 }
