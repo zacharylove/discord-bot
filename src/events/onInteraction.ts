@@ -80,9 +80,6 @@ export const onInteraction : EventInterface = {
                     } 
                 }
 
-                if (!interactionDeferred) {
-                    interaction.deferReply();
-                }
                 await broadcastCommandFailed(interaction, errorList);
                 console.debug("Command failed!");
             } catch(e) {
