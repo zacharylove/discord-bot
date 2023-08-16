@@ -138,7 +138,7 @@ export const confess: CommandInterface = {
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('channel')
-                .setDescription('Set a channel to be used as a confession channel, where users can anonymously post their darkest secrets!')
+                .setDescription('Set a channel for users to post their darkest secrets!')
                 .addChannelOption((option) =>
                     option
                         .setName('channel')
