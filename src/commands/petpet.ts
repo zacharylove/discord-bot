@@ -51,10 +51,10 @@ const createPetPetGif = async (targetURL: string, handedness: string) => {
         const offsetY = (1 - height) - 0.08
 
         if (i == petGifCache.length) petGifCache.push(await loadImage(path.resolve(path.join(__dirname, '..', '..', 'assets', 'img', 'petpet', `pet${i}.gif`))));
-
-        ctx.drawImage(avatar, handedness ? 0 : gifOptions.resolution * offsetX, gifOptions.resolution * offsetY, gifOptions.resolution * width, gifOptions.resolution * height)
-        ctx.scale(handedness ? -1 : 1, 1);
-        ctx.drawImage(petGifCache[i], handedness ? petGifCache[i].width * -1 : 0, 0, gifOptions.resolution, gifOptions.resolution)
+        const righthanded: boolean = handedness == 'right';
+        ctx.drawImage(avatar, righthanded ? 0 : gifOptions.resolution * offsetX, gifOptions.resolution * offsetY, gifOptions.resolution * width, gifOptions.resolution * height)
+        ctx.scale(righthanded ? -1 : 1, 1);
+        ctx.drawImage(petGifCache[i], righthanded ? petGifCache[i].width * -1 : 0, 0, gifOptions.resolution, gifOptions.resolution)
         ctx.restore();
 
         encoder.addFrame(ctx)
@@ -67,7 +67,7 @@ const createPetPetGif = async (targetURL: string, handedness: string) => {
 export const petPet: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('petpet')
-        .setDescription("pet a user or image")
+        .setDescription("Create a gif of a hand petting a user's avatar or an image URL")
         .addUserOption((option) =>
             option
                 .setName('user')
