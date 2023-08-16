@@ -115,7 +115,7 @@ export const confess: CommandInterface = {
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('new')
-                .setDescription('Confess something anonymously in a designated confession channel! (Use /confess channel to set one up)')
+                .setDescription('Confess something anonymously in a designated confession channel!')
                 .addStringOption((option) =>
                     option
                         .setName('confession')
