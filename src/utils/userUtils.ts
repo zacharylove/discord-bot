@@ -2,7 +2,7 @@
 
 import { Guild, ImageExtension, PermissionsBitField, User } from "discord.js";
 import { getAllImagesFromUser } from "./imageUtils";
-import { getServerAvatarURLs, hasServerAvatar } from "./requestUtils"
+import { getServerAvatarURLs, hasServerAvatar } from "../api/discordAPI"
 
 
 /* -----------------------------

@@ -146,11 +146,7 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
     }
 
 
-    if (interaction.replied || interaction.deferred) {
-        interaction.editReply(errorMessage);
-    } else {
-        interaction.reply({ content: errorMessage, ephemeral: true });
-    }
+    interaction.editReply(errorMessage);
 }
 
 export const commandNotImplemented = async ( interaction: CommandInteraction, commandName: string ): Promise<void> => {

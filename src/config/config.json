@@ -34,6 +34,18 @@
         "version": "10",
         "cdnURL": "https://cdn.discordapp.com"
     },
+    "tmdbAPI": {
+        "baseURL": "https://api.themoviedb.org",
+        "version": "3",
+        "endpoints": {
+            "search": "search/movie",
+            "discover": "discover/movie",
+            "find": "find",
+            "configuration": "configuration",
+            "genre": "genre/movie/list",
+            "movie": "movie"
+        }
+    },
     "shipMessages": {
         "reallybad": [
             "No chance.",
