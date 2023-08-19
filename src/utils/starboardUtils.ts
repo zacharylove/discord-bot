@@ -311,7 +311,8 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                             numReactions: reaction.count,
                         });
                         // Increment counter
-                        guildData.counters.numStarboardPosts++;
+                        if(guildData.counters.numStarboardPosts) guildData.counters.numStarboardPosts++;
+                        else guildData.counters.numStarboardPosts = 1;
                         guildDataUpdated = true;
                         entryAdded = true;
                     } else {
