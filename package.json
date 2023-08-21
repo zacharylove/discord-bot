@@ -11,7 +11,7 @@
   "author": "inco",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/builders": "^1.4.0",
+    "@discordjs/builders": "^1.6.5",
     "@discordjs/rest": "^1.5.0",
     "axios": "^1.4.0",
     "canvas": "^2.11.2",
