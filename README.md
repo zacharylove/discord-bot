@@ -3,6 +3,7 @@ A rewrite of Cinnamon in Typescript, merging the old functionality with the Syno
 
 The main features of the bot are:
  - Wordle Tracking: Parses and maintains a database of wordle results pasted into chat and generates detailed statistics and local/global leaderboards.
+ - Starboard/Hall of Shame: Collects messages which have received a configurable number of reactions and immortalizes them in their own channel.
  - Roleplay: Has context-based commands to enhance interactions and drive conversations between users
  - Utility: Provides relevant and unique functionalities that (hopefully) have minimal feature overlap with other more popular bots
 
@@ -27,3 +28,8 @@ This bot uses Node.js with Typescript, packaged in a Docker container.
    - `./src/modules/` = helper modules for database
  - `./prod/` = generated output files
  - `./.env` = environment variables
+
+## Usage
+Make sure the latest version of Node.js is installed.
+Run `npm i` and then `npm run deploy`
+ - MacOS requires additional libraries for the `node-canvas` package, which can be installed via Homebrew with `brew install pkg-config cairo pango libpng jpeg giflib librsvg`.
