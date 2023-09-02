@@ -45,7 +45,6 @@ const registerEvents = async (BOT: Bot) => {
 
     await registerEvents(BOT);
 
-    console.log("Setup complete. Logging in...");
     await BOT.login(process.env.BOT_TOKEN);
 
    

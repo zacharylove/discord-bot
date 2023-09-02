@@ -6,42 +6,45 @@ import { toTitleCase } from "./utils";
 import { EventProperties } from "../interfaces/Event";
 
 export const validateEnv = () => {
-    console.log("Validating environment variables...")
+    let validationOutput: string = "Validating environment variables...";
+    let valid: boolean = true;
     if (!process.env.BOT_TOKEN) {
-        console.warn("Missing Discord bot token!");
-        return false;
+        validationOutput += "\n  [!] FAILED: Missing Discord bot token!";
+        valid = false;
     }
     if (!process.env.MONGO_URI) {
-        console.warn("Missing MongoDB Atlas connection string!");
-        return false;
+        validationOutput += "\n  [!] FAILED: Missing MongoDB Atlas connection string!";
+        valid = false;
     }
 
     // ====================
     // These environment variables are optional
 
     if (!process.env.GUILD_ID) {
-        console.log("Missing testing guild ID! If not in development, this won't do anything.");
+        validationOutput += "\n  [?] Missing testing guild ID! If not in development, this won't do anything.";
     } else {
-        console.log("Loaded testing GUILD_ID = " + process.env.GUILD_ID);
+        validationOutput += "\n  [~] Loaded testing GUILD_ID = " + process.env.GUILD_ID;
     }
 
     if (!process.env.TICK_INTERVAL) {
-        console.warn("Missing tick interval!");
-        return false;
+        validationOutput += "\n  [!] FAILED: Missing tick interval!";
+        valid = false;
     } else {
-        console.log("Loaded TICK_INTERVAL = " + process.env.TICK_INTERVAL);
+        validationOutput += "\n  [~] Loaded TICK_INTERVAL = " + process.env.TICK_INTERVAL;
     }
 
     if (!process.env.DEBUG_MODE) {
-        console.warn("Missing debug mode!");
+        validationOutput += "\n  [?] WARN: Missing debug mode!";
     } else if (process.env.DEBUG_MODE.toLowerCase() === "true") {
-        console.log("Debug mode is enabled!");
+        validationOutput += "\n  [~] Debug mode is enabled!";
+    } else if (process.env.DEBUG_MODE.toLowerCase() === "false") {
+        validationOutput += "\n  [~] Debug mode is disabled!";
     }
 
     if (!process.env.OWNER_ID) {
-        console.log("No bot owner ID specified! This won't do much, just means there is no permission override for the owner.");
+        validationOutput += "\n  [?] No bot owner ID specified!";
     } else {
-        console.log("Bot owner ID loaded!");
+        validationOutput += "\n  [~] Bot owner ID loaded!";
     }
     
     if (!process.env.DEBUG_MODE || process.env.DEBUG_MODE.toLowerCase() !== "true") {
@@ -50,8 +53,15 @@ export const validateEnv = () => {
         console.log("==Debug logging disabled==");
         console.debug("If all went well, this line should NOT appear in console!");
     }
-    console.log("Environment variables look OK!")
-    return true;
+    if (!valid) {
+        validationOutput += "\n ==VALIDATION FAIL!== ";
+        console.log(validationOutput);
+        return false;
+    } else {
+        validationOutput += "\n ==VALIDATION SUCCESS!== ";
+        console.log(validationOutput);
+        return true;
+    }
 }
 
 /**
@@ -68,7 +78,6 @@ export const validatePartials = (requestedPartials: Partials[] | undefined, name
         console.warn(`${toTitleCase(type)} ${name} was not registered because it requires disabled partial ${Partials[requestedPartials.find(val => !Object.values(Partials).includes(val))!]}.`);
         return false;
     }
-    console.log("Partials check passed.");
     return true;
 }
 
@@ -86,7 +95,6 @@ export const validateIntents = (requestedIntents: GatewayIntentBits[] | undefine
         console.warn(`${toTitleCase(type)} ${name} was not registered because it requires disabled intent ${GatewayIntentBits[requestedIntents.find(val => !IntentOptions.includes(val))!]}.`);
         return false;
     }
-    console.log("Intents check passed.");
     return true;
 }
 
