@@ -22,7 +22,7 @@
     "mongoose": "^7.5.0"
   },
   "devDependencies": {
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.5.9",
     "gif-encoder-2": "^1.0.5",
     "typescript": "^5.0.4"
   }
