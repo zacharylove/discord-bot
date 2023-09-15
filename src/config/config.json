@@ -46,6 +46,13 @@
             "movie": "movie"
         }
     },
+    "jikanAPI": {
+        "baseURL": "https://api.jikan.moe",
+        "version": "4",
+        "endpoints": {
+            "anime": "anime"
+        }
+    },
     "shipMessages": {
         "reallybad": [
             "No chance.",

@@ -2,6 +2,7 @@
 
 import { CommandInterface } from "../interfaces/Command";
 import { animAvatarTest } from "./animAvatarTest";
+import { anime } from "./anime";
 import { avatar } from "./avatar";
 import { confess } from "./confession";
 import { guildSettings } from "./guildSettings";
@@ -27,7 +28,8 @@ export const CommandList: CommandInterface[] = [
     confess,
     starboard,
     petPet,
-    movie
+    movie,
+    anime
 ];
 
 export default CommandList;
