@@ -4,8 +4,10 @@ import { GatewayIntentBits, Partials } from "discord.js";
 import { IntentOptions } from "../config/IntentOptions";
 import { toTitleCase } from "./utils";
 import { EventProperties } from "../interfaces/Event";
+import { movie } from "../commands/movie";
+import { getMovie } from "../api/tmdbAPI";
 
-export const validateEnv = () => {
+export const validateEnv = async () => {
     let validationOutput: string = "Validating environment variables...";
     let valid: boolean = true;
     if (!process.env.BOT_TOKEN) {
@@ -46,6 +48,18 @@ export const validateEnv = () => {
     } else {
         validationOutput += "\n  [~] Bot owner ID loaded!";
     }
+
+
+    const tmdbTestResult = await getMovie('Annihilation');
+    if (!process.env.MOVIEDB_ACCESS_TOKEN) {
+        validationOutput += "\n  [!] No TMDB API token found, disabling /movie";
+        movie.properties.Enabled = false;
+    } else if(tmdbTestResult == null) {
+        validationOutput += "\n  [!] TMDB API token is invalid, disabling /movie";
+        movie.properties.Enabled = false;
+    } else {
+        validationOutput += "\n  [~] TMDB API token is valid!";
+    }
     
     if (!process.env.DEBUG_MODE || process.env.DEBUG_MODE.toLowerCase() !== "true") {
         // Disable debug logging if not in debug mode
@@ -53,6 +67,7 @@ export const validateEnv = () => {
         console.log("==Debug logging disabled==");
         console.debug("If all went well, this line should NOT appear in console!");
     }
+    
     if (!valid) {
         validationOutput += "\n ==VALIDATION FAIL!== ";
         console.log(validationOutput);

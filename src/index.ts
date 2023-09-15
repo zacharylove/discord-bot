@@ -37,7 +37,7 @@ const registerEvents = async (BOT: Bot) => {
 
 // This anonymous immediately-invoked function expression (IIFE) is the entry point of program
 (async () => {
-    if (!validateEnv()) return; 
+    if (!await validateEnv()) return; 
 
     BOT = new Bot({ intents: IntentOptions, partials: PartialsOptions });
 

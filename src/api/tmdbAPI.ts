@@ -2,6 +2,13 @@ import axios, { AxiosResponse } from "axios";
 import { RequestInterface } from "../interfaces/RequestInterface";
 import { tmdbAPI } from "../config/config.json";
 
+export interface parsedQuery {
+    title: string,
+    year: string,
+    // Alternate titles are used if there is no match
+    alternateTitles: string[];
+}
+
 export enum tmdbRequestType {
     Search,
     Discover,
@@ -15,7 +22,8 @@ export interface tmdbRequestInfo {
     type: tmdbRequestType,
     // A movie query
     query?: string,
-    id?: number
+    id?: number,
+    year?: string
 }
 
 export interface tmdbResponseType {
@@ -152,6 +160,8 @@ export const TMDBAPI: RequestInterface = {
                 else requestURL += `/${tmdbAPI.endpoints.movie}/${info.id}`;
                 break;
         }
+
+        if (info.year) requestURL += `&year=${info.year}`;
         if (error) throw new Error("Invalid API request info");
         return requestURL;
     },
@@ -161,26 +171,89 @@ export const TMDBAPI: RequestInterface = {
         const info: tmdbRequestInfo = {
             type: tmdbRequestType.Configuration
         };
-        const requestURL: string = await TMDBAPI.formRequestURL(info);
-        let res = await TMDBAPI.makeRequest(requestURL);
-        if (!res) throw new Error("Invalid CDN info");
-        const config: tmdbConfigurationResponseType = res.data;
-        // TODO: do something with the rest of the info
-        return config.images.secure_base_url;
+        try {
+            const requestURL: string = await TMDBAPI.formRequestURL(info);
+            let res = await TMDBAPI.makeRequest(requestURL);
+            if (!res || res.data.SUCCESS == false) throw new Error("Invalid CDN info");
+            const config: tmdbConfigurationResponseType = res.data;
+            // TODO: do something with the rest of the info
+            return config.images.secure_base_url;
+        } catch (e) {
+            console.error(`TMDB API Error: ${e}`);
+            return '';
+        }
     
     }
 }
 
-export const getMovie = async (query: string | null): Promise<any> => {
-    if (!query || query.length == 0) return null;
+// Parse a query for relevant data
+export const parseQuery = (query: string): parsedQuery => {
+    let toReturn: parsedQuery = {
+        title: query,
+        year: "",
+        alternateTitles: []
+    };
+    query = query.toLowerCase();
+    // First, check if there are multiple words
+    if (query.includes(" ")) {
+        // Date
+        // Regex matches (YYYY) and YYYY
+        const dateRegex = new RegExp(`\\s?\\(?\\d{4}\\)?\\s?`);
+        const matchedYear: RegExpExecArray | null = dateRegex.exec(query);
+        if (matchedYear != null && matchedYear.length > 0) {
+            // Remove matched year
+            toReturn.alternateTitles.push(query.replace(dateRegex, ""));
+            toReturn.year = matchedYear[0].replace(" ", "").replace("(", "").replace(")", "")
+        }
+
+        // Look for "the" and add variants with/without it
+        if (query.startsWith("the ")) {
+            toReturn.alternateTitles.push(query.replace("the ", ""));
+        } else {
+            toReturn.alternateTitles.push(`the ${query}`);
+        }
+    }
+    return toReturn;
+}
+
+const getMovieHelper = async (query: string | null, year?: string): Promise<any> => {
     const info = {
         type: tmdbRequestType.Search,
-        query: query
+        query: query,
+        year: year
     } as tmdbRequestInfo;
     const requestURL: string = TMDBAPI.formRequestURL(info);
-    let res = await TMDBAPI.makeRequest(requestURL);
-    if (!res) return null;
-    return res.data;
+    if (requestURL == '') return null;
+    try {
+        let res = await TMDBAPI.makeRequest(requestURL);
+        if (!res || res.data.SUCCESS == false || res.data.results.length == 0) return null;
+        return res.data;
+    } catch (e) {
+        console.error(`TMDB API Error: ${e}`);
+        return null;
+    }
+}
+
+export const getMovie = async (query: string | null): Promise<any> => {
+    if (!query || query == undefined) return null;
+    const parsedQuery: parsedQuery = parseQuery(query);
+    // First try given title
+    let response = await getMovieHelper(parsedQuery.title);
+    if (response != null) return response;
+    // Then try all alternate titles
+    else {
+        let firstTitle: boolean = true;
+        for (const altTitle of parsedQuery.alternateTitles) {
+            if (firstTitle) {
+                response = await getMovieHelper(altTitle, parsedQuery.year);
+                firstTitle = false;
+            } else {
+                response = await getMovieHelper(altTitle);
+            }
+            if (response != null) return response;
+        }
+    }
+    return null;
 }
 
 export const getMovieDetails = async (movieId: number): Promise<any> => {
@@ -190,7 +263,32 @@ export const getMovieDetails = async (movieId: number): Promise<any> => {
         id: movieId
     } as tmdbRequestInfo;
     const requestURL: string = TMDBAPI.formRequestURL(info);
-    let res = await TMDBAPI.makeRequest(requestURL);
-    if (!res) return null;
-    return res.data;
+    if (requestURL == '') return null;
+    try {
+        let res = await TMDBAPI.makeRequest(requestURL);
+        if (!res || res.data.SUCCESS == false) return null;
+        return res.data;
+    } catch (e) {
+        console.error(`TMDB API Error: ${e}`);
+        return null;
+    }
+}
+
+export const getMovieProviders = async (movieId: number): Promise<any> => {
+    if (!movieId || movieId == 0) return null;
+    const info = {
+        type: tmdbRequestType.Movie,
+        id: movieId
+    } as tmdbRequestInfo;
+    let requestURL: string = TMDBAPI.formRequestURL(info);
+    requestURL += "/watch/providers";
+    if (requestURL == '') return null;
+    try {
+        let res = await TMDBAPI.makeRequest(requestURL);
+        if (!res || res.data.SUCCESS == false) return null;
+        return res.data;
+    } catch (e) {
+        console.error(`TMDB API Error: ${e}`);
+        return null;
+    }
 }

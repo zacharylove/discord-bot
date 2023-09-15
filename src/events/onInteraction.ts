@@ -24,9 +24,9 @@ export const onInteraction : EventInterface = {
                     if (interaction.commandName === Command.data.name) {
                         // Defer reply according to properties
                         if ( Command.properties.Ephemeral && Command.properties.Ephemeral == true ) {
-                            interaction.deferReply({ephemeral: true});
+                            await interaction.deferReply({ephemeral: true});
                         } else {
-                            interaction.deferReply();
+                            await interaction.deferReply();
                         }
                         interactionDeferred = true;
                         console.debug("User " + interaction.user.username + " called command " + Command.data.name + ", validating...");
@@ -79,10 +79,10 @@ export const onInteraction : EventInterface = {
                         console.error(" === Command " + Command.data.name + " failed onInteraction validation- logging error! ===");
                     } 
                 }
-
+                console.error("Command failed!");
                 await broadcastCommandFailed(interaction, errorList);
-                console.debug("Command failed!");
             } catch(e) {
+                console.error(`Error running command: ${e}`);
                 await broadcastCommandFailed(interaction, "An error occurred while running this command.", undefined, e);
             }
         }
