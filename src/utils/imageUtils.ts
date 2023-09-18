@@ -1,6 +1,8 @@
 // Utility functions for images
+import axios, { AxiosResponse } from 'axios';
 import { Canvas } from 'canvas';
 import { ALLOWED_EXTENSIONS, CommandInteraction, ImageExtension, User } from 'discord.js';
+import { RequestInterface } from 'interfaces/RequestInterface';
 import path from 'path';
 
 // Valid image formats according to Discord
@@ -44,3 +46,4 @@ export const getAllImagesFromUser = (user: User, type: "avatar" | "banner"): Map
     return imageURLS;
 
 }
+

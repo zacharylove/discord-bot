@@ -25,10 +25,14 @@ export const onInteraction : EventInterface = {
                         // Defer reply according to properties
                         if ( Command.properties.Ephemeral && Command.properties.Ephemeral == true ) {
                             await interaction.deferReply({ephemeral: true});
-                        } else {
+                            interactionDeferred = true;
+                        } else if (Command.properties.Defer != false) {
                             await interaction.deferReply();
+                            interactionDeferred = true;
+                        } else {
+                            interactionDeferred = false;
                         }
-                        interactionDeferred = true;
+                        
                         console.debug("User " + interaction.user.username + " called command " + Command.data.name + ", validating...");
                         // If disabled globally
                         if (!Command.properties.Enabled) {
