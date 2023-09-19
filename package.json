@@ -14,7 +14,7 @@
     "@canvas-fonts/impact": "^1.0.4",
     "@discordjs/builders": "^1.6.5",
     "@discordjs/rest": "^1.5.0",
-    "axios": "^1.4.0",
+    "axios": "^1.5.0",
     "canvas": "^2.11.2",
     "discord-api-types": "^0.37.56",
     "discord.js": "^14.13.0",
