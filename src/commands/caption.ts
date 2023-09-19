@@ -76,7 +76,8 @@ export const caption: CommandInterface = {
 			.setLabel("Enter top text")
 		    // Short means only a single line of text
 			.setStyle(TextInputStyle.Short)
-            .setRequired(false);
+            .setRequired(false)
+            .setMaxLength(50);
         const topTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
             .addComponents(topText);
 
@@ -87,14 +88,15 @@ export const caption: CommandInterface = {
 			.setLabel("Enter bottom text")
 		    // Short means only a single line of text
 			.setStyle(TextInputStyle.Short)
-            .setRequired(false);
+            .setRequired(false)
+            .setMaxLength(50);
         const bottomTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
             .addComponents(bottomText);
 
         // Add inputs to the modal
 		modal.addComponents(topTextRow, bottomTextRow);
         await interaction.showModal(modal);
-        const submitted = await interaction.awaitModalSubmit({
+        await interaction.awaitModalSubmit({
             // Timeout after a minute of not receiving any valid Modals
             time: 60000,
             // Make sure we only accept Modals from the User who sent the original Interaction we're responding to
@@ -106,6 +108,11 @@ export const caption: CommandInterface = {
             const topText = submitted.fields.getTextInputValue('topText').toUpperCase();
             const bottomText = submitted.fields.getTextInputValue('bottomText').toUpperCase();
             if (topText == "" && bottomText == "") return;
+            // Must be alphanumeric
+            if ( !topText.match(/^[a-z0-9 ]+$/i) || !bottomText.match(/^[a-z0-9 ]+$/i) ) {
+                await submitted.followUp({ content: "Text must be alphanumeric", ephemeral: true });
+                return;
+            }
 
             // Output buffer
             let buffer;
@@ -266,18 +273,12 @@ export const caption: CommandInterface = {
             }
 
             try {
-                if (!submitted.replied && !submitted.deferred) {
-                    await submitted.reply({ files: [{attachment: buffer, name: `output.${filetype}`}]});
-                } else {
-                    await submitted.followUp({ files: [{attachment: buffer, name: `output.${filetype}`}]});
-                }
+                await submitted.followUp({ files: [{attachment: buffer, name: `output.${filetype}`}]});
             } catch (error) {
                 
                 console.error(error);
             }
         }).catch(error => {
-            // Catch any Errors that are thrown (e.g. if the awaitModalSubmit times out after 60000 ms)
-            console.error(error)
             return null
         });
         return;
