@@ -6,8 +6,42 @@ import { ApplicationCommandType, CommandInteraction, PermissionsBitField, Events
 import { CommandInterface } from "../interfaces/Command";
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
 import { createCanvas, ImageData, loadImage, registerFont } from 'canvas';
-import axios from "axios";
 
+
+const buildModal = async (): Promise<ModalBuilder> => {
+    // Build caption creation modal
+    const modal = new ModalBuilder()
+        .setCustomId('captionModal')
+        .setTitle("Add Caption");
+
+    // Top text
+    const topText = new TextInputBuilder()
+        .setCustomId('topText')
+        // The label is the prompt the user sees for this input
+        .setLabel("Enter top text")
+        // Short means only a single line of text
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false)
+        .setMaxLength(50);
+    const topTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
+        .addComponents(topText);
+
+    // bottom text
+    const bottomText = new TextInputBuilder()
+        .setCustomId('bottomText')
+        // The label is the prompt the user sees for this input
+        .setLabel("Enter bottom text")
+        // Short means only a single line of text
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false)
+        .setMaxLength(50);
+    const bottomTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
+        .addComponents(bottomText);
+
+    // Add inputs to the modal
+    modal.addComponents(topTextRow, bottomTextRow);
+    return modal;
+}
 
 
 export const caption: CommandInterface = {
@@ -64,38 +98,9 @@ export const caption: CommandInterface = {
 
         if (imageURL.includes(".gif")) isGIF = true;
 
-        // Build caption creation modal
-        const modal = new ModalBuilder()
-            .setCustomId('captionModal')
-            .setTitle("Add Caption");
+        
+        await interaction.showModal(await buildModal());
 
-        // Top text
-        const topText = new TextInputBuilder()
-			.setCustomId('topText')
-		    // The label is the prompt the user sees for this input
-			.setLabel("Enter top text")
-		    // Short means only a single line of text
-			.setStyle(TextInputStyle.Short)
-            .setRequired(false)
-            .setMaxLength(50);
-        const topTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
-            .addComponents(topText);
-
-        // bottom text
-        const bottomText = new TextInputBuilder()
-			.setCustomId('bottomText')
-		    // The label is the prompt the user sees for this input
-			.setLabel("Enter bottom text")
-		    // Short means only a single line of text
-			.setStyle(TextInputStyle.Short)
-            .setRequired(false)
-            .setMaxLength(50);
-        const bottomTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
-            .addComponents(bottomText);
-
-        // Add inputs to the modal
-		modal.addComponents(topTextRow, bottomTextRow);
-        await interaction.showModal(modal);
         await interaction.awaitModalSubmit({
             // Timeout after a minute of not receiving any valid Modals
             time: 60000,
@@ -279,7 +284,8 @@ export const caption: CommandInterface = {
                 console.error(error);
             }
         }).catch(error => {
-            return null
+            interaction.followUp({ content: "An error occurred while processing your request", ephemeral: true });
+            return;
         });
         return;
 
