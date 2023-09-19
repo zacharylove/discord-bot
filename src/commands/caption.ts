@@ -14,7 +14,7 @@ export const caption: CommandInterface = {
     data: new ContextMenuCommandBuilder()
         .setName('Caption Image/GIF')
         .setType(ApplicationCommandType.Message)
-        .setDefaultMemberPermissions(PermissionsBitField.Flags.AttachFiles)
+        .setDefaultMemberPermissions(PermissionsBitField.Flags.EmbedLinks)
     ,
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isMessageContextMenuCommand()) return;
