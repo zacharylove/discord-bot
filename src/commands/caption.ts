@@ -115,7 +115,7 @@ export const caption: CommandInterface = {
             if (topText == "" && bottomText == "") return;
             // Must be alphanumeric
             if ( !topText.match(/^[a-z0-9 ]+$/i) || !bottomText.match(/^[a-z0-9 ]+$/i) ) {
-                await submitted.followUp({ content: "Text must be alphanumeric", ephemeral: true });
+                await interaction.followUp({ content: "Text must be alphanumeric- no symbols or emojis!", ephemeral: true });
                 return;
             }
 
@@ -278,13 +278,14 @@ export const caption: CommandInterface = {
             }
 
             try {
-                await submitted.followUp({ files: [{attachment: buffer, name: `output.${filetype}`}]});
+                await interaction.followUp({ files: [{attachment: buffer, name: `output.${filetype}`}]});
             } catch (error) {
                 
                 console.error(error);
             }
         }).catch(error => {
-            interaction.followUp({ content: "An error occurred while processing your request", ephemeral: true });
+            console.error(error);
+            interaction.followUp({ content: "An error occurred while processing your request.", ephemeral: true });
             return;
         });
         return;
