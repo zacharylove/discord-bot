@@ -11,10 +11,11 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/src/index.ts",
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run-script", "deploy"
+            ],
         }
     ]
 }
