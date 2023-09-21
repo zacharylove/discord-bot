@@ -19,4 +19,4 @@ RUN npm run build
 
 # define the command to run your app using CMD which defines your runtime
 # Using -r dotenv/config starts your node app with dotenv preloaded
-CMD node -r dotenv/config ./prod/index.js
+CMD TS_NODE_BASEURL=./prod node -r dotenv/config -r tsconfig-paths/register ./prod/index.js
