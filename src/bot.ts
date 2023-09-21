@@ -1,5 +1,5 @@
 import { Client, ClientOptions } from "discord.js";
-import { wordle, tradle, initializeWordleUtil, initializeTradleUtil } from "./utils/wordleUtils";
+import { wordle, tradle, initializeWordleUtil, initializeTradleUtil } from "utils/wordleUtils";
 
 
 /**

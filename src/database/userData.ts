@@ -1,5 +1,5 @@
 import { FilterQuery } from "mongoose";
-import userModel, { UserInterface, createNewUser } from "../database/models/userModel";
+import userModel, { UserInterface, createNewUser } from "database/models/userModel";
 
 
 /**

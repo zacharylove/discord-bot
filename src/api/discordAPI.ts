@@ -1,9 +1,9 @@
 // Utility functions that make API requests
 import axios, { AxiosResponse } from "axios";
 import { ImageExtension } from "discord.js";
-import { discordAPI } from "../config/config.json"
-import { getAllImagesFromURL } from "../utils/imageUtils";
-import { RequestInterface } from "../interfaces/RequestInterface";
+import { discordAPI } from "config/config.json"
+import { getAllImagesFromURL } from "utils/imageUtils";
+import { RequestInterface } from "interfaces/RequestInterface";
 
 // See https://discord.com/developers/docs/reference#image-formatting-cdn-endpoints
 export enum discordRequestType {

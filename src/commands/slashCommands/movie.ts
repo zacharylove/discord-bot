@@ -1,8 +1,7 @@
-import axios, { AxiosResponse } from "axios";
-import { CommandInterface } from "../interfaces/Command";
-import { ButtonStyle, CommandInteraction, Interaction, Message, SlashCommandBuilder, User } from "discord.js";
-import { broadcastCommandFailed } from "../utils/commandUtils";
-import { TMDBAPI, getMovie, getMovieDetails, getMovieProviders, parsedQuery, tmdbDetailType, tmdbResponseType, tmdbResultType } from "../api/tmdbAPI";
+import { CommandInterface } from "interfaces/Command";
+import { ButtonStyle, Message, SlashCommandBuilder, User } from "discord.js";
+import { broadcastCommandFailed } from "utils/commandUtils";
+import { TMDBAPI, getMovie, getMovieDetails, getMovieProviders, tmdbDetailType, tmdbResponseType, tmdbResultType } from "api/tmdbAPI";
 import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
 
 const createEmbed = async (interaction: Message<boolean>, movie: tmdbResultType): Promise<Message<boolean>> => {

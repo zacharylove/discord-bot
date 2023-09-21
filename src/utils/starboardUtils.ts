@@ -1,10 +1,10 @@
 import { EmbedBuilder, Message, MessageReaction, TextChannel, User } from "discord.js";
-import { BOT } from "../index";
-import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "../database/models/guildModel";
-import { starboardConfig } from "../config/config.json";
-import { getGuildDataByGuildID, isStarboardEnabled, removeStoredStarboardPost, setStarboardDefaults, setStarboardEmojis, update } from "../database/guildData";
-import { truncateString } from "../utils/utils";
-import { getUserData } from "../database/userData";
+import { BOT } from "index";
+import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "database/models/guildModel";
+import { starboardConfig } from "config/config.json";
+import { getGuildDataByGuildID, isStarboardEnabled, removeStoredStarboardPost, setStarboardDefaults, setStarboardEmojis, update } from "database/guildData";
+import { truncateString } from "utils/utils";
+import { getUserData } from "database/userData";
 
 
  /**

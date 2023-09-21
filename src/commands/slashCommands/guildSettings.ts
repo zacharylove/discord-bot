@@ -1,11 +1,11 @@
 // View a list of guild-specific settings and enable/disable commands and features.
-import { CommandInterface } from "../interfaces/Command";
+import { CommandInterface } from "interfaces/Command";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled } from "../database/guildData";
-import { GuildDataInterface } from "../database/models/guildModel";
-import { commandNotImplemented, getCommandListAsString } from "../utils/commandUtils";
+import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled } from "database/guildData";
+import { GuildDataInterface } from "database/models/guildModel";
+import { commandNotImplemented, getCommandListAsString } from "utils/commandUtils";
 import { CommandInteraction, Embed, PermissionsBitField, User } from "discord.js";
-import { hasPermissions } from "../utils/userUtils";
+import { hasPermissions } from "utils/userUtils";
 
 
 // Required permission to enable/disable

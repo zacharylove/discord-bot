@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
-import { RequestInterface } from "../interfaces/RequestInterface";
-import { tmdbAPI } from "../config/config.json";
+import { RequestInterface } from "interfaces/RequestInterface";
+import { tmdbAPI } from "config/config.json";
 
 export interface parsedQuery {
     title: string,

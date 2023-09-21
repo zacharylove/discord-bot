@@ -1,6 +1,6 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder } from "@discordjs/builders";
 import { GatewayIntentBits } from "discord-api-types/v9";
-import { CommandInteraction, PermissionFlags, PermissionsBitField } from "discord.js";
+import { CommandInteraction, PermissionsBitField } from "discord.js";
 
 // Interface for all commands, defines requirements and some additional properties
 export interface CommandProperties {

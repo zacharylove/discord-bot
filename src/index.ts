@@ -1,16 +1,18 @@
-
+import 'module-alias/register';
 
 import { Bot } from "./bot";
-import { onInteraction } from "./events/onInteraction";
-import { IntentOptions, PartialsOptions } from "./config/IntentOptions";
-import { connectDatabase } from "./database/connectDatabase";
-import { validateEnv, validateEventPermissions, validateIntents } from "./utils/validateProperties";
-import { onReady } from "./events/onReady";
-import { onMessage } from "./events/onMessage";
+import { onInteraction } from "events/onInteraction";
+import { IntentOptions, PartialsOptions } from "config/IntentOptions";
+import { connectDatabase } from "database/connectDatabase";
+import { validateEnv, validateEventPermissions } from "utils/validateProperties";
+import { onReady } from "events/onReady";
+import { onMessage } from "events/onMessage";
 import { Events } from "discord.js";
-import { onMessageReactionAdd, onMessageReactionRemove } from "./events/onMessageReaction";
+import { onMessageReactionAdd, onMessageReactionRemove } from "events/onMessageReaction";
+
 
 let BOT: Bot;
+
 
 const registerEvents = async (BOT: Bot) => {
     if (validateEventPermissions(onReady.properties)) {

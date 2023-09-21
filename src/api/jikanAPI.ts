@@ -1,8 +1,8 @@
 // Jikan is an unofficial API for MyAnimeList: https://docs.api.jikan.moe/
 // No API key or token is needed for read-only access
 import axios, { AxiosResponse } from "axios";
-import { RequestInterface } from "../interfaces/RequestInterface";
-import { jikanAPI } from "../config/config.json";
+import { RequestInterface } from "interfaces/RequestInterface";
+import { jikanAPI } from "config/config.json";
 
 export enum animeType {
     tv,

@@ -2,11 +2,11 @@
 // TODO: Also make context menu command
 
 import { ActionRowBuilder, ContextMenuCommandBuilder, ModalActionRowComponentBuilder } from "@discordjs/builders";
-import { ApplicationCommandType, CommandInteraction, PermissionsBitField, Events, ModalBuilder, TextInputBuilder, TextInputStyle, Embed, EmbedBuilder } from "discord.js";
-import { CommandInterface } from "../interfaces/Command";
+import { ApplicationCommandType, CommandInteraction, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { CommandInterface } from "interfaces/Command";
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
-import { Canvas, createCanvas, ImageData, loadImage, registerFont } from 'canvas';
-import { drawFramePatch, renderFrame } from "../utils/imageUtils";
+import { createCanvas, ImageData, loadImage, registerFont } from 'canvas';
+import { renderFrame } from "utils/imageUtils";
 
 let topText: string = "";
 let bottomText: string = "";

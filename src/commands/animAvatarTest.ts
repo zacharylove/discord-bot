@@ -1,6 +1,6 @@
-import { CommandInterface, CommandProperties } from '../interfaces/Command';
-import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
-import { getAvatarURL } from '../utils/userUtils';
+import { CommandInterface } from 'interfaces/Command';
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { getAvatarURL } from 'utils/userUtils';
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
 import { createCanvas, ImageData, loadImage } from 'canvas';
 import path from 'path';

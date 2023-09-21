@@ -1,9 +1,7 @@
 // Utility functions for images
-import axios, { AxiosResponse } from 'axios';
 import { Canvas } from 'canvas';
-import { ALLOWED_EXTENSIONS, CommandInteraction, ImageExtension, User } from 'discord.js';
+import { ImageExtension, User } from 'discord.js';
 import { ParsedFrame } from 'gifuct-js';
-import { RequestInterface } from 'interfaces/RequestInterface';
 import path from 'path';
 
 // Valid image formats according to Discord

@@ -1,7 +1,6 @@
 // General-purpose utility functions
 
 import { GatewayIntentBits } from "discord.js";
-import { BOT } from "../index";
 
 export const toTitleCase = (text: string): string => {
     return text.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});

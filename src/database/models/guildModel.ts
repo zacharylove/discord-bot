@@ -1,9 +1,7 @@
 // Per-Server configuration
-import { Document, model, ObjectId, Schema, Types } from 'mongoose';
-
-import { CommandList } from 'commands/_CommandList';
-import { CommandInterface } from "../../interfaces/Command";
-import { starboardConfig } from "../../config/config.json";
+import { Document, model, Schema } from 'mongoose';
+import { CommandInterface } from "interfaces/Command";
+import { starboardConfig } from "config/config.json";
 
 export interface GuildDataInterface extends Document {
     _id: String;

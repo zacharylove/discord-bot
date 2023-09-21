@@ -4,7 +4,7 @@
   "description": "Cinnamon, rewritten!",
   "main": "./src/index.ts",
   "scripts": {
-    "start": "node -r dotenv/config ./prod/index.js",
+    "start": "TS_NODE_BASEURL=./prod node -r dotenv/config -r tsconfig-paths/register ./prod/index.js",
     "build": "tsc",
     "deploy": "npm run build && npm run start"
   },
@@ -20,11 +20,17 @@
     "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
     "gifuct-js": "^2.1.2",
+    "module-alias": "^2.2.3",
     "mongoose": "^7.5.2"
   },
   "devDependencies": {
     "@types/node": "^20.6.2",
     "gif-encoder-2": "^1.0.5",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2"
+  },
+  "_moduleAliases": {
+    "@modules": "prod/modules",
+    "@core": "prod/core"
   }
 }

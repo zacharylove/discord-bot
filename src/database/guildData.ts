@@ -1,13 +1,12 @@
-import { GatewayIntentBits } from "discord.js";
-import { CommandInterface } from "../interfaces/Command";
-import { validateEventPermissions, validateIntents } from "../utils/validateProperties";
-import { wordleStats } from "../commands/wordleStats";
+import { CommandInterface } from "interfaces/Command";
+import { validateEventPermissions } from "utils/validateProperties";
+import { wordleStats } from "commands/slashCommands/wordleStats";
 import guildModel, { GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel";
-import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils";
+import { getCommandList, isCommandDisabled, isCommandEnabled } from "utils/commandUtils";
 import { FilterQuery } from "mongoose";
-import { wordleConfig } from "../config/config.json"
-import { onMessage } from "../events/onMessage";
-import { onMessageReactionAdd } from "../events/onMessageReaction";
+import { wordleConfig } from "config/config.json"
+import { onMessage } from "events/onMessage";
+import { onMessageReactionAdd } from "events/onMessageReaction";
 
 /**
  * Updates an existing GuildData object in the database

@@ -1,12 +1,10 @@
 // Based on https://github.com/aDu/pet-pet-gif
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { CommandInterface } from "../interfaces/Command";
-import { broadcastCommandFailed } from "../utils/commandUtils";
+import { CommandInterface } from "interfaces/Command";
+import { broadcastCommandFailed } from "utils/commandUtils";
 import { createCanvas, loadImage } from "canvas";
-import { imagePath } from '../utils/imageUtils';
-import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
 import path from 'path';
-import { getAvatarURL } from "../utils/userUtils";
+import { getAvatarURL } from "utils/userUtils";
 
 const gifOptions = {
     resolution: 128,

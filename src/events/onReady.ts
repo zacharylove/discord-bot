@@ -1,13 +1,12 @@
 // On bot startup
-import { ActivityType } from "discord.js";
 import { Routes } from "discord-api-types/v9";
 import { REST } from "@discordjs/rest";
-import { CommandList } from "../commands/_CommandList";
-import { onTick } from "../events/onTick";
+import { CommandList } from "commands/_CommandList";
+import { onTick } from "events/onTick";
 import { EventInterface } from "interfaces/Event";
-import { validateIntents } from "../utils/validateProperties";
+import { validateIntents } from "utils/validateProperties";
 import { Bot } from "bot";
-import { version, statuses } from "../config/config.json";
+import { version, statuses } from "config/config.json";
 
 
 const registerCommands = async (BOT: Bot) => {

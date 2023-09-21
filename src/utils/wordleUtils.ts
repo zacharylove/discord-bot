@@ -1,9 +1,7 @@
-import { WordleDataInterface } from "../database/models/wordleModel";
 import { Message } from "discord.js";
-import { wordleConfig, tradleConfig } from "../config/config.json"
-
-import { getWordleDataByUserID, update as wordleUpdate, getRanking } from "../database/wordleData";
-import { getTradleDataByUserID, update as tradleUpdate } from "../database/tradleData";
+import { wordleConfig, tradleConfig } from "config/config.json"
+import { getWordleDataByUserID, update as wordleUpdate } from "database/wordleData";
+import { getTradleDataByUserID, update as tradleUpdate } from "database/tradleData";
 
 
 class sharedWordleUtils {
@@ -153,7 +151,7 @@ export class wordle {
         const userData = await getWordleDataByUserID(puzzleInfo.authorID);
 
         // Check if user has a wordle data entry for this puzzle
-        const puzzleData = userData.results.find( (result) => result.puzzleID == puzzleInfo.puzzleNum );
+        const puzzleData = userData.results.find( (result: any) => result.puzzleID == puzzleInfo.puzzleNum );
         if (puzzleData) {
             puzzleData.results.push(puzzleInfo.emojis);
             puzzleData.scores.push(puzzleInfo.score);

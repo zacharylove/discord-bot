@@ -2,7 +2,7 @@
 // Make sure bot has the correct scope and permissions!
 
 import { Bot } from "bot";
-import { areWordleFeaturesEnabled } from "../database/guildData";
+import { areWordleFeaturesEnabled } from "database/guildData";
 import { Message, GatewayIntentBits, TextChannel, DMChannel } from "discord.js";
 import { EventInterface } from "interfaces/Event";
 
