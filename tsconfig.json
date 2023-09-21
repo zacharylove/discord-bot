@@ -1,4 +1,8 @@
 {
+  "ts-node": {
+    // Do not forget to `npm i -D tsconfig-paths`
+    "require": ["tsconfig-paths/register"]
+  },
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
@@ -34,13 +38,16 @@
     // I.e, instead of import { foo } from './utils/Bar', you can just do import { foo } from 'Bar'
     "paths": {
       "*": ["./*"],
-      "@config/*": ["src/config/*"],
-      "@utils/*": ["src/utils/*"],
+      "@config/*": ["config/*"],
+      "@utils/*": ["utils/*"],
       "@test/*": ["../test/*"],
-      "@database/*": ["src/database/*"],
-      "@interfaces/*": ["src/interfaces/*"],
-      "@events/*": ["src/events/*"],
-      "@commands/*": ["src/commands/*"],
+      "@database/*": ["database/*"],
+      "@interfaces/*": ["interfaces/*"],
+      "@events/*": ["events/*"],
+      "@models/*": ["database/models/*"],
+      "@commands/*": ["commands/*"],
+      "@slashcommands/*": ["commands/slashCommands/*"],
+      "@contextcommands/*": ["commands/contextCommands/*"],
     },                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
@@ -111,5 +118,6 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
-  }
+  },
+  "include": ["src/**/*"],
 }

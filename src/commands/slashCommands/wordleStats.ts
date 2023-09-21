@@ -1,10 +1,9 @@
-import { CommandInterface, CommandProperties } from '../interfaces/Command';
+import { CommandInterface } from 'interfaces/Command';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
-import { getUserData } from '../database/userData';
-import { getRanking, getWordleDataByUserID } from '../database/wordleData';
+import { getRanking, getWordleDataByUserID } from 'database/wordleData';
 import { APIEmbedField } from 'discord.js';
-import { areWordleFeaturesEnabled } from '../database/guildData';
-import { broadcastCommandFailed } from '../utils/commandUtils';
+import { areWordleFeaturesEnabled } from 'database/guildData';
+import { broadcastCommandFailed } from 'utils/commandUtils';
 
 /**
      * Gets wordle stats for a user
@@ -17,9 +16,9 @@ const getWordleStats = async (userID: string) => {
     const ranking = await getRanking();
     // If user in ranking
     let userRanking = 0;
-    if (ranking.find( (user) => user.userID == userID )) {
+    if (ranking.find( (user: any) => user.userID == userID )) {
         // Get user's rank
-        const userRank = ranking.findIndex( (user) => user.userID == userID ) + 1;
+        const userRank = ranking.findIndex( (user: any) => user.userID == userID ) + 1;
         userRanking = userRank;
     }
 
@@ -83,7 +82,7 @@ export const wordleStats: CommandInterface = {
 
             embed.addFields(fields);
             embed.setTitle(`Wordle stats for ${user.username}`);
-            embed.setThumbnail(interaction.user.avatarURL());
+            embed.setThumbnail(user.avatarURL());
 
             await interaction.editReply({embeds: [embed]});
             

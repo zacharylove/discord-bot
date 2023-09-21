@@ -1,9 +1,9 @@
 // Utility function for commands
 
 import { CommandInteraction } from "discord.js";
-import CommandList from "../commands/_CommandList";
-import { getGuildDataByGuildID } from "../database/guildData";
-import { CommandInterface } from "../interfaces/Command";
+import CommandList from "commands/_CommandList";
+import { getGuildDataByGuildID } from "database/guildData";
+import { CommandInterface } from "interfaces/Command";
 
 /**
  * Get a list of all (non-globally-disabled) commands.
@@ -34,8 +34,8 @@ export const isCommandDisabled = async (command: CommandInterface, guildID: stri
     const guildData = await getGuildDataByGuildID(guildID);
     const enabledGlobally: boolean = command.properties.Enabled;
     const enabledByDefault: boolean = command.properties.DefaultEnabled;
-    const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command);
-    const disabledInGuild: boolean = guildData.commands.disabledCommands.includes(command);
+    const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command.data.name);
+    const disabledInGuild: boolean = guildData.commands.disabledCommands.includes(command.data.name);
     let cannotBeDisabled: boolean = false;
     if ( command.properties.CanBeDisabled === false ) cannotBeDisabled = true;
 
@@ -67,8 +67,8 @@ export const isCommandEnabled = async (command: CommandInterface, guildID: strin
     const guildData = await getGuildDataByGuildID(guildID);
     const enabledGlobally: boolean = command.properties.Enabled;
     const enabledByDefault: boolean = command.properties.DefaultEnabled;
-    const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command);
-    const disabledInGuild: boolean = guildData.commands.disabledCommands.includes(command);
+    const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command.data.name);
+    const disabledInGuild: boolean = guildData.commands.disabledCommands.includes(command.data.name);
     let cannotBeDisabled: boolean = false;
     if ( command.properties.CanBeDisabled === false ) cannotBeDisabled = true;
 
@@ -86,7 +86,7 @@ export const isCommandEnabled = async (command: CommandInterface, guildID: strin
 }
 
 
-export const broadcastCommandFailed = async (interaction: CommandInteraction, reason?: string[]|string, command?: CommandInterface,): Promise<void> => {
+export const broadcastCommandFailed = async (interaction: CommandInteraction, reason?: string[]|string, command?: CommandInterface, error?: any): Promise<void> => {
     let commandName: string = "";
     let errorMessage: string = "**Command `";
     if (command) commandName = command.properties.Name;
@@ -94,6 +94,7 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
     errorMessage += commandName + "` failed"
 
     let fuckyWuckyOccurred: boolean = false;
+    if ( error ) fuckyWuckyOccurred = true;
     
     // Send command failed output (if any)
     if (reason) {
@@ -122,11 +123,33 @@ export const broadcastCommandFailed = async (interaction: CommandInteraction, re
     } else fuckyWuckyOccurred = true;
     
     if (fuckyWuckyOccurred) {
-        console.error("Command " + commandName + " failed validation but no error was logged!");
-        errorMessage += ":**\n";
+        errorMessage += "\n";
         errorMessage += "Oopsie woopsy! Something made a lil' fucky wucky in the backy-endy >w<\nThis weawwy shouldn't happen... pwease contact inco for a fix :3c";
+        if (error) {
+            console.error("Command " + commandName + " caused an error!");
+            console.error(error);
+            let errorOutput: string = "";
+            if (typeof error === "string") {
+                errorOutput = error.toUpperCase();
+            } else if (error instanceof Error) {
+                errorOutput = error.message;
+            }
+            if (errorOutput.length != 0) {
+                errorMessage += "\n=== Here is the error message: ===\n";
+                errorMessage += errorOutput;
+            } else {
+                errorMessage += "\nNo error output.... uh oh...";
+            }
+        } else {
+            console.error("Command " + commandName + " failed validation but no error was logged!");
+        }
     }
 
-    if (interaction.replied) interaction.editReply(errorMessage,);
-    else interaction.reply({ content: errorMessage, ephemeral: true});
+
+    interaction.editReply(errorMessage);
+}
+
+export const commandNotImplemented = async ( interaction: CommandInteraction, commandName: string ): Promise<void> => {
+    await interaction.editReply("Yeah, uh, the `" + commandName + "` command isn't implemented yet. Sorry.");
+    return;
 }

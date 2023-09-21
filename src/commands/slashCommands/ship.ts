@@ -1,15 +1,11 @@
-import { CommandInterface, CommandProperties } from '../interfaces/Command';
-import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
+import { CommandInterface } from 'interfaces/Command';
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { User } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
-import { getAvatarURL, getGlobalAvatar, getServerProfileAvatar } from '../utils/userUtils';
-import { imagePath } from '../utils/imageUtils';
-
+import { getAvatarURL } from 'utils/userUtils';
+import { imagePath } from 'utils/imageUtils';
 import { createHash } from 'crypto';
-
-import { parseGIF, decompressFrames } from 'gifuct-js';
-
-import { shipMessages } from "../config/config.json";
+import { shipMessages } from "config/config.json";
 
 
 

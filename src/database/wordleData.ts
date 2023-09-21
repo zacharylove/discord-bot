@@ -1,6 +1,4 @@
-
-import { Aggregate } from "mongoose";
-import wordleModel, { WordleDataInterface, createNewWordleData } from "./models/wordleModel";
+import wordleModel, { WordleDataInterface, createNewWordleData } from "@models/wordleModel";
 
 
 
@@ -26,6 +24,7 @@ export const getWordleDataByUserID = async (userID: string): Promise<WordleDataI
  * Finds and returns a WordleData object with the (generated) ID matching the given ID
  * Throws error if none exists
  * @param id generated wordledata id
+ * @throws Error
  */
 export const getWordleDataByID = async (id: string): Promise<WordleDataInterface> => {
     const data = await wordleModel.findOne({ id: id});
@@ -56,4 +55,19 @@ export const getRanking = async ()  => {
         { "$replaceRoot": { "newRoot": "$items" } },
         { "$sort": { "weightedScore": -1, "name": 1 } },
     ]);
+}
+
+export const getGlobalWordleStats = async () => {
+    var numWordleResults = 0;
+    var numWordleGuesses = 0;
+    const users = await wordleModel.find({});
+    for (const user of users) {
+        numWordleResults += user.totalPuzzles;
+        numWordleGuesses += user.totalGuesses;
+    }
+
+    return {
+        numWordleResults: numWordleResults,
+        numWordleGuesses: numWordleGuesses
+    }
 }

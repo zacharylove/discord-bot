@@ -1,6 +1,6 @@
-import { CommandInterface, CommandProperties } from '../interfaces/Command';
-import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
-import { getAvatarURL } from '../utils/userUtils';
+import { CommandInterface } from 'interfaces/Command';
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { getAvatarURL } from 'utils/userUtils';
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
 import { createCanvas, ImageData, loadImage } from 'canvas';
 import path from 'path';
@@ -147,9 +147,8 @@ export const animAvatarTest: CommandInterface = {
         encoder.finish();
         const buffer = encoder.out.getData();
 
-        interaction.editReply(
-            { files: [{attachment: buffer, name: 'test.gif'}]}
-        );
+        if (interaction.replied || interaction.deferred ) await interaction.editReply({ files: [{attachment: buffer, name: 'test.gif'}]})
+        else await interaction.reply({ files: [{attachment: buffer, name: 'test.gif'}]});
 
     },
     properties: {

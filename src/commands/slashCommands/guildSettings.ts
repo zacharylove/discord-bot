@@ -1,11 +1,11 @@
 // View a list of guild-specific settings and enable/disable commands and features.
-import { CommandInterface } from "../interfaces/Command";
+import { CommandInterface } from "interfaces/Command";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableWordleFeatures, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID } from "../database/guildData";
-import { GuildDataInterface } from "../database/models/guildModel";
-import { getCommandListAsString } from "../utils/commandUtils";
+import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled } from "database/guildData";
+import { GuildDataInterface } from "database/models/guildModel";
+import { commandNotImplemented, getCommandListAsString } from "utils/commandUtils";
 import { CommandInteraction, Embed, PermissionsBitField, User } from "discord.js";
-import { hasPermissions } from "../utils/userUtils";
+import { hasPermissions } from "utils/userUtils";
 
 
 // Required permission to enable/disable
@@ -67,40 +67,54 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
     let contentScanningString: string = '';
 
     if ( availableCommandList.length > 0 ) {
-        availableCommandsString = " - " + availableCommandList.join('\n - ');
+        availableCommandsString = " - " + availableCommandList.join('\n- ');
     }
     embed.addFields({name: 'Available Commands', value: availableCommandsString, inline: true});
 
     if ( enabledCommandList.length > 0 ) {
-        enabledCommandsString = " - " + enabledCommandList.join('\n - ');
+        enabledCommandsString = " - " + enabledCommandList.join('\n- ');
     }
     embed.addFields({name: 'Enabled', value: enabledCommandsString, inline: true});
     if ( disabledCommandList.length > 0 ) {
-        disabledCommandsString = " - " + disabledCommandList.join('\n - ');
+        disabledCommandsString = " - " + disabledCommandList.join('\n- ');
     }
     embed.addFields({name: 'Disabled', value: disabledCommandsString, inline: true});
     
     // ======
     // Features
     
-
+    // Wordle
     contentScanningString += "Wordle Results Scanning: ";
     if ( guildData.messageScanning.wordleResultScanning ) {
         contentScanningString += "Enabled\n";
     } else { contentScanningString += "Disabled\n"; }
 
+    // Starboard
+    contentScanningString += "Starboard Reaction Scanning: ";
+    if ( guildData.messageScanning.starboardScanning ) {
+        contentScanningString += "Enabled\n";
+    } else { contentScanningString += "Disabled\n"; }
+
     embed.addFields({name: 'Available Features', value: contentScanningString});
+
+    if ( guildData.messageScanning.starboardScanning ) {
+        embed.addFields({name: 'Starboard Settings', value: ` - Channel: <#${guildData.channels.starboardChannelId}>\n- Emoji: ${guildData.starboard.emoji}\n- Threshold: ${guildData.starboard.threshold}\n- Success Emoji: ${guildData.starboard.successEmoji}\n- Blacklist?: ${guildData.starboard.blacklistEnabled}\n - Blacklisted Channels: ${guildData.starboard.blacklistChannels.map((channelId) => `<#${channelId}>`).join(', ')}`});
+    }
 
     return embed;
 }
 
 const checkPermission = async ( interaction: CommandInteraction ): Promise<boolean> => {
     if (!interaction.guild) {
-        await interaction.reply({content: "This command can only be used in a server.", ephemeral: true});
+        const messageContent: string = "This command can only be used in a server.";
+        if (interaction.replied || interaction.deferred ) await interaction.editReply({content: messageContent})
+        else await interaction.reply({content: messageContent, ephemeral: true});
         return false;
     }
     if (!hasPermissions(requiredPermissions, interaction.guild, interaction.user)) {
-        await interaction.reply({content: "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, uh, manage the server.", ephemeral: true});
+        const messageContent: string = "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, uh, manage the server.";
+        if (interaction.replied || interaction.deferred ) await interaction.editReply({content: messageContent})
+        else await interaction.reply({content: messageContent, ephemeral: true});
         return false;
     }
     console.log("Permission check passed.")
@@ -111,16 +125,29 @@ const checkPermission = async ( interaction: CommandInteraction ): Promise<boole
 const enableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
     if ( !interaction.guild || !interaction.guildId ) { return embed; }
 
-    if (featureName == "wordle") {
-        // Check if feature is already enabled
-        if (await areWordleFeaturesEnabled(interaction.guildId)) {
-            embed.setDescription("Wordle features are already enabled.");
-        } else {
-            await enableWordleFeatures(interaction.guildId);
-            embed.setDescription("Wordle features are now enabled.");
-        }
-    } else{
-        embed.setDescription("That feature doesn't exist. It's just wordle right now lol");
+    switch (featureName) {
+        case "wordle":
+            // Check if feature is already enabled
+            if (await areWordleFeaturesEnabled(interaction.guildId)) {
+                embed.setDescription("Wordle features are already enabled.");
+            } else {
+                embed.setDescription(await enableWordleFeatures(interaction.guildId));
+            }
+            break;
+
+        case "starboard":
+            // Check if feature is already enabled
+            if (await isStarboardEnabled(interaction.guildId)) {
+                embed.setDescription("Starboard feature is already enabled.");
+            } else {
+                embed.setDescription(await enableStarboardFeature(interaction.guildId));
+            }
+            break;
+
+        default:
+            embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
+            break;
+
     }
 
     return embed;
@@ -129,25 +156,29 @@ const enableFeature = async ( interaction: CommandInteraction, featureName: stri
 const disableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
     if ( !interaction.guild || !interaction.guildId ) { return embed; }
 
-    if (featureName == "wordle") {
-        // Check if feature is already disabled
-        if (!await areWordleFeaturesEnabled(interaction.guildId)) {
-            embed.setDescription("Wordle features are already disabled.");
-        } else {
-            await disableWordleFeatures(interaction.guildId);
-            embed.setDescription("Wordle features are now disabled.");
-        }
-    } else{
-        embed.setDescription("That feature doesn't exist. It's just wordle right now lol");
+    switch (featureName) {
+        case "wordle":
+            // Check if feature is already disabled
+            if (!await areWordleFeaturesEnabled(interaction.guildId)) {
+                embed.setDescription("Wordle features are already disabled.");
+            } else embed.setDescription(await disableWordleFeatures(interaction.guildId));
+            break;
+        case "starboard":
+            // Check if feature is already disabled
+            if (!await isStarboardEnabled(interaction.guildId)) {
+                embed.setDescription("Starboard feature is already disabled.");
+            }
+            else embed.setDescription(await disableStarboardFeature(interaction.guildId));
+            break;
+        default:
+            embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
+            break;
     }
 
     return embed;
 }
 
-const apologizeForFailure = async ( interaction: CommandInteraction, commandName: string ): Promise<void> => {
-    interaction.editReply("Yeah, uh, the `" + commandName + "` command isn't implemented yet. Sorry.");
-    return;
-}
+
 
 /* Example usage:
     /settings enableCommand poke
@@ -211,6 +242,10 @@ export const guildSettings: CommandInterface = {
                                 .setName('feature')
                                 .setDescription('The feature to enable')
                                 .setRequired(true)
+                                .addChoices(
+                                    { name: 'Wordle', value: 'wordle' },
+                                    { name: 'Starboard', value: 'starboard' }
+                                )
                         )
                 )
                 // Disable feature
@@ -223,6 +258,10 @@ export const guildSettings: CommandInterface = {
                                 .setName('feature')
                                 .setDescription('The feature to disable')
                                 .setRequired(true)
+                                .addChoices(
+                                    { name: 'Wordle', value: 'wordle' },
+                                    { name: 'Starboard', value: 'starboard' }
+                                )
                         )
                 )
                 // List features
@@ -232,6 +271,7 @@ export const guildSettings: CommandInterface = {
                         .setDescription('List all features for this server')
                 )
         )
+
         
         // List all settings
         .addSubcommand((subcommand) =>
@@ -250,12 +290,12 @@ export const guildSettings: CommandInterface = {
     run: async (interaction) => {
         // Disable context menu
         if (!interaction.isChatInputCommand()) {
-            interaction.editReply('This command cannot be used in a context menu');
+            await interaction.editReply('This command cannot be used in a context menu');
             return;
         }
         // Disable DMS
         if (!interaction.guildId || !interaction.guild) {
-            interaction.editReply('This command cannot be used in DMs');
+            await interaction.editReply('This command cannot be used in DMs');
             return;
         }
 
@@ -271,16 +311,16 @@ export const guildSettings: CommandInterface = {
                     case 'enable':
                         // Enable a command
                         if (!checkPermission(interaction)) return;
-                        apologizeForFailure(interaction, 'enableCommand');
+                        commandNotImplemented(interaction, 'enableCommand');
                         return;
                     case 'disable':
                         // Disable a command
                         if (!checkPermission(interaction)) return;
-                        apologizeForFailure(interaction, 'disableCommand');
+                        commandNotImplemented(interaction, 'disableCommand');
                         return;
                     case 'list':
                         // List all commands
-                        apologizeForFailure(interaction, 'listCommands');
+                        commandNotImplemented(interaction, 'listCommands');
                         return;
                 }
                 break;
@@ -295,11 +335,11 @@ export const guildSettings: CommandInterface = {
                     case 'disable':
                         // Disable a feature
                         if (!checkPermission(interaction)) return;
-                        apologizeForFailure(interaction, 'disableFeature');
-                        return;
+                        embedToSend = await disableFeature(interaction, interaction.options.getString('feature', true), embedToSend);
+                        break;
                     case 'list':
                         // List all features
-                        apologizeForFailure(interaction, 'listFeatures');
+                        commandNotImplemented(interaction, 'listFeatures');
                         return;
                 }
                 break;
@@ -315,11 +355,11 @@ export const guildSettings: CommandInterface = {
                 }
         }
         if (embedToSend !== undefined) {
-            interaction.editReply({ embeds: [embedToSend] });
+            await interaction.editReply({ embeds: [embedToSend] });
             return;
         } else {
             console.error('No embed to send');
-            interaction.editReply('An error occurred');
+            await interaction.editReply('An error occurred');
             return;
         }
         

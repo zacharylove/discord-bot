@@ -1,11 +1,18 @@
 # Cinnamon
 A rewrite of Cinnamon in Typescript, merging the old functionality with the Synonym wordle bot I've been working on.
 
-This is a solo project, and I usually work on this project on-and-off, using it as an opportunity to explore and learn about new things such as Typescript and Docker. Once I am satisfied with the number of features and general stability of the bot, I might release it for public use.
+The main features of the bot are:
+ - Wordle Tracking: Parses and maintains a database of wordle results pasted into chat and generates detailed statistics and local/global leaderboards.
+ - Starboard/Hall of Shame: Collects messages which have received a configurable number of reactions and immortalizes them in their own channel.
+ - Roleplay: Has context-based commands to enhance interactions and drive conversations between users
+ - Utility: Provides relevant and unique functionalities that (hopefully) have minimal feature overlap with other more popular bots
+
+This is a solo project, and I usually work on this project on-and-off, using it as an opportunity to explore and learn about new things such as Typescript, MongoDB, and Docker. Once I am satisfied with the number of features and general stability of the bot, I might release it for public use.
 
 ## Stack
 This bot uses Node.js with Typescript, packaged in a Docker container.
  - **API:** Mostly uses `discord.js` to communicate with the Discord API, and `axios` for parts of the API that have not yet been implemented into discord.js
+   - Makes use of The Movie Database API
  - **Database:** MongoDB, through the `mongoose` package
  - **Image Processing:** `canvas` is used for image processing and creation, and `gifuct-js` is used for GIF handling and creation.
 
@@ -22,3 +29,8 @@ This bot uses Node.js with Typescript, packaged in a Docker container.
    - `./src/modules/` = helper modules for database
  - `./prod/` = generated output files
  - `./.env` = environment variables
+
+## Usage
+Make sure the latest version of Node.js is installed.
+Run `npm i` and then `npm run deploy`
+ - MacOS requires additional libraries for the `node-canvas` package, which can be installed via Homebrew with `brew install pkg-config cairo pango libpng jpeg giflib librsvg`.

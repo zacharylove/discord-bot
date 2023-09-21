@@ -1,4 +1,4 @@
-import { CommandInterface, CommandProperties } from '../interfaces/Command';
+import { CommandInterface } from 'interfaces/Command';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import { getRanking } from 'database/wordleData';
 

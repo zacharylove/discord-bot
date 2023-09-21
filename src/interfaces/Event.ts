@@ -1,6 +1,6 @@
 // Interface for all events
 
-import { GatewayIntentBits } from "discord.js";
+import { GatewayIntentBits, Partials } from "discord.js";
 
 export interface EventProperties {
     // Name of event
@@ -9,6 +9,8 @@ export interface EventProperties {
     Enabled: boolean;
     // Any intents required for event to function
     Intents?: GatewayIntentBits[];
+    // Partial intents required for event to function
+    Partials?: Partials[];
 
 }
 

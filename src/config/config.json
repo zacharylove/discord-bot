@@ -1,17 +1,57 @@
 {
-    "statuses": [ "Back and better than ever!" ],
+    "version": "1.4.0",
+    "statuses": [ "Back and better than ever!", ":)" ],
+    "starboardConfig": {
+        "fetchLimit": 100,
+        "defaultEmoji": "⭐",
+        "defaultThreshold": 5,
+        "defaultSuccessEmoji": "🌟"
+    },
     "wordleConfig": {
         "wordLength": 5,
         "numGuesses": 6,
         "letterMatch": ["🟩", "🟧"],
         "letterClose": ["🟨", "🟦"],
         "letterWrong": ["⬛", "⬜"],
-        "maxPuzzles": 2315
+        "maxPuzzles": 2315,
+        "wordleCommands": [
+            "wordlestats"
+        ]
+    },
+    "tradleConfig": {
+        "outputLength": 5,
+        "numGuesses": 6,
+        "letterMatch": ["🟩"],
+        "letterClose": ["🟨"],
+        "letterWrong": ["⬜"],
+        "maxPuzzles": 848, 
+        "tradleCommands": [
+            
+        ]
     },
     "discordAPI": {
         "baseURL": "https://discord.com/api",
         "version": "10",
         "cdnURL": "https://cdn.discordapp.com"
+    },
+    "tmdbAPI": {
+        "baseURL": "https://api.themoviedb.org",
+        "version": "3",
+        "endpoints": {
+            "search": "search/movie",
+            "discover": "discover/movie",
+            "find": "find",
+            "configuration": "configuration",
+            "genre": "genre/movie/list",
+            "movie": "movie"
+        }
+    },
+    "jikanAPI": {
+        "baseURL": "https://api.jikan.moe",
+        "version": "4",
+        "endpoints": {
+            "anime": "anime"
+        }
     },
     "shipMessages": {
         "reallybad": [

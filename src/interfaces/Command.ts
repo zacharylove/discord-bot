@@ -1,6 +1,6 @@
-import { SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder } from "@discordjs/builders";
+import { ContextMenuCommandBuilder, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder } from "@discordjs/builders";
 import { GatewayIntentBits } from "discord-api-types/v9";
-import { CommandInteraction, PermissionFlags, PermissionsBitField } from "discord.js";
+import { CommandInteraction, PermissionsBitField } from "discord.js";
 
 // Interface for all commands, defines requirements and some additional properties
 export interface CommandProperties {
@@ -23,12 +23,16 @@ export interface CommandProperties {
     Intents?: GatewayIntentBits[];
     // Any permissions required for command to function
     Permissions?: PermissionsBitField[];
+    // Whether response is ephemeral or not
+    Ephemeral?: boolean;
+    // Whether to defer the reply
+    Defer?: boolean;
 }
 
 
 export interface CommandInterface {
     // Holds command data to send to Discord
-    data: Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand"> | SlashCommandSubcommandsOnlyBuilder;
+    data: Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand"> | SlashCommandSubcommandsOnlyBuilder | Omit<ContextMenuCommandBuilder, "addSubcommandGroup" | "addSubcommand"> | ContextMenuCommandBuilder;
     // Holds callback function and command logic, must return void promise
     run: (interaction: CommandInteraction) => Promise<void>;
 
