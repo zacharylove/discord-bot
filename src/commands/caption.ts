@@ -5,7 +5,107 @@ import { ActionRowBuilder, ContextMenuCommandBuilder, ModalActionRowComponentBui
 import { ApplicationCommandType, CommandInteraction, PermissionsBitField, Events, ModalBuilder, TextInputBuilder, TextInputStyle, Embed, EmbedBuilder } from "discord.js";
 import { CommandInterface } from "../interfaces/Command";
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
-import { createCanvas, ImageData, loadImage, registerFont } from 'canvas';
+import { Canvas, createCanvas, ImageData, loadImage, registerFont } from 'canvas';
+import { drawFramePatch, renderFrame } from "../utils/imageUtils";
+
+let topText: string = "";
+let bottomText: string = "";
+let filetype: string;
+
+const addTextCaption = (outputCtx?: any, width?: number, height?: number) => {
+    if (!outputCtx || !width || !height) return;
+    const fontSize = height > 250 ? height * 0.15 :  height * 0.2;
+    // Register impact font
+    registerFont(require("@canvas-fonts/impact"), { family: "Impact" });
+    outputCtx.font = `bold ${fontSize}px Impact`;
+    outputCtx.fillStyle = "#ffffff";
+    outputCtx.lineWidth = 2;
+    outputCtx.strokeStyle = "#000000";
+    outputCtx.textAlign = "center";
+    outputCtx.fillText(topText, width / 2, fontSize, width);
+    outputCtx.strokeText(topText, width / 2, fontSize, width);
+    outputCtx.fillText(bottomText, width / 2, height - (fontSize/2), width);
+    outputCtx.strokeText(bottomText, width / 2, height - (fontSize/2), width);
+}
+
+const editGIF = async (imageURL: string, overlayFn: () => void): Promise<Buffer> => {
+    filetype = "gif";
+    // Gif frame data
+    let frameImageData: ImageData;
+    let frameIndex: number = 0;
+    let loadedFrames: ParsedFrame[];
+    let needsDisposal: boolean = false;
+    
+    // Encoder to build output gif
+    const GIFencoder = require('gif-encoder-2');
+
+    // Fetch gif and split into array of all GIF image frames and metadata
+    loadedFrames = await fetch(imageURL)
+    .then(resp => resp.arrayBuffer())
+    .then(buff => {
+        var gif = parseGIF(buff);
+        var frames = decompressFrames(gif, true);
+        return frames;
+    });
+
+    // Sample first frame to get dimensions
+    const firstFrame = loadedFrames[0];
+
+    const canvasWidth = firstFrame.dims.width;
+    const canvasHeight = firstFrame.dims.height;
+    const gifWidth = firstFrame.dims.width;
+    const gifHeight = firstFrame.dims.height;
+
+    // Full gif canvas
+    const outputCanvas = createCanvas(canvasWidth, canvasHeight);
+    const outputCtx = outputCanvas.getContext('2d');
+
+    // Gif patch canvas
+    const gifPatchCanvas = createCanvas(gifWidth, gifHeight);
+    const gifPatchCtx = gifPatchCanvas.getContext('2d');
+
+    // Gif encoder
+    const encoder = new GIFencoder(canvasWidth, canvasHeight, "octree", true);
+    encoder.setThreshold(60);
+    encoder.setDelay(firstFrame.delay);
+    encoder.start();
+
+    // Render gif
+    renderGif(loadedFrames, overlayFn);
+
+    // Entry point for rendering gif
+    function renderGif(frames: ParsedFrame[], overlayFn: () => void ) {
+        loadedFrames = frames;
+        frameIndex = 0;
+        outputCanvas.width = canvasWidth;
+        outputCanvas.height = canvasHeight;
+        renderFrame( loadedFrames, frameIndex, needsDisposal, gifPatchCtx, gifPatchCanvas, frameImageData, outputCtx, encoder, overlayFn );
+    }
+
+    // Finish writing gif
+    encoder.finish();
+    return encoder.out.getData();
+}
+
+const editImage = async (imageURL: string, overlayFn: (...args: any[]) => void ): Promise<Buffer> => {
+    filetype = "png";
+    let width: number = 0;
+    let height: number = 0;
+    const img = await loadImage(imageURL);
+    width = img.width;
+    height = img.height;
+
+
+    const outputCanvas = createCanvas(width, height);
+    const outputCtx = outputCanvas.getContext('2d');
+    outputCtx.drawImage(img, 0, 0, width, height);
+
+    overlayFn(outputCtx, width, height);
+
+    return outputCanvas.toBuffer();
+}
+
+
 
 
 const buildModal = async (): Promise<ModalBuilder> => {
@@ -22,7 +122,8 @@ const buildModal = async (): Promise<ModalBuilder> => {
         // Short means only a single line of text
         .setStyle(TextInputStyle.Short)
         .setRequired(false)
-        .setMaxLength(50);
+        .setMaxLength(50)
+        .setPlaceholder('Alphanumeric text only, 50 character limit.');;
     const topTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
         .addComponents(topText);
 
@@ -34,13 +135,54 @@ const buildModal = async (): Promise<ModalBuilder> => {
         // Short means only a single line of text
         .setStyle(TextInputStyle.Short)
         .setRequired(false)
-        .setMaxLength(50);
+        .setMaxLength(50)
+        .setPlaceholder('Alphanumeric text only, 50 character limit.');
     const bottomTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
         .addComponents(bottomText);
 
     // Add inputs to the modal
     modal.addComponents(topTextRow, bottomTextRow);
     return modal;
+}
+
+const parseImageURL = async (interaction: CommandInteraction): Promise<string> => {
+    if (!interaction.isMessageContextMenuCommand()) return "";
+    if (!interaction || !interaction.targetMessage) return "";
+    let imageURL: string = "";
+    const hasAttachment: boolean = interaction.targetMessage.attachments.first() != null;
+    const hasEmbed: boolean = interaction.targetMessage.embeds.length > 0;
+    if (hasAttachment) {
+        // Get image URL from first attachment
+        const attachment = interaction.targetMessage.attachments.first();
+        if (!attachment) return "";
+        imageURL = attachment.url;
+    } else if (hasEmbed) {
+        // Get image URL from first embed
+        const embed = interaction.targetMessage.embeds[0];
+        // Obtain image URL from embed
+        if (!embed.image) {
+            // If no image, try to find video and convert to gif
+            if (!embed.video) return "";
+            
+            imageURL = embed.video.url;
+            // For tenor gifs
+            if ( imageURL.includes("tenor.com") ) {
+                imageURL = imageURL.replace("AAAPo", "AAAAC");
+            }
+            imageURL = imageURL.replace(".mp4", ".gif");
+        } else {
+            imageURL = embed.image.url;
+        }
+    } else {
+        const message = interaction.targetMessage.content;
+        // Parse image URL from message
+        const imageRegex = new RegExp(`\\bhttps?:\\/\\/\\S+`);
+        const match = message.match(imageRegex);
+        if (!match) return "";
+        imageURL = match[0];
+    }
+
+    return imageURL;
 }
 
 
@@ -52,53 +194,13 @@ export const caption: CommandInterface = {
     ,
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isMessageContextMenuCommand()) return;
-        let imageURL: string = "";
+        let imageURL: string = await parseImageURL(interaction);
         let isGIF: boolean = false;
-        const hasAttachment: boolean = interaction.targetMessage.attachments.first() != null;
-        const hasEmbed: boolean = interaction.targetMessage.embeds.length > 0;
-        if (hasAttachment) {
-            // Get image URL from first attachment
-            const attachment = interaction.targetMessage.attachments.first();
-            if (!attachment) {
-                await interaction.reply({ content: "No attachment found", ephemeral: true });
-                return;
-            }
-            imageURL = attachment.url;
-        } else if (hasEmbed) {
-            // Get image URL from first embed
-            const embed = interaction.targetMessage.embeds[0];
-            // Obtain image URL from embed
-            if (!embed.image) {
-                // If no image, try to find video and convert to gif
-                if (!embed.video) {
-                    await interaction.reply({ content: "No image found", ephemeral: true });
-                    return;
-                }
-                
-                imageURL = embed.video.url;
-                // For tenor gifs
-                if ( imageURL.includes("tenor.com") ) {
-                    imageURL = imageURL.replace("AAAPo", "AAAAC");
-                }
-                imageURL = imageURL.replace(".mp4", ".gif");
-            } else {
-                imageURL = embed.image.url;
-            }
-        } else {
-            const message = interaction.targetMessage.content;
-            // Parse image URL from message
-            const imageRegex = new RegExp(`\\bhttps?:\\/\\/\\S+`);
-            const match = message.match(imageRegex);
-            if (!match) {
-                await interaction.reply({ content: "No image found", ephemeral: true });
-                return;
-            }
-            imageURL = match[0];
-        }
-
         if (imageURL.includes(".gif")) isGIF = true;
-
-        
+        if ( imageURL == "" ) {
+            await interaction.reply({ content: "No image found", ephemeral: true });
+            return;
+        }
         await interaction.showModal(await buildModal());
 
         await interaction.awaitModalSubmit({
@@ -106,181 +208,28 @@ export const caption: CommandInterface = {
             time: 60000,
             // Make sure we only accept Modals from the User who sent the original Interaction we're responding to
             filter: i => {
+                // All interactions must be deferred, even ones that do not match filter
                 i.deferUpdate();
                 return i.user.id === interaction.user.id
             },
         }).then(async submitted => {
-            const topText = submitted.fields.getTextInputValue('topText').toUpperCase();
-            const bottomText = submitted.fields.getTextInputValue('bottomText').toUpperCase();
+            topText = submitted.fields.getTextInputValue('topText').toUpperCase();
+            bottomText = submitted.fields.getTextInputValue('bottomText').toUpperCase();
             if (topText == "" && bottomText == "") return;
             // Must be alphanumeric
             if ( !topText.match(/^[a-z0-9 ]+$/i) || !bottomText.match(/^[a-z0-9 ]+$/i) ) {
                 await interaction.followUp({ content: "Text must be alphanumeric- no symbols or emojis!", ephemeral: true });
                 return;
             }
-
             // Output buffer
             let buffer;
-            // Register impact font
-            registerFont(require("@canvas-fonts/impact"), { family: "Impact" });
-            // Set filetype
-            let filetype: string;
-
-
-            // Edit the GIF
-            if (isGIF) {
-                filetype = "gif";
-                // Gif frame data
-                let frameImageData: ImageData;
-                let frameIndex: number = 0;
-                let loadedFrames: ParsedFrame[];
-                let needsDisposal: boolean = false;
-                
-                // Encoder to build output gif
-                const GIFencoder = require('gif-encoder-2');
-
-                // Fetch gif and split into array of all GIF image frames and metadata
-                loadedFrames = await fetch(imageURL)
-                .then(resp => resp.arrayBuffer())
-                .then(buff => {
-                    var gif = parseGIF(buff);
-                    var frames = decompressFrames(gif, true);
-                    return frames;
-                });
-
-                // Sample first frame to get dimensions
-                const firstFrame = loadedFrames[0];
-
-                const canvasWidth = firstFrame.dims.width;
-                const canvasHeight = firstFrame.dims.height;
-                const gifWidth = firstFrame.dims.width;
-                const gifHeight = firstFrame.dims.height;
-
-                // Full gif canvas
-                const outputCanvas = createCanvas(canvasWidth, canvasHeight);
-                const outputCtx = outputCanvas.getContext('2d');
-
-                // Gif patch canvas
-                const gifPatchCanvas = createCanvas(gifWidth, gifHeight);
-                const gifPatchCtx = gifPatchCanvas.getContext('2d');
-
-                // Gif encoder
-                const encoder = new GIFencoder(canvasWidth, canvasHeight, "octree", true);
-                encoder.setThreshold(60);
-                encoder.setDelay(firstFrame.delay);
-                encoder.start();
-
-                // Render gif
-                renderGif(loadedFrames);
-
-                
-
-                // Draws frame data over canvas
-                function drawPatch(frame: ParsedFrame) {
-                    var dims = frame.dims;
-                    // Set frame image to size of gif frame
-                    if ( !frameImageData ||
-                        dims.width != frameImageData.width ||
-                        dims.height != frameImageData.height ) {
-                            gifPatchCanvas.width = dims.width;
-                            gifPatchCanvas.height = dims.height;
-                            frameImageData = gifPatchCtx.createImageData(dims.width, dims.height);
-                    }
-                    frameImageData.data.set(frame.patch);
-                    gifPatchCtx.putImageData(frameImageData, 0, 0);
-                    outputCtx.drawImage(gifPatchCanvas, 0, 0, dims.width, dims.height);
-                    
-                }
-
-                // Entry point for rendering gif
-                function renderGif(frames: ParsedFrame[] ) {
-                    loadedFrames = frames;
-                    frameIndex = 0;
-                    //canvas.width = frames[0].dims.width;
-                    //canvas.height = frames[0].dims.height;
-                    outputCanvas.width = canvasWidth;
-                    outputCanvas.height = canvasHeight;
-
-                    
-                    renderFrame();
-                }
-
-                // Recursively called to render each frame
-                function renderFrame() {
-                    let frame = loadedFrames[frameIndex];
-
-                    if (needsDisposal) {
-                        gifPatchCtx.clearRect(0, 0, gifPatchCanvas.width, gifPatchCanvas.height);
-                        needsDisposal = false;
-                    }
-
-                    // draw patch
-                    drawPatch(frame);
-                    // update frame index
-                    frameIndex++;
-                    if (frameIndex >= loadedFrames.length) { return }
-                    // update disposal
-                    if (frame.disposalType === 2) needsDisposal = true;
-
-                    // Add overlay
-                    const fontSize = frame.dims.height > 250 ? frame.dims.height * 0.15 : frame.dims.height * 0.2;
-                    outputCtx.font = `bold ${fontSize}px Impact`;
-                    outputCtx.fillStyle = "#ffffff";
-                    outputCtx.lineWidth = 2;
-                    outputCtx.strokeStyle = "#000000";
-                    outputCtx.textAlign = "center";
-                    outputCtx.fillText(topText, frame.dims.width / 2, fontSize, frame.dims.width);
-                    outputCtx.strokeText(topText, frame.dims.width / 2, fontSize, frame.dims.width);
-                    outputCtx.fillText(bottomText, frame.dims.width / 2, frame.dims.height - (fontSize/2), frame.dims.width);
-                    outputCtx.strokeText(bottomText, frame.dims.width / 2, frame.dims.height - (fontSize/2), frame.dims.width);
-
-
-                    // Add frame to gif
-                    if (outputCtx == null) {
-                        throw new Error("Output context is null");
-                    }
-                    encoder.addFrame(outputCtx);
-
-                    renderFrame();
-                }
-
-                // Finish writing gif
-                encoder.finish();
-                buffer = encoder.out.getData();
-            } 
-            // Edit the static image
-            else {
-                filetype = "png";
-                let width: number = 0;
-                let height: number = 0;
-                const img = await loadImage(imageURL);
-                width = img.width;
-                height = img.height;
-
-
-                const outputCanvas = createCanvas(width, height);
-                const outputCtx = outputCanvas.getContext('2d');
-                outputCtx.drawImage(img, 0, 0, width, height);
-
-                const fontSize = height > 250 ? height * 0.15 : height * 0.2;
-                outputCtx.font = `bold ${fontSize}px Impact`;
-                outputCtx.fillStyle = "#ffffff";
-                outputCtx.lineWidth = 2;
-                outputCtx.strokeStyle = "#000000";
-                outputCtx.textAlign = "center";
-                outputCtx.fillText(topText, width / 2, fontSize, width);
-                outputCtx.strokeText(topText, width / 2, fontSize, width);
-                outputCtx.fillText(bottomText, width / 2, height - (fontSize/2), width);
-                outputCtx.strokeText(bottomText, width / 2, height- (fontSize/2), width);
-
-
-                buffer = outputCanvas.toBuffer();
-            }
+            // Edit GIF or static image
+            // Using addTextCaption as the overlay function
+            buffer = isGIF ? await editGIF(imageURL, addTextCaption) : await editImage(imageURL, addTextCaption);
 
             try {
                 await interaction.followUp({ files: [{attachment: buffer, name: `output.${filetype}`}]});
             } catch (error) {
-                
                 console.error(error);
             }
         }).catch(error => {
