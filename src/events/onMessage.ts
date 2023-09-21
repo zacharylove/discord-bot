@@ -46,8 +46,6 @@ export const onMessage : EventInterface = {
         if (!Message.guildId) {
             return;
         }
-
-        const messageContent = Message.content;
         
         
     

@@ -187,6 +187,7 @@ export class wordle {
      * @param message Message to be parsed
      */
     parseMessage = async (message: Message) => {
+        if (!message || !message.content || message.content == "" ) return "";
         const messageContent = message.content;
         // Whether message matches wordle pattern
         const patternMatch = messageContent.match("Wordle [0-9]+ [X|0-9]/6");
@@ -289,6 +290,7 @@ export class tradle {
     }
 
     parseMessage = async (message: Message) => {
+        if (!message || !message.content || message.content == "" ) return "";
         const messageContent = message.content;
         const patternMatch = messageContent.match("#Tradle #[0-9]+ [X|0-9]/6");
         const numLinesMatch = messageContent.split("\n").length <= this.info.numAllowedGuesses + 2;
