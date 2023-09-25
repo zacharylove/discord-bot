@@ -139,6 +139,40 @@ export default class Player {
         }
     }
 
+    goForward(num: number): boolean {
+        // If we can go forward
+        if ((this.queuePosition + num - 1) < this.queue.length) {
+            this.queuePosition += num;
+            this.positionInSeconds = 0;
+            this.stopTrackingPosition();
+            return true;
+        } else {
+            console.error(`Cannot go forward ${num} songs`);
+            return false;
+        }
+    }
+
+    async forward(num: number): Promise<boolean> {
+        const success: boolean = this.goForward(num);
+        try {
+            if (this.getCurrent() && this.status !== MusicStatus.PAUSED) await this.play();
+            else {
+                this.audioPlayer?.stop();
+                this.status = MusicStatus.IDLE;
+                // Disconnect after 30s
+                const disconnectTimer = 30;
+                this.disconnectTimer = setTimeout(() => {
+                    if (this.status === MusicStatus.IDLE) this.disconnect();
+                }, disconnectTimer * 1000);
+            }
+        } catch (error: unknown) {
+            this.queuePosition--;
+            console.error(error);
+            return false;
+        }
+        return success ? true : false;
+    }
+
     // Get currently playing song
     getCurrent(): QueuedSong | null {
         if (this.queue[this.queuePosition]) {
@@ -229,6 +263,14 @@ export default class Player {
       
             throw error;
         }
+    }
+    // Stop playing
+    stop(): number {
+        this.disconnect();
+        this.queuePosition = 0;
+        const prevQueueNum = this.queue.length;
+        this.queue = [];
+        return prevQueueNum;
     }
 
     // Pause song

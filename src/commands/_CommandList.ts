@@ -15,6 +15,8 @@ import { starboard } from "./slashCommands/starboard.js";
 import { stats } from "./slashCommands/stats.js";
 import { wordleStats } from "./slashCommands/wordleStats.js";
 import { playSong } from "./music/play.js";
+import { skipSong } from "./music/skip.js";
+import { stopSong } from "./music/stop.js";
 
 // List of all commands registered to the bot
 // These commands are registered to Discord when the bot starts
@@ -33,7 +35,9 @@ export const CommandList: CommandInterface[] = [
     movie,
     anime,
     caption,
-    playSong
+    playSong,
+    skipSong,
+    stopSong
 ];
 
 export default CommandList;
