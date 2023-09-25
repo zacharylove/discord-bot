@@ -1,12 +1,13 @@
 // On bot startup
 import { Routes } from "discord-api-types/v9";
 import { REST } from "@discordjs/rest";
-import { CommandList } from "commands/_CommandList";
-import { onTick } from "events/onTick";
-import { EventInterface } from "interfaces/Event";
-import { validateIntents } from "utils/validateProperties";
-import { Bot } from "bot";
-import { version, statuses } from "config/config.json";
+import { CommandList } from "../commands/_CommandList.js";
+import { onTick } from "../events/onTick.js";
+import { EventInterface } from "../interfaces/Event.js";
+import { validateIntents } from "../utils/validateProperties.js";
+import Bot from "../bot";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
 
 
 const registerCommands = async (BOT: Bot) => {
@@ -74,16 +75,16 @@ export const onReady : EventInterface = {
                 if (!BOT || !BOT.user ) {
                     throw new Error("BOT is undefined in status tick event.");
                 }
-                activityString = statuses[currentIndex];
-                if ( version != "" ) {
-                    activityString += " | v" + version;
+                activityString = config.statuses[currentIndex];
+                if ( config.version != "" ) {
+                    activityString += " | v" + config.version;
                 }
 
                 BOT.user.setActivity(activityString);
             
                 // update currentIndex
                 // if it's the last one, get back to 0
-                currentIndex = currentIndex >= statuses.length - 1 
+                currentIndex = currentIndex >= config.statuses.length - 1 
                 ? 0
                 : currentIndex + 1;
             }, updateDelay * parseInt(process.env.TICK_INTERVAL as string));

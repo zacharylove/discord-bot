@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import userModel from "@models/userModel";
+import userModel from "./models/userModel.js";
 
 
 // Makes mongoose connection to MongoDB Atlas database

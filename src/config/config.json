@@ -53,6 +53,14 @@
             "anime": "anime"
         }
     },
+    "youtubeAPI": {
+        "baseURL": "https://www.googleapis.com/youtube",
+        "version": "3",
+        "endpoints": {
+            "search": "search",
+            "id": "videos"
+        }
+    },
     "shipMessages": {
         "reallybad": [
             "No chance.",

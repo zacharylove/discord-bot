@@ -1,7 +1,7 @@
-import { CommandInterface } from "interfaces/Command";
+import { CommandInterface } from "../../interfaces/Command.js";
 import { ButtonStyle, Message, SlashCommandBuilder, User } from "discord.js";
-import { broadcastCommandFailed } from "utils/commandUtils";
-import { TMDBAPI, getMovie, getMovieDetails, getMovieProviders, tmdbDetailType, tmdbResponseType, tmdbResultType } from "api/tmdbAPI";
+import { broadcastCommandFailed } from "../../utils/commandUtils.js";
+import { TMDBAPI, getMovie, getMovieDetails, getMovieProviders, tmdbDetailType, tmdbResponseType, tmdbResultType } from "../../api/tmdbAPI.js";
 import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
 
 const createEmbed = async (interaction: Message<boolean>, movie: tmdbResultType): Promise<Message<boolean>> => {

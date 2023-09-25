@@ -1,14 +1,13 @@
-import 'module-alias/register';
 
-import { Bot } from "./bot";
-import { onInteraction } from "events/onInteraction";
-import { IntentOptions, PartialsOptions } from "config/IntentOptions";
-import { connectDatabase } from "database/connectDatabase";
-import { validateEnv, validateEventPermissions } from "utils/validateProperties";
-import { onReady } from "events/onReady";
-import { onMessage } from "events/onMessage";
+import Bot from "./bot.js";
+import { onInteraction } from "./events/onInteraction.js";
+import { IntentOptions, PartialsOptions } from "./config/IntentOptions.js";
+import { connectDatabase } from "./database/connectDatabase.js";
+import { validateEnv, validateEventPermissions } from "./utils/validateProperties.js";
+import { onReady } from "./events/onReady.js";
+import { onMessage } from "./events/onMessage.js";
 import { Events } from "discord.js";
-import { onMessageReactionAdd, onMessageReactionRemove } from "events/onMessageReaction";
+import { onMessageReactionAdd, onMessageReactionRemove } from "./events/onMessageReaction.js";
 
 
 let BOT: Bot;

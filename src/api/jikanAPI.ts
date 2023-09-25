@@ -1,8 +1,9 @@
 // Jikan is an unofficial API for MyAnimeList: https://docs.api.jikan.moe/
 // No API key or token is needed for read-only access
 import axios, { AxiosResponse } from "axios";
-import { RequestInterface } from "interfaces/RequestInterface";
-import { jikanAPI } from "config/config.json";
+import { RequestInterface } from "../interfaces/RequestInterface.js";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
 
 export enum animeType {
     tv,
@@ -76,10 +77,10 @@ export const JikanAPI: RequestInterface = {
         return res;
     },
     formRequestURL: (info: jikanRequestInfo): string => {
-        let requestURL = jikanAPI.baseURL + "/v" + jikanAPI.version + "/";
+        let requestURL = config.jikanAPI.baseURL + "/v" + config.jikanAPI.version + "/";
         let error : boolean = false;
         // Assuming anime search
-        requestURL += jikanAPI.endpoints.anime;
+        requestURL += config.jikanAPI.endpoints.anime;
 
         // TODO: handle all parameters if implemented
         requestURL += "?q=" + info.query.replace(new RegExp(`\\s`,'g'), "+");

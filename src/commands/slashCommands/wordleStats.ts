@@ -1,9 +1,9 @@
-import { CommandInterface } from 'interfaces/Command';
+import { CommandInterface } from '../../interfaces/Command.js';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
-import { getRanking, getWordleDataByUserID } from 'database/wordleData';
+import { getRanking, getWordleDataByUserID } from '../../database/wordleData.js';
 import { APIEmbedField } from 'discord.js';
-import { areWordleFeaturesEnabled } from 'database/guildData';
-import { broadcastCommandFailed } from 'utils/commandUtils';
+import { areWordleFeaturesEnabled } from '../../database/guildData.js';
+import { broadcastCommandFailed } from '../../utils/commandUtils.js';
 
 /**
      * Gets wordle stats for a user

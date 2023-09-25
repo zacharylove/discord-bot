@@ -1,10 +1,10 @@
 // Confessions
 // TODO: make modal
-import { CommandInteraction, EmbedBuilder, ModalBuilder, PermissionsBitField, SlashCommandBuilder, TextInputStyle } from 'discord.js';
-import { CommandInterface, CommandProperties } from 'interfaces/Command';
-import { getGuildDataByGuildID, update } from 'database/guildData';
-import { hasPermissions } from 'utils/userUtils';
-import { broadcastCommandFailed } from 'utils/commandUtils';
+import { CommandInteraction, EmbedBuilder, PermissionsBitField, SlashCommandBuilder } from 'discord.js';
+import { CommandInterface } from '../../interfaces/Command.js';
+import { getGuildDataByGuildID, update } from '../../database/guildData.js';
+import { hasPermissions } from '../../utils/userUtils.js';
+import { broadcastCommandFailed } from '../../utils/commandUtils.js';
 
 const createNewConfession = async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {

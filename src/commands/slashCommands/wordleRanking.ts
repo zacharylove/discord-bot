@@ -1,6 +1,6 @@
-import { CommandInterface } from 'interfaces/Command';
+import { CommandInterface } from '../../interfaces/Command.js';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
-import { getRanking } from 'database/wordleData';
+import { getRanking } from '../../database/wordleData.js';
 
 export const wordleRanking: CommandInterface = {
     data: new SlashCommandBuilder()

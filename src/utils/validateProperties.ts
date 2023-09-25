@@ -1,11 +1,11 @@
 // Validates environment variables to ensure they are not undefined
 
 import { GatewayIntentBits, Partials } from "discord.js";
-import { IntentOptions } from "config/IntentOptions";
-import { toTitleCase } from "./utils";
-import { EventProperties } from "interfaces/Event";
-import { movie } from "commands/slashCommands/movie";
-import { getMovie } from "api/tmdbAPI";
+import { IntentOptions } from "../config/IntentOptions.js";
+import { toTitleCase } from "./utils.js";
+import { EventProperties } from "../interfaces/Event.js";
+import { movie } from "../commands/slashCommands/movie.js";
+import { getMovie } from "../api/tmdbAPI.js";
 
 export const validateEnv = async () => {
     let validationOutput: string = "Validating environment variables...";

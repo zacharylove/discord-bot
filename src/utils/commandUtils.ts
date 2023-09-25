@@ -1,9 +1,9 @@
 // Utility function for commands
 
 import { CommandInteraction } from "discord.js";
-import CommandList from "commands/_CommandList";
-import { getGuildDataByGuildID } from "database/guildData";
-import { CommandInterface } from "interfaces/Command";
+import CommandList from "../commands/_CommandList.js";
+import { getGuildDataByGuildID } from "../database/guildData.js";
+import { CommandInterface } from "../interfaces/Command.js";
 
 /**
  * Get a list of all (non-globally-disabled) commands.

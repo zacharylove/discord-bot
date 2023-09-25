@@ -7,6 +7,8 @@ export const IntentOptions: GatewayIntentBits[] = [
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.GuildMessageReactions,
+    // Required for playing music
+    GatewayIntentBits.GuildVoiceStates,
 ]
 
 export const PartialsOptions = [
