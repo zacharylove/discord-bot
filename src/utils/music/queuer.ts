@@ -1,7 +1,8 @@
 import { ChatInputCommandInteraction, GuildMember } from "discord.js";
-import Player, { MusicStatus, SongMetadata } from "./player.js";
+import Player, { MusicStatus, QueuedSong, SongMetadata } from "./player.js";
 import { getMemberVoiceChannel, getMostPopularVoiceChannel } from "../../utils/voiceChannelUtils.js";
 import { parseQuery } from "../../api/youtubeAPI.js";
+import { EmbedBuilder } from "@discordjs/builders";
 
 // Queuer parses input queries and calls the corresponding player object
 export class Queuer {
@@ -66,12 +67,91 @@ export class Queuer {
         if (extraMsg !== '') {
         extraMsg = ` (${extraMsg})`;
         }
-    
-        if (songs.length === 1) {
+        const queueLength = player.getQueue().length;
+        if (queueLength > 1) {
+            await interaction.editReply(`Okay, **${firstSong.title}** was added to the queue and will play after ${queueLength - 1} other songs${extraMsg}`);
+        } else if (songs.length === 1) {
             await interaction.editReply(`Okay, **${firstSong.title}** is now playing${extraMsg}`);
         } else {
-            await interaction.editReply(`u betcha, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue${extraMsg}`);
+            await interaction.editReply(`Okay, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue${extraMsg}`);
         }
+    }
+
+    async secondsToTimestamp(seconds: number): Promise<string> {
+        let m = 0;
+        let h = 0;
+        let s = seconds;
+        while (s > 60) {
+            m++;
+            s -= 60;
+        }
+        while (m > 60) {
+            h++;
+            m -= 60;
+        }
+        return `${h > 0 ? `${String(h)}:` : ''}${m > 0 ? `${String(m)}:` : ''}${String(s)}s`;
+    }
+
+    public createQueueEmbed = async (guildId: string, page: number): Promise<EmbedBuilder> => {
+       
+        const player = this.guildQueueManager.get(guildId);
+        const queue = player.getQueue();
+        const progressInCurrentSong = await this.secondsToTimestamp(await player.getPosition());
+
+        const embed = new EmbedBuilder()
+            .setTimestamp()
+        ;
+
+        let title = '';
+        switch (player.status) {
+            case MusicStatus.PLAYING:
+                title += '▶️';
+                break;
+            case MusicStatus.PAUSED:
+                title += '⏸️';
+                break;
+            case MusicStatus.IDLE:
+                title += '⏹️';
+                break;
+        }
+        title += ` Queue${player.currentVoiceChannel ? ` for ${player.currentVoiceChannel.name}` : ''}`;
+
+
+        // Split songs into multiple pages if there are more than 10
+        let splitQueue: QueuedSong[][] = [];
+        for (let i = 0; i < queue.length; i += 10) {
+            splitQueue.push(queue.slice(i, i + 10));
+        }
+        
+
+        let currentPage = page - 1;
+
+        let description = splitQueue.length > 1 ? `Page ${currentPage + 1}/${splitQueue.length}\n` : '';
+        let counter = 1;
+        let totalDuration = 0;
+        
+        for ( const song of splitQueue.at(currentPage) ?? []) {
+            description += `${counter}.`;
+            description += ` **[${song.title}](https://www.youtube.com/watch?v=${song.url})**`;
+            description += `${song.requestedBy ? `(<@${song.requestedBy}>` : ''})`;
+            if (counter === 1) {
+                description += ` - \`[${progressInCurrentSong}/${await this.secondsToTimestamp(song.length)}]\``;
+            } else {
+                description += ' - `[' + await this.secondsToTimestamp(song.length) + ']`';
+            }
+            description += '\n';
+            counter++;
+            totalDuration += song.length;
+        }
+        description += `There are ${queue.length} tracks with a remaining length of \`${await this.secondsToTimestamp(totalDuration - player.getPosition())}\`.\n`;
+
+        embed.setTitle(title);
+        embed.setThumbnail(player.getCurrent()?.thumbnailUrl ?? null);
+        embed.setDescription(description);
+        embed.setFooter({text: 'Use /queue <page> to view specific pages'});
+
+
+        return embed;
     }
 }
 

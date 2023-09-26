@@ -17,6 +17,7 @@ import { wordleStats } from "./slashCommands/wordleStats.js";
 import { playSong } from "./music/play.js";
 import { skipSong } from "./music/skip.js";
 import { stopSong } from "./music/stop.js";
+import { queue } from "./music/queue.js";
 
 // List of all commands registered to the bot
 // These commands are registered to Discord when the bot starts
@@ -37,7 +38,8 @@ export const CommandList: CommandInterface[] = [
     caption,
     playSong,
     skipSong,
-    stopSong
+    stopSong,
+    queue
 ];
 
 export default CommandList;

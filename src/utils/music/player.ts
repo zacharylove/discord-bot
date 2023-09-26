@@ -68,6 +68,8 @@ export default class Player {
     public guildId: string;
     public loopCurrentSong = false;
 
+    public currentVoiceChannel: VoiceChannel | null = null;
+
     private queue: QueuedSong[] = [];
     private queuePosition = 0;
     private audioPlayer: AudioPlayer | null = null;
@@ -84,61 +86,11 @@ export default class Player {
         this.guildId = guildId;
     }
 
-    async connect(channel: VoiceChannel): Promise<void> {
-        this.voiceConnection = joinVoiceChannel({
-          channelId: channel.id,
-          guildId: channel.guild.id,
-          adapterCreator: channel.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-        });
-
-        // Disable keepalive
-        this.voiceConnection.on('stateChange', (oldState, newState) => {
-            /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-            const oldNetworking = Reflect.get(oldState, 'networking');
-            const newNetworking = Reflect.get(newState, 'networking');
-      
-            const networkStateChangeHandler = (_: any, newNetworkState: any) => {
-              const newUdp = Reflect.get(newNetworkState, 'udp');
-              clearInterval(newUdp?.keepAliveInterval);
-            };
-      
-            oldNetworking?.off('stateChange', networkStateChangeHandler);
-            newNetworking?.on('stateChange', networkStateChangeHandler);
-            /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-          });
-    }
-
-    disconnect(): void {
-        if (this.voiceConnection) {
-          if (this.status === MusicStatus.PLAYING) {
-            this.pause();
-          }
-    
-          this.loopCurrentSong = false;
-          this.voiceConnection.destroy();
-          this.audioPlayer?.stop();
-    
-          this.voiceConnection = null;
-          this.audioPlayer = null;
-        }
-    }
-
-
     // ====================
-    // Track Management
+    // Queue Management
     // ====================
-
-    add(song: QueuedSong, immediate?: boolean): void {
-        if (song.playlist || !immediate) {
-            // Add to end of queue
-            this.queue.push(song);
-          } else {
-            // Add as the next song to be played
-            const insertAt = this.queuePosition + 1;
-            this.queue = [...this.queue.slice(0, insertAt), song, ...this.queue.slice(insertAt)];
-        }
-    }
-
+    
+    // Skip forward
     goForward(num: number): boolean {
         // If we can go forward
         if ((this.queuePosition + num - 1) < this.queue.length) {
@@ -151,7 +103,7 @@ export default class Player {
             return false;
         }
     }
-
+    // Skip forward
     async forward(num: number): Promise<boolean> {
         const success: boolean = this.goForward(num);
         try {
@@ -173,6 +125,27 @@ export default class Player {
         return success ? true : false;
     }
 
+    getQueue(): QueuedSong[] {
+        return this.queue;
+    }
+
+    // ====================
+    // Track Management
+    // ====================
+
+    add(song: QueuedSong, immediate?: boolean): void {
+        if (song.playlist || !immediate) {
+            // Add to end of queue
+            this.queue.push(song);
+          } else {
+            // Add as the next song to be played
+            const insertAt = this.queuePosition + 1;
+            this.queue = [...this.queue.slice(0, insertAt), song, ...this.queue.slice(insertAt)];
+        }
+    }
+
+    
+
     // Get currently playing song
     getCurrent(): QueuedSong | null {
         if (this.queue[this.queuePosition]) {
@@ -182,7 +155,7 @@ export default class Player {
         return null;
     }
 
-    // Get position in song
+    // Get position (seconds) in song
     getPosition(): number {
         return this.positionInSeconds;
     }
@@ -469,6 +442,47 @@ export default class Player {
     // Voice Channel Management
     // ====================
 
+    async connect(channel: VoiceChannel): Promise<void> {
+        this.voiceConnection = joinVoiceChannel({
+          channelId: channel.id,
+          guildId: channel.guild.id,
+          adapterCreator: channel.guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
+        });
+
+        // Disable keepalive
+        this.voiceConnection.on('stateChange', (oldState, newState) => {
+            /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+            const oldNetworking = Reflect.get(oldState, 'networking');
+            const newNetworking = Reflect.get(newState, 'networking');
+      
+            const networkStateChangeHandler = (_: any, newNetworkState: any) => {
+              const newUdp = Reflect.get(newNetworkState, 'udp');
+              clearInterval(newUdp?.keepAliveInterval);
+            };
+      
+            oldNetworking?.off('stateChange', networkStateChangeHandler);
+            newNetworking?.on('stateChange', networkStateChangeHandler);
+            /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+        });
+        this.currentVoiceChannel = channel;
+    }
+
+    disconnect(): void {
+        if (this.voiceConnection) {
+          if (this.status === MusicStatus.PLAYING) {
+            this.pause();
+          }
+    
+          this.loopCurrentSong = false;
+          this.voiceConnection.destroy();
+          this.audioPlayer?.stop();
+    
+          this.voiceConnection = null;
+          this.audioPlayer = null;
+          this.currentVoiceChannel = null;
+        }
+    }
+
     // Disconnect from VC
     private onVoiceConnectionDisconnect(): void {
         this.disconnect();
@@ -483,11 +497,9 @@ export default class Player {
         }
     
         if (newState.status === AudioPlayerStatus.Idle && this.status === MusicStatus.PLAYING) {
-          //await this.forward(1);
+          await this.forward(1);
         }
     }
-
-
 
     private attachVCListeners(): void {
         if (!this.voiceConnection) return;
