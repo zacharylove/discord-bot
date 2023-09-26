@@ -24,7 +24,7 @@
     "mongoose": "^7.5.2"
   },
   "devDependencies": {
-    "@types/node": "^20.6.2",
+    "@types/node": "^20.6.5",
     "gif-encoder-2": "^1.0.5",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2"
