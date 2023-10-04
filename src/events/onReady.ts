@@ -31,10 +31,10 @@ const registerCommands = async (BOT: Bot) => {
         let line = "";
 
         if (Command.properties.Scope === 'guild') {
-            line += "\n  [Guild] " + Command.properties.Name;
+            line += "\n  🔰 " + Command.properties.Name;
             guildCommands.push(Command.data.toJSON());
         } else if (Command.properties.Scope === 'global') {
-            line += "\n  [Global] " + Command.properties.Name;
+            line += "\n  🌎 " + Command.properties.Name;
             globalCommands.push(Command.data.toJSON());
         }
         
