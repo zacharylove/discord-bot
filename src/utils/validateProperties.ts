@@ -6,6 +6,8 @@ import { toTitleCase } from "./utils.js";
 import { EventProperties } from "../interfaces/Event.js";
 import { movie } from "../commands/slashCommands/movie.js";
 import { getMovie } from "../api/tmdbAPI.js";
+import { parseQuery } from "../api/youtubeAPI.js";
+import { toggleMusicCommands } from "../commands/_CommandList.js";
 
 export const validateEnv = async () => {
     let validationOutput: string = "Validating environment variables...";
@@ -59,6 +61,21 @@ export const validateEnv = async () => {
         movie.properties.Enabled = false;
     } else {
         validationOutput += "\n  [~] TMDB API token is valid!";
+    }
+
+    if(!process.env.YOUTUBE_API_KEY) {
+        validationOutput += "\n  [!] No Youtube API key found, disabling music";
+        toggleMusicCommands(false);
+        valid = false;
+    } else {
+        let result;
+        try {
+            result = parseQuery("https://www.youtube.com/watch?v=9ySxxVOHW7A");
+            validationOutput += "\n  [~] Youtube API key is valid!";
+        } catch (e) {
+            validationOutput += "\n  [!] Youtube API key is invalid!";
+            valid = false;
+        }
     }
     
     if (!process.env.DEBUG_MODE || process.env.DEBUG_MODE.toLowerCase() !== "true") {

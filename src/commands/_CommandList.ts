@@ -47,3 +47,12 @@ export const CommandList: CommandInterface[] = [
 ];
 
 export default CommandList;
+
+export const toggleMusicCommands = (enabled: boolean) => {
+    playSong.properties.Enabled = enabled;
+    skipSong.properties.Enabled = enabled;
+    stopSong.properties.Enabled = enabled;
+    queue.properties.Enabled = enabled;
+    shuffleQueue.properties.Enabled = enabled;
+    clearQueue.properties.Enabled = enabled;
+}
