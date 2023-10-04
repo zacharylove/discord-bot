@@ -1,7 +1,7 @@
 // Confessions
 // TODO: make modal
 import { CommandInteraction, EmbedBuilder, PermissionsBitField, SlashCommandBuilder } from 'discord.js';
-import { CommandInterface } from '../../interfaces/Command.js';
+import { CommandInterface, Feature } from '../../interfaces/Command.js';
 import { getGuildDataByGuildID, update } from '../../database/guildData.js';
 import { hasPermissions } from '../../utils/userUtils.js';
 import { broadcastCommandFailed } from '../../utils/commandUtils.js';
@@ -174,6 +174,7 @@ export const confess: CommandInterface = {
         DefaultEnabled: true,
         Enabled: true,
         Permissions: [],
-        Ephemeral: true
+        Ephemeral: true,
+        Feature: Feature.Confession
     }
 }

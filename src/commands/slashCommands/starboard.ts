@@ -1,5 +1,5 @@
 import { Channel, CommandInteraction, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
-import { CommandInterface } from "../../interfaces/Command.js";
+import { CommandInterface, Feature } from "../../interfaces/Command.js";
 import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold, update } from "../../database/guildData.js";
 import { hasPermissions } from "../../utils/userUtils.js";
 import { EmbedBuilder } from "@discordjs/builders";
@@ -395,5 +395,6 @@ export const starboard: CommandInterface = {
         DefaultEnabled: true,
         Enabled: true,
         Permissions: [],
+        Feature: Feature.Starboard
     }
 }

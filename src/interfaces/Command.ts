@@ -4,7 +4,9 @@ import { CommandInteraction, PermissionsBitField } from "discord.js";
 
 export enum Feature {
     Music,
-    Wordle
+    Wordle,
+    Starboard,
+    Confession
 }
 
 // Interface for all commands, defines requirements and some additional properties
