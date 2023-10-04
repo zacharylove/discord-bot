@@ -9,7 +9,7 @@ import { getMovie } from "../api/tmdbAPI.js";
 import { parseQuery } from "../api/youtubeAPI.js";
 import { toggleMusicCommands, toggleWordlecommands } from "../commands/_CommandList.js";
 import { getAnime } from "../api/jikanAPI.js";
-import { anime } from "commands/slashCommands/anime.js";
+import { anime } from "../commands/slashCommands/anime.js";
 
 export const validateEnv = async () => {
     let validationOutput: string = "Validating environment variables...";
