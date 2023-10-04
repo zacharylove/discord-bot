@@ -7,7 +7,9 @@ import { EventProperties } from "../interfaces/Event.js";
 import { movie } from "../commands/slashCommands/movie.js";
 import { getMovie } from "../api/tmdbAPI.js";
 import { parseQuery } from "../api/youtubeAPI.js";
-import { toggleMusicCommands } from "../commands/_CommandList.js";
+import { toggleMusicCommands, toggleWordlecommands } from "../commands/_CommandList.js";
+import { getAnime } from "../api/jikanAPI.js";
+import { anime } from "commands/slashCommands/anime.js";
 
 export const validateEnv = async () => {
     let validationOutput: string = "Validating environment variables...";
@@ -17,7 +19,8 @@ export const validateEnv = async () => {
         valid = false;
     }
     if (!process.env.MONGO_URI) {
-        validationOutput += "\n  [!] FAILED: Missing MongoDB Atlas connection string!";
+        validationOutput += "\n  [!] FAILED: Missing MongoDB Atlas connection string! Disabling Wordle";
+        toggleWordlecommands(false);
         valid = false;
     }
 
@@ -61,6 +64,15 @@ export const validateEnv = async () => {
         movie.properties.Enabled = false;
     } else {
         validationOutput += "\n  [~] TMDB API token is valid!";
+    }
+
+    const animeTestResult = await getAnime("Monogatari");
+    if(animeTestResult == null) {
+        validationOutput += "\n  [!] Jikan API token is invalid, disabling /anime";
+        anime.properties.Enabled = false;
+        valid = false;
+    } else {
+        validationOutput += "\n  [~] Jikan API token is valid!";
     }
 
     if(!process.env.YOUTUBE_API_KEY) {
