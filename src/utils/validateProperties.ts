@@ -28,64 +28,65 @@ export const validateEnv = async () => {
     // These environment variables are optional
 
     if (!process.env.GUILD_ID) {
-        validationOutput += "\n  [?] Missing testing guild ID! If not in development, this won't do anything.";
+        validationOutput += "\n  ℹ️  Missing testing guild ID! If not in development, this won't do anything.";
     } else {
-        validationOutput += "\n  [~] Loaded testing GUILD_ID = " + process.env.GUILD_ID;
+        validationOutput += "\n  ℹ️  Loaded testing GUILD_ID = " + process.env.GUILD_ID;
     }
 
     if (!process.env.TICK_INTERVAL) {
-        validationOutput += "\n  [!] FAILED: Missing tick interval!";
+        validationOutput += "\n  ⚠️ Missing tick interval!";
         valid = false;
     } else {
-        validationOutput += "\n  [~] Loaded TICK_INTERVAL = " + process.env.TICK_INTERVAL;
+        validationOutput += "\n  ℹ️  Loaded TICK_INTERVAL = " + process.env.TICK_INTERVAL;
     }
 
     if (!process.env.DEBUG_MODE) {
-        validationOutput += "\n  [?] WARN: Missing debug mode!";
+        validationOutput += "\n  ⚠️ Missing debug mode!";
     } else if (process.env.DEBUG_MODE.toLowerCase() === "true") {
-        validationOutput += "\n  [~] Debug mode is enabled!";
+        validationOutput += "\n  ℹ️  Debug mode is enabled!";
     } else if (process.env.DEBUG_MODE.toLowerCase() === "false") {
-        validationOutput += "\n  [~] Debug mode is disabled!";
+        validationOutput += "\n  ℹ️  Debug mode is disabled!";
     }
 
     if (!process.env.OWNER_ID) {
-        validationOutput += "\n  [?] No bot owner ID specified!";
+        validationOutput += "\n  ℹ️  No bot owner ID specified!";
     } else {
-        validationOutput += "\n  [~] Bot owner ID loaded!";
+        validationOutput += "\n  ℹ️  Bot owner ID loaded!";
     }
 
-
-    const tmdbTestResult = await getMovie('Annihilation');
     if (!process.env.MOVIEDB_ACCESS_TOKEN) {
-        validationOutput += "\n  [!] No TMDB API token found, disabling /movie";
+        validationOutput += "\n  ❌ No TMDB API token found, disabling /movie";
         movie.properties.Enabled = false;
-    } else if(tmdbTestResult == null) {
-        validationOutput += "\n  [!] TMDB API token is invalid, disabling /movie";
-        movie.properties.Enabled = false;
-    } else {
-        validationOutput += "\n  [~] TMDB API token is valid!";
+    }  else {
+        const tmdbTestResult = await getMovie('Annihilation');
+        if(tmdbTestResult == null) {
+            validationOutput += "\n  ❌ TMDB API token is invalid, disabling /movie";
+            movie.properties.Enabled = false;
+        } else {
+            validationOutput += "\n  ✅ TMDB API token is valid!";
+        }
     }
 
     const animeTestResult = await getAnime("Monogatari");
     if(animeTestResult == null) {
-        validationOutput += "\n  [!] Jikan API token is invalid, disabling /anime";
+        validationOutput += "\n  ❌ Jikan API token is invalid, disabling /anime";
         anime.properties.Enabled = false;
         valid = false;
     } else {
-        validationOutput += "\n  [~] Jikan API token is valid!";
+        validationOutput += "\n  ✅ Jikan API token is valid!";
     }
 
     if(!process.env.YOUTUBE_API_KEY) {
-        validationOutput += "\n  [!] No Youtube API key found, disabling music";
+        validationOutput += "\n  ❌ No Youtube API key found, disabling music";
         toggleMusicCommands(false);
         valid = false;
     } else {
         let result;
         try {
             result = parseQuery("https://www.youtube.com/watch?v=9ySxxVOHW7A");
-            validationOutput += "\n  [~] Youtube API key is valid!";
+            validationOutput += "\n  ✅ Youtube API key is valid!";
         } catch (e) {
-            validationOutput += "\n  [!] Youtube API key is invalid!";
+            validationOutput += "\n  ❌ Youtube API key is invalid!";
             valid = false;
         }
     }
@@ -98,11 +99,11 @@ export const validateEnv = async () => {
     }
     
     if (!valid) {
-        validationOutput += "\n ==VALIDATION FAIL!== ";
+        validationOutput += "\n == VALIDATION FAIL! == ";
         console.log(validationOutput);
         return false;
     } else {
-        validationOutput += "\n ==VALIDATION SUCCESS!== ";
+        validationOutput += "\n == VALIDATION SUCCESS! == ";
         console.log(validationOutput);
         return true;
     }
