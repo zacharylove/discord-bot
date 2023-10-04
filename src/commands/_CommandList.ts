@@ -18,6 +18,8 @@ import { playSong } from "./music/play.js";
 import { skipSong } from "./music/skip.js";
 import { stopSong } from "./music/stop.js";
 import { queue } from "./music/queue.js";
+import { shuffleQueue } from "./music/shuffle.js";
+import { clearQueue } from "./music/clear.js";
 
 // List of all commands registered to the bot
 // These commands are registered to Discord when the bot starts
@@ -39,7 +41,9 @@ export const CommandList: CommandInterface[] = [
     playSong,
     skipSong,
     stopSong,
-    queue
+    queue,
+    shuffleQueue,
+    clearQueue
 ];
 
 export default CommandList;

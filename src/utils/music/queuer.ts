@@ -46,9 +46,8 @@ export class Queuer {
             if (songAlreadyPlaying) {
                 statusMessage = 'resuming playback';
             }
-            // TODO: build embed
             await interaction.editReply({
-                content: 'test',
+                content: 'Getting your song....',
             });
         } else if (player.status === MusicStatus.IDLE) {
             // Player is idle, start playback instead
@@ -65,19 +64,33 @@ export class Queuer {
         }
     
         if (extraMsg !== '') {
-        extraMsg = ` (${extraMsg})`;
+            extraMsg = ` (${extraMsg})`;
         }
         const queueLength = player.getQueue().length;
-        if (queueLength > 1) {
-            await interaction.editReply(`Okay, **${firstSong.title}** was added to the queue and will play after ${queueLength - 1} other songs${extraMsg}`);
-        } else if (songs.length === 1) {
-            await interaction.editReply(`Okay, **${firstSong.title}** is now playing${extraMsg}`);
+        if (songs.length === 1) {
+            if (queueLength > 1) {
+                await interaction.editReply(`Okay, **${firstSong.title}** was added to the queue and will play after ${queueLength - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
+            } else {
+                await interaction.editReply(`Okay, **${firstSong.title}** is now playing${extraMsg}`);
+            } 
         } else {
-            await interaction.editReply(`Okay, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue${extraMsg}`);
+            if (queueLength > 1) {
+                await interaction.editReply(`Okay, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue and will play after ${queueLength - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
+            } else {
+                await interaction.editReply(`Okay, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue${extraMsg}`);
+            }
         }
+
+        
     }
 
     async secondsToTimestamp(seconds: number): Promise<string> {
+        function leadingZeroes(num: number, size: number) {
+            let strNum = num.toString();
+            while (strNum.length < size) strNum = "0" + strNum;
+            return strNum;
+        }
+
         let m = 0;
         let h = 0;
         let s = seconds;
@@ -89,7 +102,7 @@ export class Queuer {
             h++;
             m -= 60;
         }
-        return `${h > 0 ? `${String(h)}:` : ''}${m > 0 ? `${String(m)}:` : ''}${String(s)}s`;
+        return `${h > 0 ? `${leadingZeroes(h,2)}:` : ''}${m > 0 ? `${leadingZeroes(m,2)}` : '00'}:${leadingZeroes(s,2)}`;
     }
 
     public createQueueEmbed = async (guildId: string, page: number): Promise<EmbedBuilder> => {
@@ -133,7 +146,7 @@ export class Queuer {
         for ( const song of splitQueue.at(currentPage) ?? []) {
             description += `${counter}.`;
             description += ` **[${song.title}](https://www.youtube.com/watch?v=${song.url})**`;
-            description += `${song.requestedBy ? `(<@${song.requestedBy}>` : ''})`;
+            description += `${song.requestedBy ? ` (<@${song.requestedBy}>` : ''})`;
             if (counter === 1) {
                 description += ` - \`[${progressInCurrentSong}/${await this.secondsToTimestamp(song.length)}]\``;
             } else {

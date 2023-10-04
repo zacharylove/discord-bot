@@ -31,6 +31,7 @@ import ytdl, {videoFormat} from 'ytdl-core';
 //import { WriteStream } from "fs-capacitor";
 import ffmpeg from 'fluent-ffmpeg';
 import { WriteStream } from "fs-capacitor";
+import { shuffleArray } from "../../utils/utils.js";
 export enum MusicStatus {
     PLAYING,
     PAUSED,
@@ -125,6 +126,29 @@ export default class Player {
         return success ? true : false;
     }
 
+    // Shuffle queue
+    async shuffle(): Promise<void> { 
+        // Shuffle all songs after current song
+        
+        const shuffledSongs = shuffleArray(this.queue.slice(this.queuePosition + 1));
+        
+        this.queue = [...this.queue.slice(0, this.queuePosition + 1), ...shuffledSongs];
+    }
+
+    // Clear queue
+    clear(clearCurrent: boolean): void {
+        if (clearCurrent) {
+            this.queue = [];
+            this.queuePosition = 0;
+            if (this.status === MusicStatus.PLAYING) {
+                this.pause();
+            }
+            this.audioPlayer?.stop();
+        } else {
+            this.queue = this.queue.slice(0, this.queuePosition + 1);
+        }
+    }
+
     getQueue(): QueuedSong[] {
         return this.queue;
     }
@@ -143,8 +167,6 @@ export default class Player {
             this.queue = [...this.queue.slice(0, insertAt), song, ...this.queue.slice(insertAt)];
         }
     }
-
-    
 
     // Get currently playing song
     getCurrent(): QueuedSong | null {
