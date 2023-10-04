@@ -1,6 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { CommandInterface, Feature } from "../../interfaces/Command.js";
-import { BOT } from "../../index.js";
+import { CommandInterface, Feature } from "../../../interfaces/Command.js";
+import { BOT } from "../../../index.js";
 import { GatewayIntentBits } from "discord-api-types/v9";
 
 

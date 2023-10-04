@@ -1,8 +1,8 @@
 import { GatewayIntentBits } from "discord-api-types/v9";
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { BOT } from "../../index.js";
-import { CommandInterface } from "../../interfaces/Command.js";
-import { MusicStatus } from "../../utils/music/player.js";
+import { BOT } from "../../../index.js";
+import { CommandInterface, Feature } from "../../../interfaces/Command.js";
+import { MusicStatus } from "../../../utils/music/player.js";
 
 
 export const stopSong: CommandInterface = {

@@ -1,6 +1,6 @@
 import { CommandInterface } from "../interfaces/Command.js";
 import { validateEventPermissions } from "../utils/validateProperties.js";
-import { wordleStats } from "../commands/slashCommands/wordleStats.js";
+import { wordleStats } from "../commands/slashCommands/wordle/wordleStats.js";
 import guildModel, { GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel.js";
 import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils.js";
 import { FilterQuery } from "mongoose";

@@ -1,6 +1,6 @@
-import { CommandInterface, Feature } from "../../interfaces/Command.js";
+import { CommandInterface, Feature } from "../../../interfaces/Command.js";
 import { ChatInputCommandInteraction, CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { BOT } from "../../index.js";
+import { BOT } from "../../../index.js";
 import { GatewayIntentBits } from "discord-api-types/v9";
 
 export const playSong: CommandInterface = {

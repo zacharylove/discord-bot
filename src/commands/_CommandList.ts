@@ -13,15 +13,15 @@ import { poke } from "./slashCommands/poke.js";
 import { ship } from "./slashCommands/ship.js";
 import { starboard } from "./slashCommands/starboard.js";
 import { stats } from "./slashCommands/stats.js";
-import { wordleStats } from "./slashCommands/wordleStats.js";
-import { playSong } from "./music/play.js";
-import { skipSong } from "./music/skip.js";
-import { stopSong } from "./music/stop.js";
-import { queue } from "./music/queue.js";
-import { shuffleQueue } from "./music/shuffle.js";
-import { clearQueue } from "./music/clear.js";
-import { nowPlaying } from "./music/nowplaying.js";
-import { pause, resume } from "./music/pauseResume.js";
+import { wordleStats } from "./slashCommands/wordle/wordleStats.js";
+import { playSong } from "./slashCommands/music/play.js";
+import { skipSong } from "./slashCommands/music/skip.js";
+import { stopSong } from "./slashCommands/music/stop.js";
+import { queue } from "./slashCommands/music/queue.js";
+import { shuffleQueue } from "./slashCommands/music/shuffle.js";
+import { clearQueue } from "./slashCommands/music/clear.js";
+import { nowPlaying } from "./slashCommands/music/nowplaying.js";
+import { pause, resume } from "./slashCommands/music/pauseResume.js";
 
 // List of all commands registered to the bot
 // These commands are registered to Discord when the bot starts

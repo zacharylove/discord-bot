@@ -1,6 +1,6 @@
-import { CommandInterface } from '../../interfaces/Command.js';
+import { CommandInterface, Feature } from '../../../interfaces/Command.js';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
-import { getRanking } from '../../database/wordleData.js';
+import { getRanking } from '../../../database/wordleData.js';
 
 export const wordleRanking: CommandInterface = {
     data: new SlashCommandBuilder()
@@ -30,7 +30,7 @@ export const wordleRanking: CommandInterface = {
         GuildOnly: false,
         Enabled: true,
         DefaultEnabled: false,
-        Intents: []
-
+        Intents: [],
+        Feature: Feature.Wordle
     }
 }

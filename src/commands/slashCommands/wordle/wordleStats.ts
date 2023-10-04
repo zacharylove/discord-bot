@@ -1,9 +1,9 @@
-import { CommandInterface } from '../../interfaces/Command.js';
+import { CommandInterface, Feature } from '../../../interfaces/Command.js';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
-import { getRanking, getWordleDataByUserID } from '../../database/wordleData.js';
+import { getRanking, getWordleDataByUserID } from '../../../database/wordleData.js';
 import { APIEmbedField } from 'discord.js';
-import { areWordleFeaturesEnabled } from '../../database/guildData.js';
-import { broadcastCommandFailed } from '../../utils/commandUtils.js';
+import { areWordleFeaturesEnabled } from '../../../database/guildData.js';
+import { broadcastCommandFailed } from '../../../utils/commandUtils.js';
 
 /**
      * Gets wordle stats for a user
@@ -95,6 +95,7 @@ export const wordleStats: CommandInterface = {
             GuildOnly: true,
             Enabled: true,
             DefaultEnabled: false,
-            Intents: []
+            Intents: [],
+            Feature: Feature.Wordle
         }
 }
