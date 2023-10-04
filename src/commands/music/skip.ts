@@ -1,13 +1,13 @@
 import { GatewayIntentBits } from "discord-api-types/v9";
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BOT } from "../../index.js";
-import { CommandInterface } from "../../interfaces/Command.js";
+import { CommandInterface, Feature } from "../../interfaces/Command.js";
 
 
 export const skipSong: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('skip')
-        .setDescription('Skips to the next song in the queue')
+        .setDescription('(Music) Skips to the next song in the queue')
         .addIntegerOption((option) =>
             option
                 .setName('number')
@@ -37,5 +37,6 @@ export const skipSong: CommandInterface = {
         Intents: [GatewayIntentBits.GuildVoiceStates],
         Permissions: [],
         Ephemeral: false,
+        Feature: Feature.Music
     }
 }

@@ -1,4 +1,4 @@
-import { CommandInterface } from "../../interfaces/Command.js";
+import { CommandInterface, Feature } from "../../interfaces/Command.js";
 import { ChatInputCommandInteraction, CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BOT } from "../../index.js";
 import { GatewayIntentBits } from "discord-api-types/v9";
@@ -6,7 +6,7 @@ import { GatewayIntentBits } from "discord-api-types/v9";
 export const playSong: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('play')
-        .setDescription('Plays a song in your current voice channel')
+        .setDescription('(Music) Plays a song in your current voice channel')
         .addStringOption((option) =>
             option
                 .setName('query')
@@ -47,5 +47,6 @@ export const playSong: CommandInterface = {
         Intents: [GatewayIntentBits.GuildVoiceStates],
         Permissions: [],
         Ephemeral: false,
+        Feature: Feature.Music
     }
 }

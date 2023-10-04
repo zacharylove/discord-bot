@@ -8,7 +8,7 @@ import { MusicStatus } from "../../utils/music/player.js";
 export const stopSong: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('stop')
-        .setDescription('Stops the current song, clears the queue, and leaves the channel'),
+        .setDescription('(Music) Stops the current song, clears the queue, and leaves the channel'),
     run: async (interaction: CommandInteraction) => {
         if( !interaction.isChatInputCommand() ) return;
         const musicQueueManager = BOT.getMusicQueuerManager();
@@ -33,5 +33,6 @@ export const stopSong: CommandInterface = {
         Intents: [GatewayIntentBits.GuildVoiceStates],
         Permissions: [],
         Ephemeral: false,
+        Feature: Feature.Music
     }
 }

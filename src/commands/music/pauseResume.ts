@@ -1,13 +1,13 @@
 import { GatewayIntentBits } from "discord-api-types/v9";
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BOT } from "../../index.js";
-import { CommandInterface } from "../../interfaces/Command.js";
+import { CommandInterface, Feature } from "../../interfaces/Command.js";
 import { MusicStatus } from "../../utils/music/player.js";
 
 export const pause: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('pause')
-        .setDescription('Pauses the current song'),
+        .setDescription('(Music) Pauses the current song'),
     run: async (interaction: CommandInteraction) => {
         if( !interaction.isChatInputCommand() ) return;
         const musicQueueManager = BOT.getMusicQueuerManager();
@@ -34,13 +34,14 @@ export const pause: CommandInterface = {
         Intents: [GatewayIntentBits.GuildVoiceStates],
         Permissions: [],
         Ephemeral: false,
+        Feature: Feature.Music
     }
 }
 
 export const resume: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('resume')
-        .setDescription('Resumes playing the current song'),
+        .setDescription('(Music) Resumes playing the current song'),
     run: async (interaction: CommandInteraction) => {
         if( !interaction.isChatInputCommand() ) return;
         const musicQueueManager = BOT.getMusicQueuerManager();
@@ -67,5 +68,6 @@ export const resume: CommandInterface = {
         Intents: [GatewayIntentBits.GuildVoiceStates],
         Permissions: [],
         Ephemeral: false,
+        Feature: Feature.Music
     }
 }

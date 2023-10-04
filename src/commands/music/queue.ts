@@ -1,13 +1,13 @@
 import { GatewayIntentBits } from "discord-api-types/v9";
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BOT } from "../../index.js";
-import { CommandInterface } from "../../interfaces/Command.js";
+import { CommandInterface, Feature } from "../../interfaces/Command.js";
 
 
 export const queue: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('queue')
-        .setDescription('Displays the current queue')
+        .setDescription('(Music) Displays the current queue')
         .addIntegerOption((option) =>
             option
                 .setName('page')
@@ -33,5 +33,6 @@ export const queue: CommandInterface = {
         Intents: [GatewayIntentBits.GuildVoiceStates],
         Permissions: [],
         Ephemeral: false,
+        Feature: Feature.Music
     }
 }

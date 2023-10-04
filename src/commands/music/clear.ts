@@ -1,12 +1,12 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { CommandInterface } from "../../interfaces/Command.js";
+import { CommandInterface, Feature } from "../../interfaces/Command.js";
 import { BOT } from "../../index.js";
 import { GatewayIntentBits } from "discord-api-types/v9";
 
 export const clearQueue: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('clear')
-        .setDescription('Clears the queue')
+        .setDescription('(Music) Clears the queue')
         .addBooleanOption((option) =>
             option.setName('all')
                 .setDescription('Also remove the currently playing song?')
@@ -37,5 +37,6 @@ export const clearQueue: CommandInterface = {
         Intents: [GatewayIntentBits.GuildVoiceStates],
         Permissions: [],
         Ephemeral: false,
+        Feature: Feature.Music
     }
 }

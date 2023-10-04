@@ -1,6 +1,6 @@
 // Keeps track of all commands as an array
 
-import { CommandInterface } from "../interfaces/Command.js"
+import { CommandInterface, Feature } from "../interfaces/Command.js"
 import { animAvatarTest } from "./animAvatarTest.js";
 import { anime } from "./slashCommands/anime.js";
 import { avatar } from "./slashCommands/avatar.js";
@@ -54,13 +54,17 @@ export const CommandList: CommandInterface[] = [
 export default CommandList;
 
 export const toggleMusicCommands = (enabled: boolean) => {
-    playSong.properties.Enabled = enabled;
-    skipSong.properties.Enabled = enabled;
-    stopSong.properties.Enabled = enabled;
-    queue.properties.Enabled = enabled;
-    shuffleQueue.properties.Enabled = enabled;
-    clearQueue.properties.Enabled = enabled;
-    nowPlaying.properties.Enabled = enabled;
-    pause.properties.Enabled = enabled;
-    resume.properties.Enabled = enabled;
+    for (const command of CommandList) {
+        if (command.properties.Feature == Feature.Music) {
+            command.properties.Enabled = enabled;
+        }
+    }
+}
+
+export const toggleWordlecommands = (enabled: boolean) => {
+    for (const command of CommandList) {
+        if (command.properties.Feature == Feature.Wordle) {
+            command.properties.Enabled = enabled;
+        }
+    }
 }
