@@ -13,16 +13,28 @@ export const playSong: CommandInterface = {
                 .setDescription('The song to play')
                 .setRequired(true)
         )
+        .addBooleanOption((option) =>
+            option
+                .setName('next')
+                .setDescription('Whether to add to the front of the queue')
+        )
+        .addBooleanOption((option) =>
+            option
+                .setName('shuffle')
+                .setDescription('Whether to shuffle the queue')
+        )
         ,
     run: async (interaction: CommandInteraction) => {
         if( !interaction.isChatInputCommand() ) return;
         const query = interaction.options.getString('query')!;
+        const next = interaction.options.getBoolean('next') ?? false;
+        const shuffle = interaction.options.getBoolean('shuffle') ?? false;
         const guildQueuer = BOT.getMusicQueuer();
 
         await guildQueuer.addToQueue({
             query: query,
             interaction: interaction
-        });
+        }, shuffle, next);
     },
     properties: {
         Name: "play",

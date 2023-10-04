@@ -15,7 +15,7 @@ export class Queuer {
     }: {
         query: string,
         interaction: ChatInputCommandInteraction
-    }): Promise<void> {
+    }, shuffle: boolean, next: boolean): Promise<void> {
         const guildId: string = interaction.guild!.id;
         const player = this.guildQueueManager.get(guildId);
         const songAlreadyPlaying: boolean = player.getCurrent() !== null;
@@ -31,8 +31,9 @@ export class Queuer {
                 ...song,
                 addedInChannelId: interaction.channel!.id,
                 requestedBy: interaction.member!.user.id,
-            }, true);
+            }, next);
         });
+        if (shuffle) player.shuffle();
         const firstSong = songs[0];
         
         let statusMessage: string = '';
@@ -164,6 +165,50 @@ export class Queuer {
         embed.setFooter({text: 'Use /queue <page> to view specific pages'});
 
 
+        return embed;
+    }
+
+    public createNowPlayingEmbed = async (guildId: string): Promise<EmbedBuilder> => {
+        const player = this.guildQueueManager.get(guildId);
+        const queue = player.getQueue();
+        const progressInCurrentSong = await this.secondsToTimestamp(await player.getPosition());
+
+        const embed = new EmbedBuilder()
+            .setTimestamp()
+            .setColor(player.getStatus() === MusicStatus.PLAYING ? 2067276 : 10038562)
+            .setTitle(player.getStatus() === MusicStatus.PLAYING ? 'Now Playing' : 'Paused')
+        ;
+
+        
+        const song = player.getCurrent();
+        let playerStr = '';
+        if (song) {
+            const position = await player.getPosition()
+            const barWidth = 15;
+            const button = player.status === MusicStatus.PLAYING ? '⏹️' : '▶️';
+            const dotPosition = Math.floor(barWidth * position / song.length);
+            let progressBar = '';
+            for (let i = 0; i < barWidth; i++) {
+                if (i === dotPosition) {
+                    progressBar += '🔘';
+                } else {
+                  progressBar += '▬';
+                }
+            }
+
+
+            //const progressBar = getProgressBar(15, position / song.length);
+            const elapsedTime = song.isLive ? 'live' : `${await this.secondsToTimestamp(position)}/${await this.secondsToTimestamp(song.length)}`;
+            const loop = player.loopCurrentSong ? '🔁' : '';
+            playerStr = `${button} ${progressBar} \`[${elapsedTime}]\` 🔉 ${loop}`;
+            embed.setDescription(`**[${song?.title}](https://www.youtube.com/watch?v=${song?.url})**\nRequested By <@${song?.requestedBy}>\n${playerStr}`);
+            embed.setThumbnail(song?.thumbnailUrl ?? null);
+            embed.setFooter({text: `Source: ${song?.artist ?? 'Unknown'}`});
+        } else {
+            embed.setDescription('Nothing is currently playing');
+        }
+
+        
         return embed;
     }
 }

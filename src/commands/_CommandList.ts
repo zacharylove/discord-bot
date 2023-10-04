@@ -20,6 +20,8 @@ import { stopSong } from "./music/stop.js";
 import { queue } from "./music/queue.js";
 import { shuffleQueue } from "./music/shuffle.js";
 import { clearQueue } from "./music/clear.js";
+import { nowPlaying } from "./music/nowplaying.js";
+import { pause, resume } from "./music/pauseResume.js";
 
 // List of all commands registered to the bot
 // These commands are registered to Discord when the bot starts
@@ -43,7 +45,10 @@ export const CommandList: CommandInterface[] = [
     stopSong,
     queue,
     shuffleQueue,
-    clearQueue
+    clearQueue,
+    nowPlaying,
+    pause,
+    resume,
 ];
 
 export default CommandList;
@@ -55,4 +60,7 @@ export const toggleMusicCommands = (enabled: boolean) => {
     queue.properties.Enabled = enabled;
     shuffleQueue.properties.Enabled = enabled;
     clearQueue.properties.Enabled = enabled;
+    nowPlaying.properties.Enabled = enabled;
+    pause.properties.Enabled = enabled;
+    resume.properties.Enabled = enabled;
 }

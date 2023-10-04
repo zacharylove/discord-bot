@@ -182,6 +182,11 @@ export default class Player {
         return this.positionInSeconds;
     }
 
+    // Get player status
+    getStatus(): MusicStatus {
+        return this.status;
+    }
+
     // Play song
     async play(): Promise<void> {
         if (!this.voiceConnection) throw new Error('Not connected to a voice channel.');
@@ -277,6 +282,16 @@ export default class Player {
         if (this.audioPlayer) this.audioPlayer.pause();
     
         this.stopTrackingPosition();
+    }
+
+    // Resume song
+    resume(): void {
+        if (this.status !== MusicStatus.PAUSED) {
+            throw new Error('Not currently paused.');
+        }
+        this.audioPlayer?.unpause();
+        this.status = MusicStatus.PLAYING;
+        this.startTrackingPosition();
     }
 
     // Start tracking position in song
