@@ -9,9 +9,21 @@ import { secondsToTimestamp } from '../../../utils/utils.js';
 import { BOT } from 'index.js';
 import { hasPermissions } from 'utils/userUtils.js';
 
-const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean) => {
+const createSolutionLineString = (word: string) => {
+    let out = "";
+    for (const letter of word) {
+        if (letter == " ") out += ":black_large_square: ";
+        else out += `:regional_indicator_${letter}: `;
+    }
+    return out;
+}
+
+const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean, showSolution?: boolean) => {
+    showSolution = showSolution ?? false;
+    let moreThanTen: number = 0;
     // Crop guesses to the last 10 if there are more than 10
     if (guesses.length > 10) {
+        moreThanTen = guesses.length - 10;
         guesses = guesses.slice(guesses.length - 10);
     }
 
@@ -23,29 +35,41 @@ const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean) 
         }
     }
     // Fill in guess letters
+    let includeWord: string[] = Array.from(word);
+    let partialSolutionMessage: string[] = [" ", " ", " ", " ", " "];
     for (let i = 0; i < guesses.length; i++) {
         let guess = guesses[i];
         for (let j = 0; j < guess.length; j++) {
             if (guess[j] == word[j]) {
                 grid[i][j] = "🟩";
-            } else if (word.includes(guess[j])) {
-                grid[i][j] = "🟨";
-            } else {
-                grid[i][j] = "🟥";
-            }
+                partialSolutionMessage[j] = guess[j];
+                includeWord[j] = " ";
+            } 
         }
+        for (let j = 0; j < guess.length; j++) {    
+            for ( let k = 0; k < word.length; k++) {
+                if (guess[j] == includeWord[k] && grid[i][j] != "🟩") {
+                    grid[i][j] = "🟨";
+                    includeWord[k] = " ";
+                    break;
+                }
+            }
+            if (grid[i][j] != "🟨" && grid[i][j] != "🟩") grid[i][j] = "🟥";
+        }
+        
     }
     // Convert grid to string
-    let gridString = ``;
+    let gridString = isInfinite && moreThanTen > 0 ? `:::::::::::::::::::::::::::::: | (${moreThanTen} more)\n` : ``;
     for (let i = 0; i < grid.length; i++) {
         gridString += grid[i].join(" ");
         gridString += `${guesses.length > i ? " | " + guesses[i] : ""}`;
         gridString += "\n";
     }
+    gridString += showSolution ? createSolutionLineString(word) : createSolutionLineString(partialSolutionMessage.join(""));
     return gridString;
 }
 
-const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean) => {
+const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean, puzzlenum:number) => {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     
@@ -59,7 +83,16 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     let wordString: string = fs.readFileSync(path.resolve(path.join(__dirname, '..', '..', '..', '..', 'assets', 'txt', 'wordleWords.txt')),'utf8');
     let wordList: string[] = wordString.split('\n');
     // Select a random 5-letter word
-    const num = Math.floor(Math.random() * wordList.length);
+    let num: number;
+    if (puzzlenum == -1) {
+        num = Math.floor(Math.random() * wordList.length);
+    } else if (puzzlenum <= 1 || puzzlenum > wordList.length) {
+        interaction.editReply({ content: "Invalid puzzle number!" });
+        await threadChannel.delete();
+        return;
+    } else {
+        num = puzzlenum - 1;
+    }
     await interaction.editReply({ content: `Currently playing #${num+1}${isInfinite ? " in infinite mode" : ""}${isPublic ? " - anyone can join and play!" : ""}`})
     let word: string = wordList[num];
 
@@ -109,25 +142,33 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         */
 
         guesses++;
-        if (!isInfinite && guesses >= 6) {
-            await m.reply({ content: `You ran out of guesses! The word was ${word}. Better luck next time!`});
-            endMessage = `The game has ended- ${m.author.username} ran out of guesses! The word was ${word}.`;
-            collector.stop();
-            return;
-        }
         let guess = m.content.toLowerCase();
+        guessedWords.push(guess);
+        let gridString = createWordleGrid(word, guessedWords, isInfinite);
         if (guess == word) {
             await m.reply({ content: `You guessed the word! Congratulations!`});
             endMessage = `The game has ended- ${m.author.username} guessed the word! The word was ${word}.`;
+            endMessage += `\n${createWordleGrid(word, guessedWords, isInfinite, true)}`
             collector.stop();
             return;
         }
-        guessedWords.push(guess);
-        let gridString = createWordleGrid(word, guessedWords, isInfinite);
-        // Fill invalid letters
+        if (!isInfinite && guesses >= 6) {
+            await m.reply({ content: `You ran out of guesses! The word was ${word}. Better luck next time!`});
+            endMessage = `The game has ended- ${m.author.username} ran out of guesses! The word was ${word}.`;
+            endMessage += `\n${createWordleGrid(word, guessedWords, isInfinite, true)}`
+            collector.stop();
+            return;
+        }
+        
+        // Fill invalid letters and valid letters
+        let validLetters: string = "";
         for (let j = 0; j < guess.length; j++) {
             if (guess[j] != word[j] && !word.includes(guess[j])) {
                 invalidLetters.add(guess[j]);
+                validLetters += " ";
+            }
+            if (guess[j] == word[j]) {
+                validLetters += guess[j];
             }
         }
         if (invalidLetters.size > 0) {
@@ -136,6 +177,11 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
                 value: Array.from(invalidLetters).join(", ")
             });
         }
+        // Fill valid letters
+        process.env.DEBUG_MODE == "true" ? gridString += `\nDEBUG: word is "${word}"` : null;
+
+        
+
 
         wordleEmbed.setDescription(gridString);
         wordleEmbed.setFooter({text: `${isInfinite ? `You have ${await secondsToTimestamp((collectorEndTime - Date.now()) / 1000, true)} remaining. Say 'stop' to end at any time.` : `You have ${6-guesses} guesses remaining`}`});
@@ -167,6 +213,12 @@ export const playWordle: CommandInterface = {
                 .setDescription('Infinite guess mode')
                 .setRequired(false)
         )
+        .addIntegerOption(option =>
+            option
+                .setName('puzzlenum')
+                .setDescription('Specify a puzzle number to play')
+                .setRequired(false)
+        )
         ,
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel ) return;
@@ -183,6 +235,7 @@ export const playWordle: CommandInterface = {
         
         const isPublic: boolean = interaction.options.getBoolean('public') ?? false;
         const isInfinite: boolean = interaction.options.getBoolean('infinite') ?? false;
+        const puzzlenum: number = interaction.options.getInteger('puzzlenum') ?? -1;
 
         const channel = await interaction.channel.fetch();
         // get original Message from interaction
@@ -213,11 +266,14 @@ export const playWordle: CommandInterface = {
                 try {
                     await threadChannel.members.add(interaction.user.id);
                 } catch (e) {
+                    interaction.editReply({ content: "An error occurred adding you to the thread." });
+                    await threadChannel.delete();
                     console.error(e);
+                    return;
                 }
                 await threadChannel.send({ content: startMessage});
 
-                await createWordleGame(interaction, threadChannel, isPublic, isInfinite);
+                await createWordleGame(interaction, threadChannel, isPublic, isInfinite, puzzlenum);
                 return;
             } catch (e) {
                 await interaction.editReply({ content: "Something went horribly wrong behind the scenes here... "});
