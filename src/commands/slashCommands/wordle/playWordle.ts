@@ -30,8 +30,10 @@ const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean, 
     let grid: string[][] = [];
     for (let i = 0; i < (isInfinite ? guesses.length + 1 : 6); i++) {
         grid.push([]);
-        for (let j = 0; j < 5; j++) {
-            grid[i].push("⬜");
+        if (!showSolution) {
+            for (let j = 0; j < 5; j++) {
+                grid[i].push("⬜");
+            }
         }
     }
     // Fill in guess letters
@@ -64,7 +66,7 @@ const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean, 
     for (let i = 0; i < grid.length; i++) {
         gridString += grid[i].join(" ");
         gridString += `${guesses.length > i ? " | " + guesses[i] : ""}`;
-        gridString += "\n";
+        if (grid[i].length > 0) gridString += "\n";
     }
     gridString += showSolution ? createSolutionLineString(word) : createSolutionLineString(partialSolutionMessage.join(""));
     return gridString;
@@ -149,14 +151,15 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         let gridString = createWordleGrid(word, guessedWords, isInfinite);
         if (guess == word) {
             await m.reply({ content: `You guessed the word! Congratulations!`});
-            endMessage = `The game has ended- ${m.author.username} guessed the word! The word was ${word}.`;
+            endMessage = `The game has ended${ isPublic ? `- ${m.author.username} guessed the word!` : "."}`;
+            endMessage += `\n Wordle #${num+1} ${guesses}/${isInfinite ? "infinite" : "6"}`;
             endMessage += `\n${createWordleGrid(word, guessedWords, isInfinite, true)}`
             collector.stop();
             return;
         }
         if (!isInfinite && guesses >= 6) {
             await m.reply({ content: `You ran out of guesses! The word was ${word}. Better luck next time!`});
-            endMessage = `The game has ended- ${m.author.username} ran out of guesses! The word was ${word}.`;
+            endMessage = `The game has ended${ isPublic ? `- ${m.author.username} ran out of guesses!` : "."}`;
             endMessage += `\n${createWordleGrid(word, guessedWords, isInfinite, true)}`
             collector.stop();
             return;
