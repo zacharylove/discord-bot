@@ -1,9 +1,10 @@
 // Utility functions that make API requests
 import axios, { AxiosResponse } from "axios";
 import { ImageExtension } from "discord.js";
-import { discordAPI } from "config/config.json"
-import { getAllImagesFromURL } from "utils/imageUtils";
-import { RequestInterface } from "interfaces/RequestInterface";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
+import { getAllImagesFromURL } from "../utils/imageUtils.js";
+import { RequestInterface } from "../interfaces/RequestInterface.js";
 
 // See https://discord.com/developers/docs/reference#image-formatting-cdn-endpoints
 export enum discordRequestType {
@@ -38,7 +39,7 @@ export const DiscordAPI: RequestInterface = {
     },
     
     formRequestURL: (info: discordRequestInfo): string => {
-        let requestURL = discordAPI.baseURL + "/v" + discordAPI.version;
+        let requestURL = config.discordAPI.baseURL + "/v" + config.discordAPI.version;
     
         // Form URL based on requested info
         let error : boolean = false;
@@ -55,7 +56,7 @@ export const DiscordAPI: RequestInterface = {
     },
 
     formCdnURL: async (info: discordRequestInfo): Promise<string> => {
-        let url = discordAPI.cdnURL;
+        let url = config.discordAPI.cdnURL;
     
         let error : boolean = false;
         switch ( info.type ) {        

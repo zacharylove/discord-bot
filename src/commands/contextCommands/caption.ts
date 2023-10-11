@@ -3,10 +3,10 @@
 
 import { ActionRowBuilder, ContextMenuCommandBuilder, ModalActionRowComponentBuilder } from "@discordjs/builders";
 import { ApplicationCommandType, CommandInteraction, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import { CommandInterface } from "interfaces/Command";
+import { CommandInterface } from "../../interfaces/Command.js";
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
 import { createCanvas, ImageData, loadImage, registerFont } from 'canvas';
-import { renderFrame } from "utils/imageUtils";
+import { renderFrame } from "../../utils/imageUtils.js";
 
 let topText: string = "";
 let bottomText: string = "";

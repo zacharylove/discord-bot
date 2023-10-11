@@ -1,4 +1,4 @@
-import tradleModel, { TradleDataInterface, createNewTradleData } from "@models/tradleModel";
+import tradleModel, { TradleDataInterface, createNewTradleData } from "./models/tradleModel.js";
 
 /**
  * Updates an existing TradleData object in the database

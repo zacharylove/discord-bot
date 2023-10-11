@@ -1,7 +1,8 @@
 import { Message } from "discord.js";
-import { wordleConfig, tradleConfig } from "config/config.json"
-import { getWordleDataByUserID, update as wordleUpdate } from "database/wordleData";
-import { getTradleDataByUserID, update as tradleUpdate } from "database/tradleData";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
+import { getWordleDataByUserID, update as wordleUpdate } from "../database/wordleData.js";
+import { getTradleDataByUserID, update as tradleUpdate } from "../database/tradleData.js";
 
 
 class sharedWordleUtils {
@@ -103,12 +104,12 @@ export class wordle {
     constructor() {
         // Load wordle info from config
         this.info = {
-            solutionLength: wordleConfig.wordLength,
-            letterMatch: wordleConfig.letterMatch,
-            letterClose: wordleConfig.letterClose,
-            letterWrong: wordleConfig.letterWrong,
-            maxPuzzles: wordleConfig.maxPuzzles,
-            numAllowedGuesses: wordleConfig.numGuesses
+            solutionLength: config.wordleConfig.wordLength,
+            letterMatch: config.wordleConfig.letterMatch,
+            letterClose: config.wordleConfig.letterClose,
+            letterWrong: config.wordleConfig.letterWrong,
+            maxPuzzles: config.wordleConfig.maxPuzzles,
+            numAllowedGuesses: config.wordleConfig.numGuesses
         }
         
     }
@@ -218,12 +219,12 @@ export class tradle {
 
     constructor() {
         this.info = {
-            solutionLength: tradleConfig.outputLength,
-            letterMatch: tradleConfig.letterMatch,
-            letterClose: tradleConfig.letterClose,
-            letterWrong: tradleConfig.letterWrong,
-            maxPuzzles: tradleConfig.maxPuzzles,
-            numAllowedGuesses: tradleConfig.numGuesses
+            solutionLength: config.tradleConfig.outputLength,
+            letterMatch: config.tradleConfig.letterMatch,
+            letterClose: config.tradleConfig.letterClose,
+            letterWrong: config.tradleConfig.letterWrong,
+            maxPuzzles: config.tradleConfig.maxPuzzles,
+            numAllowedGuesses: config.tradleConfig.numGuesses
         }
     }
 
@@ -263,7 +264,7 @@ export class tradle {
         const userData = await getTradleDataByUserID(puzzleInfo.authorID);
 
         // Update scores
-        const puzzleData = userData.results.find( (result) => result.puzzleID == puzzleInfo.puzzleNum );
+        const puzzleData = userData.results.find( (result: any) => result.puzzleID == puzzleInfo.puzzleNum );
         if (puzzleData) {
             puzzleData.scores.push(puzzleInfo.score);
         } else {

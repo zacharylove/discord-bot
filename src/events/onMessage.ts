@@ -1,10 +1,10 @@
 // Runs on every message
 // Make sure bot has the correct scope and permissions!
 
-import { Bot } from "bot";
-import { areWordleFeaturesEnabled } from "database/guildData";
+import Bot from "../bot";
+import { areWordleFeaturesEnabled } from "../database/guildData.js";
 import { Message, GatewayIntentBits, TextChannel, DMChannel } from "discord.js";
-import { EventInterface } from "interfaces/Event";
+import { EventInterface } from "../interfaces/Event.js";
 
 const sayCommand = async (Message: Message) => {
 

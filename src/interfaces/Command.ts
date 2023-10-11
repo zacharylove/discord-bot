@@ -2,6 +2,13 @@ import { ContextMenuCommandBuilder, SlashCommandBuilder, SlashCommandSubcommands
 import { GatewayIntentBits } from "discord-api-types/v9";
 import { CommandInteraction, PermissionsBitField } from "discord.js";
 
+export enum Feature {
+    Music,
+    Wordle,
+    Starboard,
+    Confession
+}
+
 // Interface for all commands, defines requirements and some additional properties
 export interface CommandProperties {
     // Name of command
@@ -27,6 +34,8 @@ export interface CommandProperties {
     Ephemeral?: boolean;
     // Whether to defer the reply
     Defer?: boolean;
+    // What feature the command belongs to
+    Feature?: Feature;
 }
 
 

@@ -1,12 +1,14 @@
 // On bot startup
 import { Routes } from "discord-api-types/v9";
 import { REST } from "@discordjs/rest";
-import { CommandList } from "commands/_CommandList";
-import { onTick } from "events/onTick";
-import { EventInterface } from "interfaces/Event";
-import { validateIntents } from "utils/validateProperties";
-import { Bot } from "bot";
-import { version, statuses } from "config/config.json";
+import { CommandList } from "../commands/_CommandList.js";
+import { onTick } from "../events/onTick.js";
+import { EventInterface } from "../interfaces/Event.js";
+import { validateIntents } from "../utils/validateProperties.js";
+import Bot from "../bot";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
+import { Feature } from "../interfaces/Command.js";
 
 
 const registerCommands = async (BOT: Bot) => {
@@ -15,6 +17,9 @@ const registerCommands = async (BOT: Bot) => {
     var guildCommands = [];
     var globalCommands = [];
     let commandOutput: string = "Registering the following commands:";
+    let musicCommandOutput: string = "  === MUSIC ===";
+    let wordleCommandOutput: string = "  === WORDLE ===";
+
     for (const Command of CommandList) {
         // Check if we have the correct intents for the command
         if (!validateIntents(Command.properties.Intents, "onReady")) {
@@ -23,15 +28,25 @@ const registerCommands = async (BOT: Bot) => {
         // Check if command is not globally disabled
         if (!Command.properties.Enabled) continue;
 
+        let line = "";
+
         if (Command.properties.Scope === 'guild') {
-            commandOutput += "\n  [Guild] " + Command.properties.Name;
+            line += "\n  🔰 " + Command.properties.Name;
             guildCommands.push(Command.data.toJSON());
         } else if (Command.properties.Scope === 'global') {
-            commandOutput += "\n  [Global] " + Command.properties.Name;
+            line += "\n  🌎 " + Command.properties.Name;
             globalCommands.push(Command.data.toJSON());
         }
         
+        if (Command.properties.Feature == Feature.Wordle) {
+            wordleCommandOutput += line;
+        } else if (Command.properties.Feature == Feature.Music) {
+            musicCommandOutput += line;
+        } else {
+            commandOutput += line;
+        }
     }
+    commandOutput += "\n" + musicCommandOutput + "\n" + wordleCommandOutput;
     commandOutput += "\n=== COMMAND REGISTRATION COMPLETE ===";
     console.log(commandOutput);
     // Register guild commands
@@ -51,7 +66,7 @@ const registerCommands = async (BOT: Bot) => {
         { body: globalCommands}
     );
 
-    console.log(`Registered ${guildCommands.length} guild commands and ${globalCommands.length} global commands.`)
+    console.log(`Bot ready. Registered ${guildCommands.length} guild commands and ${globalCommands.length} global commands.`)
 };
 
 
@@ -74,16 +89,16 @@ export const onReady : EventInterface = {
                 if (!BOT || !BOT.user ) {
                     throw new Error("BOT is undefined in status tick event.");
                 }
-                activityString = statuses[currentIndex];
-                if ( version != "" ) {
-                    activityString += " | v" + version;
+                activityString = config.statuses[currentIndex];
+                if ( config.version != "" ) {
+                    activityString += " | v" + config.version;
                 }
 
                 BOT.user.setActivity(activityString);
             
                 // update currentIndex
                 // if it's the last one, get back to 0
-                currentIndex = currentIndex >= statuses.length - 1 
+                currentIndex = currentIndex >= config.statuses.length - 1 
                 ? 0
                 : currentIndex + 1;
             }, updateDelay * parseInt(process.env.TICK_INTERVAL as string));
@@ -96,7 +111,6 @@ export const onReady : EventInterface = {
             setInterval(() => onTick.run(BOT), parseInt(process.env.TICK_INTERVAL as string));
         }
 
-        console.log("=== Bot ready ===\n\n")
     },
     properties: {
         Name: "ready",

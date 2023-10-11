@@ -1,6 +1,6 @@
 // Database model for a user's wordle data
 import { Document, model, Schema, ObjectId, Types } from 'mongoose';
-import { getUserData } from '../userData';
+import { getUserData } from '../userData.js';
 
 
 export interface WordleDataInterface extends Document {

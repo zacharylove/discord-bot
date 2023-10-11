@@ -6,6 +6,7 @@ The main features of the bot are:
  - Starboard/Hall of Shame: Collects messages which have received a configurable number of reactions and immortalizes them in their own channel.
  - Roleplay: Has context-based commands to enhance interactions and drive conversations between users
  - Utility: Provides relevant and unique functionalities that (hopefully) have minimal feature overlap with other more popular bots
+ - Music: Streams quality-focused music from nontraditional sources with plenty of customization.
 
 This is a solo project, and I usually work on this project on-and-off, using it as an opportunity to explore and learn about new things such as Typescript, MongoDB, and Docker. Once I am satisfied with the number of features and general stability of the bot, I might release it for public use.
 

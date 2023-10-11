@@ -1,5 +1,5 @@
 {
-    "version": "1.4.0",
+    "version": "1.4.2",
     "statuses": [ "Back and better than ever!", ":)" ],
     "starboardConfig": {
         "fetchLimit": 100,
@@ -51,6 +51,14 @@
         "version": "4",
         "endpoints": {
             "anime": "anime"
+        }
+    },
+    "youtubeAPI": {
+        "baseURL": "https://www.googleapis.com/youtube",
+        "version": "3",
+        "endpoints": {
+            "search": "search",
+            "id": "videos"
         }
     },
     "shipMessages": {
