@@ -60,7 +60,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     let wordList: string[] = wordString.split('\n');
     // Select a random 5-letter word
     const num = Math.floor(Math.random() * wordList.length);
-    interaction.editReply({ content: `Currently playing #${num+1}${isInfinite ? " in infinite mode" : ""}${isPublic ? " - anyone can join and play!" : ""}`})
+    await interaction.editReply({ content: `Currently playing #${num+1}${isInfinite ? " in infinite mode" : ""}${isPublic ? " - anyone can join and play!" : ""}`})
     let word: string = wordList[num];
 
     // Number of guesses, max 6
@@ -110,14 +110,14 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 
         guesses++;
         if (!isInfinite && guesses >= 6) {
-            m.reply({ content: `You ran out of guesses! The word was ${word}. Better luck next time!`});
+            await m.reply({ content: `You ran out of guesses! The word was ${word}. Better luck next time!`});
             endMessage = `The game has ended- ${m.author.username} ran out of guesses! The word was ${word}.`;
             collector.stop();
             return;
         }
         let guess = m.content.toLowerCase();
         if (guess == word) {
-            m.reply({ content: `You guessed the word! Congratulations!`});
+            await m.reply({ content: `You guessed the word! Congratulations!`});
             endMessage = `The game has ended- ${m.author.username} guessed the word! The word was ${word}.`;
             collector.stop();
             return;
@@ -147,7 +147,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         setTimeout(async () => {
             await threadChannel.delete();
         }, 10000);
-        interaction.editReply({ content: endMessage });
+        await interaction.editReply({ content: endMessage });
     });
 }
 
@@ -192,28 +192,36 @@ export const playWordle: CommandInterface = {
         const username = interaction.user.username;
         // If channel is a GuildTextBasedChannel channel
         if (channel.isTextBased() && channel instanceof TextChannel) {
-            const threadChannel = await replyMessage.startThread({
-                name: `${username}-wordle`,
-                autoArchiveDuration: 60,
-                reason: `${username}'s game of wordle!`,
-            });
-            let startMessage = `**Let's play a game of Wordle!**\n > Wordle is a daily word game where players have ${isInfinite ? "~~six~~ *infinite*" : "six"} attempts to guess a five letter word. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.`;
-            startMessage += `\n - You can send guesses as messages in this thread. I'll ignore any messages that aren't 5-letter words.`;
-            if (isPublic) startMessage += `\n - This game is **public**: anyone can make guesses in this thread!`;
-            else startMessage += `\n - Only <@${interaction.user.id}> will be able to make guesses.`;
-            if (isInfinite) startMessage += `\n - This game is **infinite**: you have infinite guesses within 30 minutes until you get the word!`;
-            
-            startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.`;
+            try {
+                const threadChannel = await replyMessage.startThread({
+                    name: `${username}-wordle`,
+                    autoArchiveDuration: 60,
+                    reason: `${username}'s game of wordle!`,
+                });
+                let startMessage = `**Let's play a game of Wordle!**\n > Wordle is a daily word game where players have ${isInfinite ? "~~six~~ *infinite*" : "six"} attempts to guess a five letter word. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.`;
+                startMessage += `\n - You can send guesses as messages in this thread. I'll ignore any messages that aren't 5-letter words.`;
+                if (isPublic) startMessage += `\n - This game is **public**: anyone can make guesses in this thread!`;
+                else startMessage += `\n - Only <@${interaction.user.id}> will be able to make guesses.`;
+                if (isInfinite) startMessage += `\n - This game is **infinite**: you have infinite guesses within 30 minutes until you get the word!`;
+                
+                startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.`;
 
-            
-            startMessage += `\nGood luck!`;
+                
+                startMessage += `\nGood luck!`;
 
-            // Add the user
-            await threadChannel.members.add(interaction.user.id);
-            await threadChannel.send({ content: startMessage});
+                // Add the user
+                try {
+                    await threadChannel.members.add(interaction.user.id);
+                } catch (e) {
+                    console.error(e);
+                }
+                await threadChannel.send({ content: startMessage});
 
-            await createWordleGame(interaction, threadChannel, isPublic, isInfinite);
-            return;
+                await createWordleGame(interaction, threadChannel, isPublic, isInfinite);
+                return;
+            } catch (e) {
+                await interaction.editReply({ content: "Something went horribly wrong behind the scenes here... "});
+            }
         }
         await interaction.editReply({ content: "Sorry, I can only create new threads in a regular text channel!" });
         
