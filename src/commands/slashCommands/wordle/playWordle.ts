@@ -51,14 +51,15 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     let wordString: string = fs.readFileSync(path.resolve(path.join(__dirname, '..', '..', '..', '..', 'assets', 'txt', 'wordleWords.txt')),'utf8');
     let wordList: string[] = wordString.split('\n');
     // Select a random 5-letter word
-    let word: string = wordList[Math.floor(Math.random() * wordList.length)];
+    const num = Math.floor(Math.random() * wordList.length);
+    let word: string = wordList[num];
 
     // Number of guesses, max 6
     let guesses = 0;
 
     // Create a new EmbedBuilder
     const wordleEmbed = new EmbedBuilder()
-        .setTitle("Wordle")
+        .setTitle(`Wordle #${num+1}`)
         .setDescription(createWordleGrid(word, []))
         .setColor(0x00ff00)
         .setFooter({text: "You have 6 guesses remaining"});
@@ -73,6 +74,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     });
 
     let guessedWords: string[] = []
+    let invalidLetters = new Set<string>();
     let endMessage = "My message collector stopped- either something went wrong or you took over 30 minutes to play this game.";
     // Listen for messages
     collector.on('collect', async (m: Message) => {
@@ -112,6 +114,19 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         }
         guessedWords.push(guess);
         let gridString = createWordleGrid(word, guessedWords);
+        // Fill invalid letters
+        for (let j = 0; j < guess.length; j++) {
+            if (guess[j] != word[j] && !word.includes(guess[j])) {
+                invalidLetters.add(guess[j]);
+            }
+        }
+        if (invalidLetters.size > 0) {
+            wordleEmbed.setFields({
+                name: "Invalid Letters",
+                value: Array.from(invalidLetters).join(", ")
+            });
+        }
+
         wordleEmbed.setDescription(gridString);
         wordleEmbed.setFooter({text: `You have ${6-guesses} guesses remaining`});
         await m.reply({ embeds: [wordleEmbed] });
@@ -146,9 +161,9 @@ export const playWordle: CommandInterface = {
                 autoArchiveDuration: 60,
                 reason: `${username}'s game of wordle!`,
             });
-            let startMessage = "Let's play a game of Wordle!\nWordle is a daily word game where players have six attempts to guess a five letter word. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.";
-            startMessage += `\nYou can send guesses as messages in this thread. Only ${username} will be able to make guesses, and I'll ignore any messages that aren't 5-letter words.`;
-            startMessage += `\nYou can say "stop" at any time to end the game early, and the thread will be deleted after the game ends. Good luck!`;
+            let startMessage = "**Let's play a game of Wordle!**\n > Wordle is a daily word game where players have six attempts to guess a five letter word. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.";
+            startMessage += `\n - You can send guesses as messages in this thread.\n - Only <@${interaction.user.id}> will be able to make guesses, and I'll ignore any messages that aren't 5-letter words.`;
+            startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.\nGood luck!`;
 
             // Add the user
             await threadChannel.members.add(interaction.user.id);
