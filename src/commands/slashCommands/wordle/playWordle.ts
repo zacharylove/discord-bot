@@ -1,4 +1,4 @@
-import { CommandInteraction, Message, TextChannel, ThreadChannel } from 'discord.js';
+import { CommandInteraction, Message, PermissionsBitField, TextChannel, ThreadChannel } from 'discord.js';
 import { CommandInterface, Feature } from '../../../interfaces/Command.js';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import * as fs from 'fs';
@@ -6,6 +6,8 @@ import path from 'path'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { secondsToTimestamp } from '../../../utils/utils.js';
+import { BOT } from 'index.js';
+import { hasPermissions } from 'utils/userUtils.js';
 
 const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean) => {
     // Crop guesses to the last 10 if there are more than 10
@@ -168,6 +170,17 @@ export const playWordle: CommandInterface = {
         ,
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel ) return;
+        if (interaction.guild.members.me!.permissions.has(PermissionsBitField.Flags.ManageThreads) == false ||
+        interaction.guild.members.me!.permissions.has(PermissionsBitField.Flags.SendMessagesInThreads) == false) {
+            await interaction.editReply({ content: "I don't have permission to create threads! Please ask a server admin to enable this permission for me." });
+            return;
+        }
+
+        if (interaction.guild.members.me!.permissions.has(PermissionsBitField.Flags.ManageMessages) == false) {
+            await interaction.editReply({ content: "I don't have permission to delete messages! I need this in order to delete the thread created for the game." });
+            return;
+        }
+        
         const isPublic: boolean = interaction.options.getBoolean('public') ?? false;
         const isInfinite: boolean = interaction.options.getBoolean('infinite') ?? false;
 
@@ -212,6 +225,7 @@ export const playWordle: CommandInterface = {
         Enabled: true,
         DefaultEnabled: true,
         Intents: [],
+        Permissions: [],
         Feature: Feature.Wordle
     }
 }
