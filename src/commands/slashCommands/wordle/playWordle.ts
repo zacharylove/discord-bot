@@ -241,7 +241,7 @@ export const playWordle: CommandInterface = {
         const puzzlenum: number = interaction.options.getInteger('puzzlenum') ?? -1;
 
         const numTotalPuzzles = BOT.getWordleWordList().length;
-        if (puzzlenum < 1 || puzzlenum > BOT.getWordleWordList().length) {
+        if (puzzlenum != -1 && (puzzlenum < 1 || puzzlenum > BOT.getWordleWordList().length)) {
             await interaction.editReply({ content: `Invalid puzzle number! Pick a number between 1 and ${numTotalPuzzles}.` });
             return;
         }
