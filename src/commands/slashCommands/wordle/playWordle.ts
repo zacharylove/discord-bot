@@ -7,6 +7,11 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean) => {
+    // Crop guesses to the last 10 if there are more than 10
+    if (guesses.length > 10) {
+        guesses = guesses.slice(guesses.length - 10);
+    }
+
     let grid: string[][] = [];
     for (let i = 0; i < (isInfinite ? guesses.length + 1 : 6); i++) {
         grid.push([]);
