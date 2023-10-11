@@ -119,6 +119,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 
     let guessedWords: string[] = []
     let invalidLetters = new Set<string>();
+    let validLetters = new Set<string>();
     let endMessage = isInfinite ? `The game has ended- ${interaction.user.username} ran out of time! The word was ${word}.` : "My message collector stopped- either something went wrong or you took over 30 minutes to play this game.";
     // Listen for messages
     collector.on('collect', async (m: Message) => {
@@ -162,26 +163,24 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         }
         
         // Fill invalid letters and valid letters
-        let validLetters: string = "";
         for (let j = 0; j < guess.length; j++) {
             if (guess[j] != word[j] && !word.includes(guess[j])) {
                 invalidLetters.add(guess[j]);
-            }
-            if (guess[j] == word[j]) {
-                validLetters += guess[j];
+            } else {
+                validLetters.add(guess[j]);
             }
         }
         let fields = []
         if (invalidLetters.size > 0) {
             fields.push({
                 name: "Invalid Letters",
-                value: Array.from(invalidLetters).join(", ")
+                value: Array.from(invalidLetters).sort().join(", ")
             });
         }
-        if (validLetters.length > 0) {
+        if (validLetters.size > 0) {
             fields.push({
                 name: "Valid Letters",
-                value: Array.from(validLetters).join(", ")
+                value: Array.from(validLetters).sort().join(", ")
             });
         }
 
