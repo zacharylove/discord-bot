@@ -19,7 +19,7 @@
     "@discordjs/voice": "^0.16.0",
     "axios": "^1.5.0",
     "canvas": "^2.11.2",
-    "discord-api-types": "^0.37.56",
+    "discord-api-types": "^0.37.58",
     "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.2.0",
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.22",
-    "@types/node": "^20.6.2",
+    "@types/node": "^20.6.5",
     "fluent-ffmpeg": "^2.1.2",
     "gif-encoder-2": "^1.0.5",
     "tsconfig-paths": "^4.2.0",
