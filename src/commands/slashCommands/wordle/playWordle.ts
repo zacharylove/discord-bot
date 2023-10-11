@@ -57,6 +57,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     let wordList: string[] = wordString.split('\n');
     // Select a random 5-letter word
     const num = Math.floor(Math.random() * wordList.length);
+    interaction.editReply({ content: `Currently playing #${num+1}${isInfinite ? " in infinite mode" : ""}${isPublic ? " - anyone can join and play!" : ""}`})
     let word: string = wordList[num];
 
     // Number of guesses, max 6
