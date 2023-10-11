@@ -31,6 +31,7 @@ const createWordleGrid = (word: string, guesses: string[]) => {
     let gridString = ``;
     for (let i = 0; i < grid.length; i++) {
         gridString += grid[i].join(" ");
+        gridString += `${guesses.length > i ? " | " + guesses[i] : ""}`;
         gridString += "\n";
     }
     return gridString;
@@ -41,8 +42,8 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     const __dirname = dirname(__filename);
     
     // Load valid wordle guesses
-    let validGuessesString: string = fs.readFileSync(path.resolve(path.join(__dirname, '..', '..', '..', '..', 'assets', 'txt', 'validWordleGuesses.txt')),'utf8');
-    const validGuesses: string[] = validGuessesString.split('\n');
+    //let validGuessesString: string = fs.readFileSync(path.resolve(path.join(__dirname, '..', '..', '..', '..', 'assets', 'txt', 'validWordleGuesses.txt')),'utf8');
+    //const validGuesses: string[] = validGuessesString.split('\n');
     
     
     // Load word list
@@ -89,10 +90,11 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         }
 
         // Ensure guess is in validWordleGuesses
-        if (!validGuesses.includes(m.content.toLowerCase())) {
+        /*if (!validGuesses.includes(m.content.toLowerCase())) {
             await m.reply({ content: "Not a valid word- please try again!" });
             return;
         }
+        */
 
         guesses++;
         if (guesses >= 6) {
