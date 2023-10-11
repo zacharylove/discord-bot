@@ -31,7 +31,7 @@ export const clearQueue: CommandInterface = {
         Aliases: [],
         Scope: "global",
         GuildOnly: true,
-        Enabled: true,
+        Enabled: false,
         DefaultEnabled: true,
         CanBeDisabled: true,
         Intents: [GatewayIntentBits.GuildVoiceStates],

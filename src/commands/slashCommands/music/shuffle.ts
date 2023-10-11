@@ -25,7 +25,7 @@ export const shuffleQueue: CommandInterface = {
         Aliases: [],
         Scope: "global",
         GuildOnly: true,
-        Enabled: true,
+        Enabled: false,
         DefaultEnabled: true,
         CanBeDisabled: true,
         Intents: [GatewayIntentBits.GuildVoiceStates],
