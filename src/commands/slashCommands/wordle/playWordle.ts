@@ -96,16 +96,16 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 
         guesses++;
         if (guesses >= 6) {
-            collector.stop();
             m.reply({ content: `You ran out of guesses! The word was ${word}. Better luck next time!`});
             endMessage = `The game has ended- ${interaction.user.username} ran out of guesses! The word was ${word}.`;
+            collector.stop();
             return;
         }
         let guess = m.content.toLowerCase();
         if (guess == word) {
-            collector.stop();
             m.reply({ content: `You guessed the word! Congratulations!`});
             endMessage = `The game has ended- ${interaction.user.username} guessed the word! The word was ${word}.`;
+            collector.stop();
             return;
         }
         guessedWords.push(guess);
