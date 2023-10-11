@@ -28,7 +28,7 @@ const createWordleGrid = (word: string, guesses: string[]) => {
         }
     }
     // Convert grid to string
-    let gridString = `debug: ${word}\n`;
+    let gridString = ``;
     for (let i = 0; i < grid.length; i++) {
         gridString += grid[i].join(" ");
         gridString += "\n";
@@ -72,10 +72,12 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     });
 
     let guessedWords: string[] = []
+    let endMessage = "";
     // Listen for messages
     collector.on('collect', async (m: Message) => {
         if (m.content.toLowerCase() == "stop") {
             await m.reply({ content: "Okay! Stopping the game." });
+            endMessage = `The game was stopped by ${interaction.user.username}.`;
             collector.stop();
             return;
         }
@@ -96,12 +98,14 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         if (guesses >= 6) {
             collector.stop();
             m.reply({ content: `You ran out of guesses! The word was ${word}. Better luck next time!`});
+            endMessage = `The game has ended- ${interaction.user.username} ran out of guesses! The word was ${word}.`;
             return;
         }
         let guess = m.content.toLowerCase();
         if (guess == word) {
             collector.stop();
             m.reply({ content: `You guessed the word! Congratulations!`});
+            endMessage = `The game has ended- ${interaction.user.username} guessed the word! The word was ${word}.`;
             return;
         }
         guessedWords.push(guess);
@@ -116,6 +120,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         setTimeout(async () => {
             await threadChannel.delete();
         }, 10000);
+        interaction.editReply({ content: endMessage });
     });
 }
 
