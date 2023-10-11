@@ -64,7 +64,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 
     // Create a new EmbedBuilder
     const wordleEmbed = new EmbedBuilder()
-        .setTitle(`Wordle #${num+1}`)
+        .setTitle(`Wordle #${num+1}${isInfinite ? " (Infinite)" : ""}${isPublic ? " (Public)" : ""}}}`)
         .setDescription(createWordleGrid(word, [], isInfinite))
         .setColor(0x00ff00)
         .setFooter({text: `${isInfinite ? "Keep guessing, you have all the time in the world." : `You have 6 guesses remaining`}`});
