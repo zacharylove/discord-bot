@@ -153,8 +153,9 @@ export const playWordle: CommandInterface = {
             await threadChannel.send({ content: startMessage});
 
             await createWordleGame(interaction, threadChannel);
-
+            return;
         }
+        await interaction.editReply({ content: "Sorry, I can only create new threads in a regular text channel!" });
         
     },
     properties:  {
