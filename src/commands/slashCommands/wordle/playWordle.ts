@@ -67,12 +67,12 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     const filter = (m: Message) => (m.author.id === interaction.user.id) && (m.content.length == 5 || m.content.toLowerCase() == "stop");
     const collector = threadChannel.createMessageCollector({ 
         filter: filter, 
-        time: 60000,
+        time: 1800000,
         max: 100 
     });
 
     let guessedWords: string[] = []
-    let endMessage = "";
+    let endMessage = "My message collector stopped- either something went wrong or you took over 30 minutes to play this game.";
     // Listen for messages
     collector.on('collect', async (m: Message) => {
         if (m.content.toLowerCase() == "stop") {
