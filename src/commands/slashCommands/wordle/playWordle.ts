@@ -235,7 +235,8 @@ export const playWordle: CommandInterface = {
             await interaction.editReply({ content: "I don't have permission to delete messages! I need this in order to delete the thread created for the game." });
             return;
         }
-        
+        const replyMessage: Message = await interaction.editReply("Creating a new game of Wordle...");
+
         const isPublic: boolean = interaction.options.getBoolean('public') ?? false;
         const isInfinite: boolean = interaction.options.getBoolean('infinite') ?? false;
         const puzzlenum: number = interaction.options.getInteger('puzzlenum') ?? -1;
@@ -248,7 +249,6 @@ export const playWordle: CommandInterface = {
 
         const channel = await interaction.channel.fetch();
         // get original Message from interaction
-        const replyMessage: Message = await interaction.editReply("Creating a new game of Wordle...");
         
         // get username of user who sent the command
         const username = interaction.user.username;
