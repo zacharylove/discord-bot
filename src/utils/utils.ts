@@ -83,3 +83,26 @@ export const shuffleArray = (array: any[]): any[] => {
   
     return array;
 }
+
+
+export const secondsToTimestamp = async (seconds: number, markers?: boolean): Promise<string> => {
+    function leadingZeroes(num: number, size: number) {
+        let strNum = num.toString();
+        while (strNum.length < size) strNum = "0" + strNum;
+        return strNum;
+    }
+
+    let m = 0;
+    let h = 0;
+    let s = seconds;
+    while (s > 60) {
+        m++;
+        s -= 60;
+    }
+    while (m > 60) {
+        h++;
+        m -= 60;
+    }
+    s = Math.floor(s);
+    return `${h > 0 ? `${leadingZeroes(h,2)}${markers ? "h " : ":"}` : ''}${m > 0 ? `${leadingZeroes(m,2)}${markers ? "m " : ":"}` : '00'}${leadingZeroes(s,2)}${markers ? "s" : ""}`;
+}

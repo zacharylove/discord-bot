@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { secondsToTimestamp } from '../../../utils/utils.js';
 
 const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean) => {
     // Crop guesses to the last 10 if there are more than 10
@@ -65,10 +66,10 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 
     // Create a new EmbedBuilder
     const wordleEmbed = new EmbedBuilder()
-        .setTitle(`Wordle #${num+1}${isInfinite ? " (Infinite)" : ""}${isPublic ? " (Public)" : ""}}}`)
+        .setTitle(`Wordle #${num+1}${isInfinite ? " (Infinite)" : ""}${isPublic ? " (Public)" : ""}`)
         .setDescription(createWordleGrid(word, [], isInfinite))
         .setColor(0x00ff00)
-        .setFooter({text: `${isInfinite ? "Keep guessing, you have all the time in the world." : `You have 6 guesses remaining`}`});
+        .setFooter({text: `${isInfinite ? "You got this." : `You have 6 guesses remaining`}`});
     // Send the embed
     await threadChannel.send({ embeds: [wordleEmbed] });
     // Filter messages for 5-letter words or 'stop' sent by original author
@@ -78,6 +79,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         time: 1800000,
         max: 100 
     });
+    const collectorEndTime = Date.now() + 1800000;
 
     let guessedWords: string[] = []
     let invalidLetters = new Set<string>();
@@ -134,7 +136,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         }
 
         wordleEmbed.setDescription(gridString);
-        wordleEmbed.setFooter({text: `${isInfinite ? "Keep guessing, you have all the time in the world." : `You have ${6-guesses} guesses remaining`}`});
+        wordleEmbed.setFooter({text: `${isInfinite ? `You have ${await secondsToTimestamp((collectorEndTime - Date.now()) / 1000, true)} remaining. You got this!` : `You have ${6-guesses} guesses remaining`}`});
         await m.reply({ embeds: [wordleEmbed] });
     });
 

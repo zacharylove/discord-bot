@@ -3,6 +3,7 @@ import Player, { MusicStatus, QueuedSong, SongMetadata } from "./player.js";
 import { getMemberVoiceChannel, getMostPopularVoiceChannel } from "../../utils/voiceChannelUtils.js";
 import { parseQuery } from "../../api/youtubeAPI.js";
 import { EmbedBuilder } from "@discordjs/builders";
+import { secondsToTimestamp } from "../../utils/utils.js";
 
 // Queuer parses input queries and calls the corresponding player object
 export class Queuer {
@@ -85,32 +86,13 @@ export class Queuer {
         
     }
 
-    async secondsToTimestamp(seconds: number): Promise<string> {
-        function leadingZeroes(num: number, size: number) {
-            let strNum = num.toString();
-            while (strNum.length < size) strNum = "0" + strNum;
-            return strNum;
-        }
-
-        let m = 0;
-        let h = 0;
-        let s = seconds;
-        while (s > 60) {
-            m++;
-            s -= 60;
-        }
-        while (m > 60) {
-            h++;
-            m -= 60;
-        }
-        return `${h > 0 ? `${leadingZeroes(h,2)}:` : ''}${m > 0 ? `${leadingZeroes(m,2)}` : '00'}:${leadingZeroes(s,2)}`;
-    }
+    
 
     public createQueueEmbed = async (guildId: string, page: number): Promise<EmbedBuilder> => {
        
         const player = this.guildQueueManager.get(guildId);
         const queue = player.getQueue();
-        const progressInCurrentSong = await this.secondsToTimestamp(await player.getPosition());
+        const progressInCurrentSong = await secondsToTimestamp(await player.getPosition());
 
         const embed = new EmbedBuilder()
             .setTimestamp()
@@ -149,15 +131,15 @@ export class Queuer {
             description += ` **[${song.title}](https://www.youtube.com/watch?v=${song.url})**`;
             description += `${song.requestedBy ? ` (<@${song.requestedBy}>` : ''})`;
             if (counter === 1) {
-                description += ` - \`[${progressInCurrentSong}/${await this.secondsToTimestamp(song.length)}]\``;
+                description += ` - \`[${progressInCurrentSong}/${await secondsToTimestamp(song.length)}]\``;
             } else {
-                description += ' - `[' + await this.secondsToTimestamp(song.length) + ']`';
+                description += ' - `[' + await secondsToTimestamp(song.length) + ']`';
             }
             description += '\n';
             counter++;
             totalDuration += song.length;
         }
-        description += `There are ${queue.length} tracks with a remaining length of \`${await this.secondsToTimestamp(totalDuration - player.getPosition())}\`.\n`;
+        description += `There are ${queue.length} tracks with a remaining length of \`${await secondsToTimestamp(totalDuration - player.getPosition())}\`.\n`;
 
         embed.setTitle(title);
         embed.setThumbnail(player.getCurrent()?.thumbnailUrl ?? null);
@@ -171,7 +153,7 @@ export class Queuer {
     public createNowPlayingEmbed = async (guildId: string): Promise<EmbedBuilder> => {
         const player = this.guildQueueManager.get(guildId);
         const queue = player.getQueue();
-        const progressInCurrentSong = await this.secondsToTimestamp(await player.getPosition());
+        const progressInCurrentSong = await secondsToTimestamp(await player.getPosition());
 
         const embed = new EmbedBuilder()
             .setTimestamp()
@@ -198,7 +180,7 @@ export class Queuer {
 
 
             //const progressBar = getProgressBar(15, position / song.length);
-            const elapsedTime = song.isLive ? 'live' : `${await this.secondsToTimestamp(position)}/${await this.secondsToTimestamp(song.length)}`;
+            const elapsedTime = song.isLive ? 'live' : `${await secondsToTimestamp(position)}/${await secondsToTimestamp(song.length)}`;
             const loop = player.loopCurrentSong ? '🔁' : '';
             playerStr = `${button} ${progressBar} \`[${elapsedTime}]\` 🔉 ${loop}`;
             embed.setDescription(`**[${song?.title}](https://www.youtube.com/watch?v=${song?.url})**\nRequested By <@${song?.requestedBy}>\n${playerStr}`);
