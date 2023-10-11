@@ -83,7 +83,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 
     let guessedWords: string[] = []
     let invalidLetters = new Set<string>();
-    let endMessage = "My message collector stopped- either something went wrong or you took over 30 minutes to play this game.";
+    let endMessage = isInfinite ? `The game has ended- ${interaction.user.username} ran out of time! The word was ${word}.` : "My message collector stopped- either something went wrong or you took over 30 minutes to play this game.";
     // Listen for messages
     collector.on('collect', async (m: Message) => {
         if (m.content.toLowerCase() == "stop") {
@@ -136,7 +136,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         }
 
         wordleEmbed.setDescription(gridString);
-        wordleEmbed.setFooter({text: `${isInfinite ? `You have ${await secondsToTimestamp((collectorEndTime - Date.now()) / 1000, true)} remaining. You got this!` : `You have ${6-guesses} guesses remaining`}`});
+        wordleEmbed.setFooter({text: `${isInfinite ? `You have ${await secondsToTimestamp((collectorEndTime - Date.now()) / 1000, true)} remaining. Say 'stop' to end at any time.` : `You have ${6-guesses} guesses remaining`}`});
         await m.reply({ embeds: [wordleEmbed] });
     });
 
