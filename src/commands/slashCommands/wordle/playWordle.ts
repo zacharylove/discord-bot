@@ -106,15 +106,15 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     const filter = (m: Message) => ((m.author.id === interaction.user.id) || isPublic) && (m.content.length == 5 || m.content.toLowerCase() == "stop");
     const collector = threadChannel.createMessageCollector({ 
         filter: filter, 
-        time: 1800000,
+        time: 600000,
         max: 100 
     });
-    const collectorEndTime = Date.now() + 1800000;
+    const collectorEndTime = Date.now() + 600000;
 
     let guessedWords: string[] = []
     let invalidLetters = new Set<string>();
     let validLetters = new Set<string>();
-    let endMessage = isInfinite ? `The game has ended- ${interaction.user.username} ran out of time! The word was ${word}.` : "My message collector stopped- either something went wrong or you took over 30 minutes to play this game.";
+    let endMessage = isInfinite ? `The game has ended- ${interaction.user.username} ran out of time! The word was ${word}.` : "My message collector stopped- either something went wrong or you took over 10 minutes to play this game.";
     // Listen for messages
     collector.on('collect', async (m: Message) => {
         if (m.content.toLowerCase() == "stop") {
@@ -264,7 +264,7 @@ export const playWordle: CommandInterface = {
                 startMessage += `\n - You can send guesses as messages in this thread. I'll ignore any messages that aren't 5-letter words.`;
                 if (isPublic) startMessage += `\n - This game is **public**: anyone can make guesses in this thread!`;
                 else startMessage += `\n - Only <@${interaction.user.id}> will be able to make guesses.`;
-                if (isInfinite) startMessage += `\n - This game is **infinite**: you have infinite guesses within 30 minutes until you get the word!`;
+                if (isInfinite) startMessage += `\n - This game is **infinite**: you have infinite guesses within 10 minutes until you get the word!`;
                 
                 startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.`;
 
