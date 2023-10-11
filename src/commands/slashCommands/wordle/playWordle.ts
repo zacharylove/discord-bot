@@ -6,9 +6,9 @@ import path from 'path'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-const createWordleGrid = (word: string, guesses: string[]) => {
+const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean) => {
     let grid: string[][] = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < (isInfinite ? guesses.length + 1 : 6); i++) {
         grid.push([]);
         for (let j = 0; j < 5; j++) {
             grid[i].push("⬜");
@@ -37,7 +37,7 @@ const createWordleGrid = (word: string, guesses: string[]) => {
     return gridString;
 }
 
-const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel) => {
+const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean) => {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     
@@ -60,13 +60,13 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     // Create a new EmbedBuilder
     const wordleEmbed = new EmbedBuilder()
         .setTitle(`Wordle #${num+1}`)
-        .setDescription(createWordleGrid(word, []))
+        .setDescription(createWordleGrid(word, [], isInfinite))
         .setColor(0x00ff00)
-        .setFooter({text: "You have 6 guesses remaining"});
+        .setFooter({text: `${isInfinite ? "Keep guessing, you have all the time in the world." : `You have 6 guesses remaining`}`});
     // Send the embed
     await threadChannel.send({ embeds: [wordleEmbed] });
     // Filter messages for 5-letter words or 'stop' sent by original author
-    const filter = (m: Message) => (m.author.id === interaction.user.id) && (m.content.length == 5 || m.content.toLowerCase() == "stop");
+    const filter = (m: Message) => ((m.author.id === interaction.user.id) || isPublic) && (m.content.length == 5 || m.content.toLowerCase() == "stop");
     const collector = threadChannel.createMessageCollector({ 
         filter: filter, 
         time: 1800000,
@@ -80,7 +80,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     collector.on('collect', async (m: Message) => {
         if (m.content.toLowerCase() == "stop") {
             await m.reply({ content: "Okay! Stopping the game." });
-            endMessage = `The game was stopped by ${interaction.user.username}.`;
+            endMessage = `The game was stopped by ${m.author.username}.`;
             collector.stop();
             return;
         }
@@ -99,21 +99,21 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         */
 
         guesses++;
-        if (guesses >= 6) {
+        if (!isInfinite && guesses >= 6) {
             m.reply({ content: `You ran out of guesses! The word was ${word}. Better luck next time!`});
-            endMessage = `The game has ended- ${interaction.user.username} ran out of guesses! The word was ${word}.`;
+            endMessage = `The game has ended- ${m.author.username} ran out of guesses! The word was ${word}.`;
             collector.stop();
             return;
         }
         let guess = m.content.toLowerCase();
         if (guess == word) {
             m.reply({ content: `You guessed the word! Congratulations!`});
-            endMessage = `The game has ended- ${interaction.user.username} guessed the word! The word was ${word}.`;
+            endMessage = `The game has ended- ${m.author.username} guessed the word! The word was ${word}.`;
             collector.stop();
             return;
         }
         guessedWords.push(guess);
-        let gridString = createWordleGrid(word, guessedWords);
+        let gridString = createWordleGrid(word, guessedWords, isInfinite);
         // Fill invalid letters
         for (let j = 0; j < guess.length; j++) {
             if (guess[j] != word[j] && !word.includes(guess[j])) {
@@ -128,7 +128,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         }
 
         wordleEmbed.setDescription(gridString);
-        wordleEmbed.setFooter({text: `You have ${6-guesses} guesses remaining`});
+        wordleEmbed.setFooter({text: `${isInfinite ? "Keep guessing, you have all the time in the world." : `You have ${6-guesses} guesses remaining`}`});
         await m.reply({ embeds: [wordleEmbed] });
     });
 
@@ -144,9 +144,24 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 export const playWordle: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('playwordle')
-        .setDescription("Creates a new game of Wordle in a thread"),
+        .setDescription("Creates a new game of Wordle in a thread")
+        .addBooleanOption(option =>
+            option
+                .setName('public')
+                .setDescription('Allow anyone to guess')
+                .setRequired(false)
+        )
+        .addBooleanOption(option =>
+            option
+                .setName('infinite')
+                .setDescription('Infinite guess mode')
+                .setRequired(false)
+        )
+        ,
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel ) return;
+        const isPublic: boolean = interaction.options.getBoolean('public') ?? false;
+        const isInfinite: boolean = interaction.options.getBoolean('infinite') ?? false;
 
         const channel = await interaction.channel.fetch();
         // get original Message from interaction
@@ -161,15 +176,22 @@ export const playWordle: CommandInterface = {
                 autoArchiveDuration: 60,
                 reason: `${username}'s game of wordle!`,
             });
-            let startMessage = "**Let's play a game of Wordle!**\n > Wordle is a daily word game where players have six attempts to guess a five letter word. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.";
-            startMessage += `\n - You can send guesses as messages in this thread.\n - Only <@${interaction.user.id}> will be able to make guesses, and I'll ignore any messages that aren't 5-letter words.`;
-            startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.\nGood luck!`;
+            let startMessage = `**Let's play a game of Wordle!**\n > Wordle is a daily word game where players have ${isInfinite ? "~~six~~ *infinite*" : "six"} attempts to guess a five letter word. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.`;
+            startMessage += `\n - You can send guesses as messages in this thread. I'll ignore any messages that aren't 5-letter words.`;
+            if (isPublic) startMessage += `\n - This game is **public**: anyone can make guesses in this thread!`;
+            else startMessage += `\n - Only <@${interaction.user.id}> will be able to make guesses.`;
+            if (isInfinite) startMessage += `\n - This game is **infinite**: you have infinite guesses within 30 minutes until you get the word!`;
+            
+            startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.`;
+
+            
+            startMessage += `\nGood luck!`;
 
             // Add the user
             await threadChannel.members.add(interaction.user.id);
             await threadChannel.send({ content: startMessage});
 
-            await createWordleGame(interaction, threadChannel);
+            await createWordleGame(interaction, threadChannel, isPublic, isInfinite);
             return;
         }
         await interaction.editReply({ content: "Sorry, I can only create new threads in a regular text channel!" });
