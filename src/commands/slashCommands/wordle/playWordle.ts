@@ -193,7 +193,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 
         wordleEmbed.setDescription(gridString);
         wordleEmbed.setFooter({text: `${isInfinite ? `You have ${await secondsToTimestamp((collectorEndTime - Date.now()) / 1000, true)} remaining. Say 'stop' to end at any time.` : `You have ${6-guesses} guesses remaining`}`});
-        await m.reply({ embeds: [wordleEmbed] });
+        await m.reply({ embeds: [wordleEmbed], allowedMentions: { repliedUser: false } });
     });
 
     collector.on('end', async (collected) => {
