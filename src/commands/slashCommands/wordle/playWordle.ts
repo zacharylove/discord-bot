@@ -3,11 +3,8 @@ import { CommandInterface, Feature } from '../../../interfaces/Command.js';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import * as fs from 'fs';
 import path from 'path'
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { secondsToTimestamp } from '../../../utils/utils.js';
-import { BOT } from 'index.js';
-import { hasPermissions } from 'utils/userUtils.js';
+import { BOT } from '../../../index.js';
 
 const createSolutionLineString = (word: string) => {
     let out = "";
@@ -73,24 +70,19 @@ const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean, 
 }
 
 const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean, puzzlenum:number) => {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
     
-    // Load valid wordle guesses
-    //let validGuessesString: string = fs.readFileSync(path.resolve(path.join(__dirname, '..', '..', '..', '..', 'assets', 'txt', 'validWordleGuesses.txt')),'utf8');
-    //const validGuesses: string[] = validGuessesString.split('\n');
+    const validGuesses: string[] = BOT.getWordleAllowedGuessList();
     
     
     // Load word list
     
-    let wordString: string = fs.readFileSync(path.resolve(path.join(__dirname, '..', '..', '..', '..', 'assets', 'txt', 'wordleWords.txt')),'utf8');
-    let wordList: string[] = wordString.split('\n');
+    let wordList: string[] = BOT.getWordleWordList();
     // Select a random 5-letter word
     let num: number;
     if (puzzlenum == -1) {
         num = Math.floor(Math.random() * wordList.length);
-    } else if (puzzlenum <= 1 || puzzlenum > wordList.length) {
-        interaction.editReply({ content: "Invalid puzzle number!" });
+    } else if (puzzlenum < 1 || puzzlenum > wordList.length) {
+        await interaction.editReply({ content: "Invalid puzzle number!" });
         await threadChannel.delete();
         return;
     } else {
@@ -139,11 +131,11 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         }
 
         // Ensure guess is in validWordleGuesses
-        /*if (!validGuesses.includes(m.content.toLowerCase())) {
+        if (!validGuesses.includes(m.content.toLowerCase())) {
             await m.reply({ content: "Not a valid word- please try again!" });
             return;
         }
-        */
+        
 
         guesses++;
         let guess = m.content.toLowerCase();
@@ -247,6 +239,12 @@ export const playWordle: CommandInterface = {
         const isPublic: boolean = interaction.options.getBoolean('public') ?? false;
         const isInfinite: boolean = interaction.options.getBoolean('infinite') ?? false;
         const puzzlenum: number = interaction.options.getInteger('puzzlenum') ?? -1;
+
+        const numTotalPuzzles = BOT.getWordleWordList().length;
+        if (puzzlenum < 1 || puzzlenum > BOT.getWordleWordList().length) {
+            await interaction.editReply({ content: `Invalid puzzle number! Pick a number between 1 and ${numTotalPuzzles}.` });
+            return;
+        }
 
         const channel = await interaction.channel.fetch();
         // get original Message from interaction
