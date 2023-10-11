@@ -35,9 +35,10 @@ const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean, 
         }
     }
     // Fill in guess letters
-    let includeWord: string[] = Array.from(word);
+    let wordAsArray: string[] = Array.from(word);
     let partialSolutionMessage: string[] = [" ", " ", " ", " ", " "];
     for (let i = 0; i < guesses.length; i++) {
+        let includeWord = wordAsArray.slice();
         let guess = guesses[i];
         for (let j = 0; j < guess.length; j++) {
             if (guess[j] == word[j]) {
@@ -54,7 +55,7 @@ const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean, 
                     break;
                 }
             }
-            if (grid[i][j] != "🟨" && grid[i][j] != "🟩") grid[i][j] = "🟥";
+            if (grid[i][j] != "🟨" && grid[i][j] != "🟩") grid[i][j] = "⬛";
         }
         
     }
@@ -165,18 +166,26 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         for (let j = 0; j < guess.length; j++) {
             if (guess[j] != word[j] && !word.includes(guess[j])) {
                 invalidLetters.add(guess[j]);
-                validLetters += " ";
             }
             if (guess[j] == word[j]) {
                 validLetters += guess[j];
             }
         }
+        let fields = []
         if (invalidLetters.size > 0) {
-            wordleEmbed.setFields({
+            fields.push({
                 name: "Invalid Letters",
                 value: Array.from(invalidLetters).join(", ")
             });
         }
+        if (validLetters.length > 0) {
+            fields.push({
+                name: "Valid Letters",
+                value: Array.from(validLetters).join(", ")
+            });
+        }
+
+        wordleEmbed.setFields(fields);
         // Fill valid letters
         process.env.DEBUG_MODE == "true" ? gridString += `\nDEBUG: word is "${word}"` : null;
 
