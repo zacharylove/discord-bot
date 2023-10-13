@@ -84,14 +84,14 @@ const createWordleGrid = (word: string, guesses: guesses[], isInfinite: boolean,
     return gridString;
 }
 
-const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean, isSilent: boolean, puzzlenum:number, username: string, userID: string) => {
+const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean, isSilent: boolean, isChallenge: boolean, puzzlenum:number, username: string, userID: string) => {
     
     const validGuesses: string[] = BOT.getWordleAllowedGuessList();
     
     
     // Load word list
     
-    let wordList: string[] = BOT.getWordleWordList();
+    let wordList: string[] = isChallenge ? BOT.getWordleWordList() : BOT.getWordleChallengeWordList();
     // Select a random 5-letter word
     let num: number;
     if (puzzlenum == -1) {
@@ -111,7 +111,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
 
     // Create a new EmbedBuilder
     const wordleEmbed = new EmbedBuilder()
-        .setTitle(`Wordle #${num+1}${isInfinite ? " (Infinite)" : ""}${isPublic ? " (Public)" : ""}`)
+        .setTitle(`Wordle #${num+1}${isInfinite ? " (Infinite)" : ""}${isPublic ? " (Public)" : ""}${isChallenge ? "(🔥 Challenge)" : ""}`)
         .setDescription(createWordleGrid(word, [], isInfinite, isPublic))
         .setColor(0x00ff00)
         .setFooter({text: `${isInfinite ? "You got this." : `You have 6 guesses remaining`}`});
@@ -255,6 +255,12 @@ export const playWordle: CommandInterface = {
                 .setDescription('Do not send score in chat when finished')
                 .setRequired(false)
             )
+        .addBooleanOption(option =>
+            option
+                .setName('challenge')
+                .setDescription('Play in challenge mode')
+                .setRequired(false)
+            )
         ,
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel ) return;
@@ -274,6 +280,7 @@ export const playWordle: CommandInterface = {
         const isInfinite: boolean = await interaction.options.getBoolean('infinite') ?? false;
         const puzzlenum: number = await interaction.options.getInteger('puzzlenum') ?? -1;
         const isSilent: boolean = await interaction.options.getBoolean('silent') ?? false;
+        const isChallenge: boolean = await interaction.options.getBoolean('challenge') ?? false;
 
         const numTotalPuzzles = BOT.getWordleWordList().length;
         if (puzzlenum != -1 && (puzzlenum < 1 || puzzlenum > BOT.getWordleWordList().length)) {
@@ -303,6 +310,7 @@ export const playWordle: CommandInterface = {
                 else startMessage += `\n - Only <@${userID}> will be able to make guesses.`;
                 if (isInfinite) startMessage += `\n - This game is **infinite**: you have infinite guesses within 10 minutes until you get the word!`;
                 if (isSilent) startMessage += `\n - This game is **silent**: the final score will not be sent to chat and the starting message will be deleted after the game ends.`;
+                if (isChallenge) startMessage += `\n - This game is in **challenge mode**: the word will be selected from the *entire* US dictionary and can be very difficult to guess!`;
                 startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.`;
 
                 
@@ -319,7 +327,7 @@ export const playWordle: CommandInterface = {
                 }
                 await threadChannel.send({ content: startMessage});
 
-                await createWordleGame(interaction, threadChannel, isPublic, isInfinite, isSilent, puzzlenum, username, userID);
+                await createWordleGame(interaction, threadChannel, isPublic, isInfinite, isSilent, isChallenge, puzzlenum, username, userID);
                 return;
             } catch (e) {
                 await interaction.editReply({ content: "Something went horribly wrong behind the scenes here... "});
