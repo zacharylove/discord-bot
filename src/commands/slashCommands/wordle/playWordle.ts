@@ -84,7 +84,7 @@ const createWordleGrid = (word: string, guesses: guesses[], isInfinite: boolean,
     return gridString;
 }
 
-const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean, puzzlenum:number, username: string, userID: string) => {
+const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean, isSilent: boolean, puzzlenum:number, username: string, userID: string) => {
     
     const validGuesses: string[] = BOT.getWordleAllowedGuessList();
     
@@ -216,7 +216,11 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
             await deleteThread(threadChannel);
         }, 10000);
         try {
-            await interaction.editReply({ content: endMessage });
+            if (!isSilent) {
+                await interaction.editReply({ content: endMessage });
+            } else {
+                await interaction.deleteReply();
+            }
         } catch (e) {
             console.error(e);
         }
@@ -245,6 +249,12 @@ export const playWordle: CommandInterface = {
                 .setDescription('Specify a puzzle number to play')
                 .setRequired(false)
         )
+        .addBooleanOption(option =>
+            option
+                .setName('silent')
+                .setDescription('Do not send score in chat when finished')
+                .setRequired(false)
+            )
         ,
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel ) return;
@@ -263,6 +273,7 @@ export const playWordle: CommandInterface = {
         const isPublic: boolean = await interaction.options.getBoolean('public') ?? false;
         const isInfinite: boolean = await interaction.options.getBoolean('infinite') ?? false;
         const puzzlenum: number = await interaction.options.getInteger('puzzlenum') ?? -1;
+        const isSilent: boolean = await interaction.options.getBoolean('silent') ?? false;
 
         const numTotalPuzzles = BOT.getWordleWordList().length;
         if (puzzlenum != -1 && (puzzlenum < 1 || puzzlenum > BOT.getWordleWordList().length)) {
@@ -291,7 +302,7 @@ export const playWordle: CommandInterface = {
                 if (isPublic) startMessage += `\n - This game is **public**: anyone can make guesses in this thread!`;
                 else startMessage += `\n - Only <@${userID}> will be able to make guesses.`;
                 if (isInfinite) startMessage += `\n - This game is **infinite**: you have infinite guesses within 10 minutes until you get the word!`;
-                
+                if (isSilent) startMessage += `\n - This game is **silent**: the final score will not be sent to chat and the starting message will be deleted after the game ends.`;
                 startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.`;
 
                 
@@ -308,7 +319,7 @@ export const playWordle: CommandInterface = {
                 }
                 await threadChannel.send({ content: startMessage});
 
-                await createWordleGame(interaction, threadChannel, isPublic, isInfinite, puzzlenum, username, userID);
+                await createWordleGame(interaction, threadChannel, isPublic, isInfinite, isSilent, puzzlenum, username, userID);
                 return;
             } catch (e) {
                 await interaction.editReply({ content: "Something went horribly wrong behind the scenes here... "});
