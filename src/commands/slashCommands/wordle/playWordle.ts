@@ -69,7 +69,7 @@ const createWordleGrid = (word: string, guesses: string[], isInfinite: boolean, 
     return gridString;
 }
 
-const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean, puzzlenum:number) => {
+const createWordleGame = async (interaction: CommandInteraction, threadChannel: ThreadChannel, isPublic: boolean, isInfinite: boolean, puzzlenum:number, username: string, userID: string) => {
     
     const validGuesses: string[] = BOT.getWordleAllowedGuessList();
     
@@ -103,7 +103,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     // Send the embed
     await threadChannel.send({ embeds: [wordleEmbed] });
     // Filter messages for 5-letter words or 'stop' sent by original author
-    const filter = (m: Message) => ((m.author.id === interaction.user.id) || isPublic) && (m.content.length == 5 || m.content.toLowerCase() == "stop");
+    const filter = (m: Message) => ((m.author.id === userID) || isPublic) && (m.content.length == 5 || m.content.toLowerCase() == "stop");
     const collector = threadChannel.createMessageCollector({ 
         filter: filter, 
         time: 600000,
@@ -114,7 +114,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     let guessedWords: string[] = []
     let invalidLetters = new Set<string>();
     let validLetters = new Set<string>();
-    let endMessage = isInfinite ? `The game has ended- ${interaction.user.username} ran out of time! The word was ${word}.` : "My message collector stopped- either something went wrong or you took over 10 minutes to play this game.";
+    let endMessage = isInfinite ? `The game has ended- ${username} ran out of time! The word was ${word}.` : "My message collector stopped- either something went wrong or you took over 10 minutes to play this game.";
     // Listen for messages
     collector.on('collect', async (m: Message) => {
         if (m.content.toLowerCase() == "stop") {
@@ -196,7 +196,11 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         setTimeout(async () => {
             await threadChannel.delete();
         }, 10000);
-        await interaction.editReply({ content: endMessage });
+        try {
+            await interaction.editReply({ content: endMessage });
+        } catch (e) {
+            console.error(e);
+        }
     });
 }
 
@@ -237,9 +241,9 @@ export const playWordle: CommandInterface = {
         }
         const replyMessage: Message = await interaction.editReply("Creating a new game of Wordle...");
 
-        const isPublic: boolean = interaction.options.getBoolean('public') ?? false;
-        const isInfinite: boolean = interaction.options.getBoolean('infinite') ?? false;
-        const puzzlenum: number = interaction.options.getInteger('puzzlenum') ?? -1;
+        const isPublic: boolean = await interaction.options.getBoolean('public') ?? false;
+        const isInfinite: boolean = await interaction.options.getBoolean('infinite') ?? false;
+        const puzzlenum: number = await interaction.options.getInteger('puzzlenum') ?? -1;
 
         const numTotalPuzzles = BOT.getWordleWordList().length;
         if (puzzlenum != -1 && (puzzlenum < 1 || puzzlenum > BOT.getWordleWordList().length)) {
@@ -251,7 +255,8 @@ export const playWordle: CommandInterface = {
         // get original Message from interaction
         
         // get username of user who sent the command
-        const username = interaction.user.username;
+        const username = await interaction.user.username;
+        const userID = await interaction.user.id;
         // If channel is a GuildTextBasedChannel channel
         if (channel.isTextBased() && channel instanceof TextChannel) {
             try {
@@ -263,7 +268,7 @@ export const playWordle: CommandInterface = {
                 let startMessage = `**Let's play a game of Wordle!**\n > Wordle is a daily word game where players have ${isInfinite ? "~~six~~ *infinite*" : "six"} attempts to guess a five letter word. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.`;
                 startMessage += `\n - You can send guesses as messages in this thread. I'll ignore any messages that aren't 5-letter words.`;
                 if (isPublic) startMessage += `\n - This game is **public**: anyone can make guesses in this thread!`;
-                else startMessage += `\n - Only <@${interaction.user.id}> will be able to make guesses.`;
+                else startMessage += `\n - Only <@${userID}> will be able to make guesses.`;
                 if (isInfinite) startMessage += `\n - This game is **infinite**: you have infinite guesses within 10 minutes until you get the word!`;
                 
                 startMessage += `\n - You can say "stop" at any time to end the game early, and the thread will be deleted after the game ends.`;
@@ -273,16 +278,16 @@ export const playWordle: CommandInterface = {
 
                 // Add the user
                 try {
-                    await threadChannel.members.add(interaction.user.id);
+                    await threadChannel.members.add(userID);
                 } catch (e) {
-                    interaction.editReply({ content: "An error occurred adding you to the thread." });
+                    await interaction.editReply({ content: "An error occurred adding you to the thread." });
                     await threadChannel.delete();
                     console.error(e);
                     return;
                 }
                 await threadChannel.send({ content: startMessage});
 
-                await createWordleGame(interaction, threadChannel, isPublic, isInfinite, puzzlenum);
+                await createWordleGame(interaction, threadChannel, isPublic, isInfinite, puzzlenum, username, userID);
                 return;
             } catch (e) {
                 await interaction.editReply({ content: "Something went horribly wrong behind the scenes here... "});
