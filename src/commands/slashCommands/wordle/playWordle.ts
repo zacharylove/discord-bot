@@ -163,7 +163,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         if (guess == word) {
             await m.reply({ content: `You guessed the word! Congratulations!`});
             endMessage = `The game has ended${ isPublic ? `- ${m.author.username} guessed the word!` : "."}`;
-            endMessage += `\n Wordle #${num+1} ${guesses}/${isInfinite ? "infinite" : "6"}`;
+            endMessage += `\n Wordle ${isChallenge ? "**Challenge** " : ""}#${num+1} ${guesses}/${isInfinite ? "infinite" : "6"}`;
             endMessage += `\n${createWordleGrid(word, guessedWords, isInfinite, isPublic, true)}`
             collector.stop();
             return;
