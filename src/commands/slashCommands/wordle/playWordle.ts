@@ -103,7 +103,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     } else {
         num = puzzlenum - 1;
     }
-    await interaction.editReply({ content: `Currently playing #${num+1}${isInfinite ? " in infinite mode" : ""}${isPublic ? " - anyone can join and play!" : ""}`})
+    await interaction.editReply({ content: `Currently playing ${isChallenge ? "**Challenge** " : ""}#${num+1}${isInfinite ? " in infinite mode" : ""}${isPublic ? " - anyone can join and play!" : ""}`})
     let word: string = wordList[num];
 
     // Number of guesses, max 6
