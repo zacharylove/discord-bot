@@ -5,6 +5,13 @@ import * as fs from 'fs';
 import path from 'path'
 import { secondsToTimestamp } from '../../../utils/utils.js';
 import { BOT } from '../../../index.js';
+import { addThread, removeThread } from '../../../database/internalData.js';
+
+const deleteThread = async (threadChannel: ThreadChannel) => {
+    console.debug(`Removed thread ${threadChannel.id} from internal data.`)
+    await removeThread(threadChannel.id);
+    await threadChannel.delete();
+}
 
 const createSolutionLineString = (word: string) => {
     let out = "";
@@ -83,7 +90,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         num = Math.floor(Math.random() * wordList.length);
     } else if (puzzlenum < 1 || puzzlenum > wordList.length) {
         await interaction.editReply({ content: "Invalid puzzle number!" });
-        await threadChannel.delete();
+        await deleteThread(threadChannel);
         return;
     } else {
         num = puzzlenum - 1;
@@ -194,7 +201,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     collector.on('end', async (collected) => {
         // After the game ends, wait 10 seconds and then delete the thread
         setTimeout(async () => {
-            await threadChannel.delete();
+            await deleteThread(threadChannel);
         }, 10000);
         try {
             await interaction.editReply({ content: endMessage });
@@ -265,6 +272,8 @@ export const playWordle: CommandInterface = {
                     autoArchiveDuration: 60,
                     reason: `${username}'s game of wordle!`,
                 });
+                console.debug(`Added thread ${threadChannel.id} to internal data.`);
+                await addThread(threadChannel.id, channel.id, "wordle");
                 let startMessage = `**Let's play a game of Wordle!**\n > Wordle is a daily word game where players have ${isInfinite ? "~~six~~ *infinite*" : "six"} attempts to guess a five letter word. Feedback for each guess is given in the form of colored tiles to indicate if letters match the correct position.`;
                 startMessage += `\n - You can send guesses as messages in this thread. I'll ignore any messages that aren't 5-letter words.`;
                 if (isPublic) startMessage += `\n - This game is **public**: anyone can make guesses in this thread!`;
@@ -281,7 +290,7 @@ export const playWordle: CommandInterface = {
                     await threadChannel.members.add(userID);
                 } catch (e) {
                     await interaction.editReply({ content: "An error occurred adding you to the thread." });
-                    await threadChannel.delete();
+                    await deleteThread(threadChannel);
                     console.error(e);
                     return;
                 }
