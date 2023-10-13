@@ -21,6 +21,7 @@ export const addThread = async (threadID: string, channelID: string, type: strin
         channelID: channelID,
         createdAt: new Date(),
         type: type,
+        localDev: process.env.DEBUG_MODE ? process.env.DEBUG_MODE : "false",
     }
     const internalData = await getInternalData();
     internalData!.openedThreads.push(thread);
@@ -39,12 +40,15 @@ export const removeAllThreads = async () => {
     await update(internalData);
 }
 
-export const getThreads = async (): Promise<Thread[]> => {
+export const getThreads = async (debug?: string): Promise<Thread[]> => {
+    let isDebug = debug ? debug : "false";
     const internalData = await getInternalData();
-    return internalData!.openedThreads;
+    return internalData!.openedThreads.filter(thread => thread.localDev === isDebug);
 }
 
-export const getNumThreads = async (): Promise<number> => {
+export const getNumThreads = async (debug?: string): Promise<number> => {
+    // Get number of threads with localDev = debug
+    let isDebug = debug ? debug : "false";
     const internalData = await getInternalData();
-    return internalData!.openedThreads.length;
+    return internalData!.openedThreads.filter(thread => thread.localDev === isDebug).length;
 }

@@ -13,6 +13,7 @@ export interface Thread {
     channelID: string;
     createdAt: Date;
     type: string;
+    localDev: string;
 }
 
 export const Internal = new Schema({

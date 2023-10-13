@@ -22,14 +22,14 @@ const cleanupThreads = async () => {
         console.log("Internal data does not exist in database- creating collection...");
         await createInternalData();
     }
-    console.log("Checking for dangling threads...");
+    console.log(`Checking for dangling threads with debug mode ${process.env.DEBUG_MODE}...`);
     let threadMessage = "";
-    const numThreads = await getNumThreads();
+    const numThreads = await getNumThreads(process.env.DEBUG_MODE);
     let numErrors = 0;
     let numSuccess = 0;
     if ( numThreads > 0) {
         threadMessage += `${numThreads} threads found. Cleaning... `;
-        const threads: Thread[] = await getThreads();
+        const threads: Thread[] = await getThreads(process.env.DEBUG_MODE);
         for (const thread of threads) {
             const channel = await BOT.channels.fetch(thread.channelID);
             if (channel) {
@@ -48,7 +48,7 @@ const cleanupThreads = async () => {
             }
         }
         threadMessage += `${numSuccess} deleted, ${numErrors} errors.`;
-        threadMessage += ` Cleanup complete.${numErrors > 0 ? `${await getNumThreads()} threads remaining..` : ''}`;
+        threadMessage += ` Cleanup complete.${numErrors > 0 ? `${await getNumThreads(process.env.DEBUG_MODE)} threads remaining..` : ''}`;
     } else {
         threadMessage += " No threads found.";
     }
