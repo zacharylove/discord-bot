@@ -41,7 +41,7 @@ const cleanupThreads = async () => {
                 if (threadChannel) {
                     await threadChannel.delete();
                     numSuccess++;
-                    removeThread(thread.threadID);
+                    await removeThread(thread.threadID);
                 } else {
                     numErrors++;
                 }
