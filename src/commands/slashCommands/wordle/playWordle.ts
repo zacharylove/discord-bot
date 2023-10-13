@@ -91,7 +91,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     
     // Load word list
     
-    let wordList: string[] = isChallenge ? BOT.getWordleWordList() : BOT.getWordleChallengeWordList();
+    let wordList: string[] = isChallenge ? BOT.getWordleChallengeWordList() : BOT.getWordleWordList();
     // Select a random 5-letter word
     let num: number;
     if (puzzlenum == -1) {
