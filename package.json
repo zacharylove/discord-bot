@@ -31,13 +31,17 @@
     "libsodium-wrappers": "^0.7.13",
     "module-alias": "^2.2.3",
     "mongoose": "^7.5.2",
+    "p-retry": "^6.1.0",
+    "spotify-uri": "^4.0.0",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.22",
     "@types/node": "^20.6.5",
+    "@types/spotify-web-api-node": "^5.0.9",
     "fluent-ffmpeg": "^2.1.2",
     "gif-encoder-2": "^1.0.5",
+    "spotify-web-api-node": "^5.0.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2"
   },

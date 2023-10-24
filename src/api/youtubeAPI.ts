@@ -1,4 +1,4 @@
-import { SongMetadata } from "../utils/music/player.js";
+import { MediaSource, SongMetadata } from "../utils/music/player.js";
 import getYouTubeID from 'get-youtube-id';
 import { RequestInterface } from "../interfaces/RequestInterface.js";
 import {toSeconds, parse} from 'iso8601-duration';
@@ -103,7 +103,7 @@ export const youtubeAPI: RequestInterface = {
 }
 
 
-const getMetadataFromVideoId = async (videoId: string): Promise<SongMetadata> => {
+const getYoutubeMetadataFromVideoId = async (videoId: string): Promise<SongMetadata> => {
     const request: youtubeRequestInfo = {
         query: videoId,
         type: "id",
@@ -113,7 +113,7 @@ const getMetadataFromVideoId = async (videoId: string): Promise<SongMetadata> =>
     if (!res) throw new Error("Invalid youtube url");
     const video: VideoDetailsResponse = res.data.items[0];
     const metadata: SongMetadata = {
-      source: "Youtube",
+      source: MediaSource.Youtube,
       title: video.snippet.title,
       artist: video.snippet.channelTitle,
       length: toSeconds(parse(video.contentDetails.duration)),
@@ -127,7 +127,7 @@ const getMetadataFromVideoId = async (videoId: string): Promise<SongMetadata> =>
     return metadata;
 }
 
-export const getVideoByQuery = async (query: string): Promise<SongMetadata> => {
+export const getYoutubeVideoByQuery = async (query: string): Promise<SongMetadata> => {
     const request: youtubeRequestInfo = {
         query: query,
         type: "search",
@@ -136,56 +136,58 @@ export const getVideoByQuery = async (query: string): Promise<SongMetadata> => {
     const res = await youtubeAPI.makeRequest(youtubeAPI.formRequestURL(request));
     if (!res) throw new Error("Invalid youtube url");
     const videoId = res.data.items[0].id.videoId;
-    return await getMetadataFromVideoId(videoId);
+    return await getYoutubeMetadataFromVideoId(videoId);
 }
 
 
 
-export const getVideoByURL = async (url: string): Promise<SongMetadata> => {
+export const getYoutubeVideoByURL = async (url: string): Promise<SongMetadata> => {
     // Parse id
     const id: string | null = await getYouTubeID(url);
     if (!id) throw new Error("Invalid youtube url");
-    return await getMetadataFromVideoId(id);
+    return await getYoutubeMetadataFromVideoId(id);
 }
 
-export const parseQuery = async (query: string): Promise<SongMetadata[]> => {
-    let newSongs: SongMetadata[] = [];
-    try {
-        const url = new URL(query);
-        const YOUTUBE_HOSTS = [
-        'www.youtube.com',
-        'youtu.be',
-        'youtube.com',
-        'music.youtube.com',
-        'www.music.youtube.com',
-        ];
-        if (YOUTUBE_HOSTS.includes(url.host)) {
-            if (url.searchParams.get('list')) {
-                // YouTube playlist
-                // TODO: playlist support
-            } else {
-                const songs = await getVideoByURL(url.href);
-                if (songs) newSongs.push(songs);
-                else throw new Error("Invalid youtube url");
-            }
-        } else if (url.protocol === 'spotify:' || url.host === 'open.spotify.com') {
-            // TODO: Spotify support
-        } else {
-            // TODO: HTTP live stream support
 
+/*
+  ====================
+  SPOTIFY
+   - Convert spotify url to youtube url
+*/
+
+export const searchYoutube = async (query: string, shouldSplitChapters: boolean, singleResult: boolean): Promise<SongMetadata[]> => {
+    const request: youtubeRequestInfo = {
+        query: query,
+        type: "search",
+        maxResults: 5,
+    };
+    const res = await youtubeAPI.makeRequest(youtubeAPI.formRequestURL(request));
+    if (!res) throw new Error("Invalid youtube url");
+    const videos = res.data.items;
+    const metadata: SongMetadata[] = [];
+
+    if (singleResult) {
+      let firstVideo;
+
+      for (const video of videos) {
+        if (video.id.kind === 'youtube#video') {
+          firstVideo = video;
+          break;
         }
-    } catch (e: unknown) {
-        console.error(e);
-        // Not a URL, must search YouTube
-        const songs = await getVideoByQuery(query);
-  
-        if (songs) {
-          newSongs.push(songs);
-        } else {
-          throw new Error('that doesn\'t exist');
+        if (!firstVideo) {
+          throw new Error('No video found.');
         }
+      }
+      const videoId = firstVideo.id.videoId;
+      const videoMetadata = await getYoutubeMetadataFromVideoId(videoId);
+      metadata.push(videoMetadata);
+    } else {
+      for (const video of videos) {
+          const videoId = video.id.videoId;
+          const videoMetadata = await getYoutubeMetadataFromVideoId(videoId);
+          metadata.push(videoMetadata);
+      }
     }
-    if (newSongs.length === 0) throw new Error('no songs found');
-    // TODO: shuffle support
-    return newSongs;
+    return metadata;
 }
+

@@ -1,7 +1,9 @@
 import { Client, ClientOptions } from "discord.js";
 import { Queuer, guildQueueManager } from "./utils/music/queuer.js";
 import { wordle, tradle, initializeWordleUtil, initializeTradleUtil } from "./utils/wordleUtils.js";
-
+import SpotifyWebApi from "spotify-web-api-node";
+import { toggleMusicCommands } from "./commands/_CommandList.js";
+import pRetry from "p-retry";
 
 /**
  * Custom client class that extends the default discord.js Client class
@@ -12,6 +14,8 @@ export default class Bot extends Client {
     private tradleUtil: tradle;
     private musicQueuerManager: guildQueueManager;
     private musicQueuer: Queuer;
+    private spotifyAPI: SpotifyWebApi;
+    private spotifyTokenTimerId: NodeJS.Timeout | undefined;
 
     constructor( options: ClientOptions ) {
         super(options);
@@ -19,6 +23,41 @@ export default class Bot extends Client {
         this.tradleUtil = initializeTradleUtil();
         this.musicQueuerManager = new guildQueueManager();
         this.musicQueuer = new Queuer(this.musicQueuerManager);
+
+        let spotifyAPIValid: boolean = true;
+        
+        this.spotifyAPI = new SpotifyWebApi({
+            clientId: process.env.SPOTIFY_CLIENT_ID,
+            clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+            redirectUri: 'http://localhost/'
+        });
+        this.initializeSpotifyAPI();
+    }
+
+    private initializeSpotifyAPI = async (): Promise<void> => {
+        await this.refreshSpotifyToken();
+        try {
+            this.spotifyAPI.getArtistAlbums('43ZHCT0cAZBISjO8DG9PnE').then(
+                function(data) {
+                    console.log('Spotify API connected!');
+                },
+                function(err) {
+                    console.error(err);
+                    toggleMusicCommands(false);
+                }
+            );
+        } catch (e) { 
+            console.error(e); 
+            toggleMusicCommands(false);
+        }
+    }
+
+    private refreshSpotifyToken = async () => {
+        await pRetry(async () => {
+            const auth = await this.spotifyAPI.clientCredentialsGrant();
+            this.spotifyAPI.setAccessToken(auth.body.access_token);
+            this.spotifyTokenTimerId = setTimeout(this.refreshSpotifyToken.bind(this), (auth.body.expires_in / 2) * 1000);
+          }, {retries: 5});
     }
 
     public getWordleUtil = (): wordle => {
@@ -32,5 +71,8 @@ export default class Bot extends Client {
     }
     public getMusicQueuer = (): Queuer => {
         return this.musicQueuer;
+    }
+    public getSpotifyAPI = (): SpotifyWebApi => {
+        return this.spotifyAPI;
     }
 }
