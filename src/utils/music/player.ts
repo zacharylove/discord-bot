@@ -389,9 +389,10 @@ export default class Player {
                 .outputFormat('webm')
                 .addOutputOption(['-filter:a', `volume=${options?.volumeAdjustment ?? '1'}`])
                 .on('error', error => {
-                if (!isReadStreamClosed) {
-                    reject(error);
-                }
+                    console.error(error)
+                    if (!isReadStreamClosed) {
+                        reject(error);
+                    }
             }).on('start', command => {
                 console.debug(`Spawned ffmpeg with ${command as string}`);
             });
