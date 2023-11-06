@@ -1,4 +1,4 @@
-import { RequestInterface } from 'interfaces/RequestInterface';
+import { RequestInterface } from '../interfaces/RequestInterface';
 import Spotify from 'spotify-web-api-node';
 import { parse, Album, Artist, Playlist, Track} from 'spotify-uri';
 import { BOT } from '../index.js';
