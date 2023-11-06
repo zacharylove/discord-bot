@@ -6,11 +6,54 @@ import { connectDatabase } from "./database/connectDatabase.js";
 import { validateEnv, validateEventPermissions } from "./utils/validateProperties.js";
 import { onReady } from "./events/onReady.js";
 import { onMessage } from "./events/onMessage.js";
-import { Events } from "discord.js";
+import { Events, TextChannel } from "discord.js";
 import { onMessageReactionAdd, onMessageReactionRemove } from "./events/onMessageReaction.js";
+import { createInternalData } from "./database/models/internalModel.js";
 
 
 let BOT: Bot;
+
+// Cleanup dangling threads on startup
+import { removeAllThreads, getNumThreads, getThreads, removeThread, getInternalData } from "./database/internalData.js";
+import { Thread } from "./database/models/internalModel.js";
+const cleanupThreads = async () => {
+    // If this is the first time the bot is running, create the internal data
+    if (await getInternalData() === null) {
+        console.log("Internal data does not exist in database- creating collection...");
+        await createInternalData();
+    }
+    console.log(`Checking for dangling threads with debug mode ${process.env.DEBUG_MODE}...`);
+    let threadMessage = "";
+    const numThreads = await getNumThreads(process.env.DEBUG_MODE);
+    let numErrors = 0;
+    let numSuccess = 0;
+    if ( numThreads > 0) {
+        threadMessage += `${numThreads} threads found. Cleaning... `;
+        const threads: Thread[] = await getThreads(process.env.DEBUG_MODE);
+        for (const thread of threads) {
+            const channel = await BOT.channels.fetch(thread.channelID);
+            if (channel) {
+                const fetchedChannel = await channel.fetch();
+                let threadChannel = null;
+                if (channel instanceof TextChannel) {
+                    threadChannel = channel.threads.cache.find(x => x.id = thread.threadID);
+                }                
+                if (threadChannel) {
+                    await threadChannel.delete();
+                    numSuccess++;
+                    await removeThread(thread.threadID);
+                } else {
+                    numErrors++;
+                }
+            }
+        }
+        threadMessage += `${numSuccess} deleted, ${numErrors} errors.`;
+        threadMessage += ` Cleanup complete.${numErrors > 0 ? `${await getNumThreads(process.env.DEBUG_MODE)} threads remaining..` : ''}`;
+    } else {
+        threadMessage += " No threads found.";
+    }
+    console.log(threadMessage);
+}
 
 
 const registerEvents = async (BOT: Bot) => {
@@ -46,8 +89,11 @@ const registerEvents = async (BOT: Bot) => {
 
     await registerEvents(BOT);
 
+    //await createInternalData();
+
     await BOT.login(process.env.BOT_TOKEN);
 
+    await cleanupThreads();
    
 })();
 

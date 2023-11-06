@@ -9,7 +9,7 @@ export const connectDatabase = async() => {
     let errorOccurred: boolean = false;
     mongoose.set("strictQuery", false);
     try {
-        mongoose.connect(process.env.MONGO_URI as string).then(() => {
+        await mongoose.connect(process.env.MONGO_URI as string).then(() => {
             databaseOutput += "Database connection established.";
         });
     } catch (err) {
