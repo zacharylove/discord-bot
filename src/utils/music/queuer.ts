@@ -19,6 +19,7 @@ export class Queuer {
         let newSongs: SongMetadata[] = [];
         let extraMsg = '';
         try {
+            
             const url = new URL(query);
 
             // === YouTube ===
@@ -67,7 +68,7 @@ export class Queuer {
                 else throw new Error("Invalid http livestream url");
             }
         } catch (e: unknown) {
-            console.error(e);
+            console.debug(e);
             // Not a URL, must search YouTube
             const songs = await getYoutubeVideoByQuery(query);
       
