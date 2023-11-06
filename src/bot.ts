@@ -8,9 +8,6 @@ import * as fs from 'fs';
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import * as ffmpeginstaller from '@ffmpeg-installer/ffmpeg';
-import ffmpeg from 'fluent-ffmpeg';
-ffmpeg.setFfmpegPath(ffmpeginstaller.path);
 
 /**
  * Custom client class that extends the default discord.js Client class
