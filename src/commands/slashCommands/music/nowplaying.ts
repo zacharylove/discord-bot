@@ -19,7 +19,7 @@ export const nowPlaying: CommandInterface = {
         Aliases: ["np"],
         Scope: "global",
         GuildOnly: true,
-        Enabled: false,
+        Enabled: true,
         DefaultEnabled: true,
         CanBeDisabled: true,
         Intents: [GatewayIntentBits.GuildVoiceStates],

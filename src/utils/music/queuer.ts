@@ -1,14 +1,86 @@
 import { ChatInputCommandInteraction, GuildMember } from "discord.js";
-import Player, { MusicStatus, QueuedSong, SongMetadata } from "./player.js";
+import Player, { MusicStatus, QueuedSong, SongMetadata, MediaSource } from "./player.js";
 import { getMemberVoiceChannel, getMostPopularVoiceChannel } from "../../utils/voiceChannelUtils.js";
-import { parseQuery } from "../../api/youtubeAPI.js";
+import { getYoutubeVideoByQuery, getYoutubeVideoByURL } from "../../api/youtubeAPI.js";
 import { EmbedBuilder } from "@discordjs/builders";
+import { parseSpotifyURL } from "../../api/spotifyAPI.js";
+import ffmpeg from 'fluent-ffmpeg';
 import { secondsToTimestamp } from "../../utils/utils.js";
 
 // Queuer parses input queries and calls the corresponding player object
 export class Queuer {
 
     constructor(private readonly guildQueueManager: guildQueueManager) {}
+
+    // Max limit for number of songs in a playlist to parse
+    private playlistLimit: number = 100;
+
+    private parseQuery = async (query: string): Promise<[SongMetadata[], string]> => {
+        let newSongs: SongMetadata[] = [];
+        let extraMsg = '';
+        try {
+            const url = new URL(query);
+
+            // === YouTube ===
+            const YOUTUBE_HOSTS = [
+            'www.youtube.com',
+            'youtu.be',
+            'youtube.com',
+            'music.youtube.com',
+            'www.music.youtube.com',
+            ];
+            if (YOUTUBE_HOSTS.includes(url.host)) {
+                if (url.searchParams.get('list')) {
+                    // YouTube playlist
+                    // TODO: playlist support
+                } else {
+                    const songs = await getYoutubeVideoByURL(url.href);
+                    if (songs) newSongs.push(songs);
+                    else throw new Error("Invalid youtube url");
+                }
+            } 
+            
+            // === Spotify ===
+            else if (url.protocol === 'spotify:' || url.host === 'open.spotify.com') {
+                const [convertedSongs, nSongsNotFound, totalSongs] = await parseSpotifyURL(query, this.playlistLimit);
+                if (totalSongs > this.playlistLimit) {
+                    extraMsg = `a random sample of ${this.playlistLimit} songs was taken`;
+                }
+                if (totalSongs > this.playlistLimit && nSongsNotFound !== 0) {
+                    extraMsg += ' and ';
+                }
+        
+                if (nSongsNotFound !== 0) {
+                    if (nSongsNotFound === 1) {
+                        extraMsg += '1 song was not found';
+                    } else {
+                        extraMsg += `${nSongsNotFound.toString()} songs were not found`;
+                    }
+                }
+                newSongs.push(...convertedSongs);
+            } 
+            
+            // === Http livestream (fallback) ===
+            else {
+                const song = await this.getHttpLivestream(query);
+                if (song) newSongs.push(song);
+                else throw new Error("Invalid http livestream url");
+            }
+        } catch (e: unknown) {
+            console.error(e);
+            // Not a URL, must search YouTube
+            const songs = await getYoutubeVideoByQuery(query);
+      
+            if (songs) {
+              newSongs.push(songs);
+            } else {
+              throw new Error('that doesn\'t exist');
+            }
+        }
+        if (newSongs.length === 0) throw new Error('no songs found');
+        // TODO: shuffle support
+        return [newSongs, extraMsg];
+    }
 
     public async addToQueue({
         query,
@@ -25,8 +97,10 @@ export class Queuer {
         //const settings = await getGuildSettings(guildId);
         //const {playlistLimit} = settings;
         
-
-        let songs: SongMetadata[] = await parseQuery(query);
+        let extraMsg: string = '';
+        let results: [SongMetadata[], string] = await this.parseQuery(query);
+        const songs = results[0];
+        extraMsg = results[1];
         songs.forEach(song => {
             player.add({
                 ...song,
@@ -38,7 +112,7 @@ export class Queuer {
         const firstSong = songs[0];
         
         let statusMessage: string = '';
-        let extraMsg: string = '';
+        
 
         // Connect to voice channel
         if (player.voiceConnection === null) {
@@ -192,6 +266,28 @@ export class Queuer {
 
         
         return embed;
+    }
+
+    async getHttpLivestream(url: string): Promise<SongMetadata> {
+        return new Promise((resolve, reject) => {
+            ffmpeg(url).ffprobe((err, _) => {
+              if (err) {
+                reject();
+              }
+      
+              resolve({
+                url,
+                source: MediaSource.HLS,
+                isLive: true,
+                title: url,
+                artist: url,
+                length: 0,
+                offset: 0,
+                playlist: null,
+                thumbnailUrl: null,
+              });
+            });
+          });
     }
 }
 

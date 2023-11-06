@@ -6,7 +6,7 @@ import { toTitleCase } from "./utils.js";
 import { EventProperties } from "../interfaces/Event.js";
 import { movie } from "../commands/slashCommands/movie.js";
 import { getMovie } from "../api/tmdbAPI.js";
-import { parseQuery } from "../api/youtubeAPI.js";
+import { getYoutubeVideoByURL } from "../api/youtubeAPI.js";
 import { toggleMusicCommands, toggleWordlecommands } from "../commands/_CommandList.js";
 import { getAnime } from "../api/jikanAPI.js";
 import { anime } from "../commands/slashCommands/anime.js";
@@ -83,12 +83,20 @@ export const validateEnv = async () => {
     } else {
         let result;
         try {
-            result = parseQuery("https://www.youtube.com/watch?v=9ySxxVOHW7A");
+            result = getYoutubeVideoByURL("https://www.youtube.com/watch?v=9ySxxVOHW7A");
             validationOutput += "\n  ✅ Youtube API key is valid!";
         } catch (e) {
             validationOutput += "\n  ❌ Youtube API key is invalid!";
             valid = false;
         }
+    }
+
+    if(!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
+        validationOutput += "\n  ❌ No Spotify API key found, disabling music";
+        toggleMusicCommands(false);
+        valid = false;
+    } else {
+        validationOutput += "\n  ✅ Spotify credentials found- assuming valid until bot initialization.";
     }
     
     if (!process.env.DEBUG_MODE || process.env.DEBUG_MODE.toLowerCase() !== "true") {

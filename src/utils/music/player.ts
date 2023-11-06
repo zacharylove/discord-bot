@@ -47,6 +47,10 @@ export interface QueuedPlaylist {
     title: string;
     source: string;
 }
+export enum MediaSource {
+    Youtube,
+    HLS,
+}
 export interface SongMetadata {
     title: string;
     artist: string;
@@ -56,7 +60,7 @@ export interface SongMetadata {
     playlist: QueuedPlaylist | null;
     isLive: boolean;
     thumbnailUrl: string | null;
-    source: "Youtube";
+    source: MediaSource;
 }
 export interface QueuedSong extends SongMetadata {
     addedInChannelId: Snowflake;
