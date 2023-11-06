@@ -87,6 +87,7 @@ export default class Bot extends Client {
     }
     public getSpotifyAPI = (): SpotifyWebApi => {
         return this.spotifyAPI;
+    }
     public getWordleWordList = (): string[] => {
         return this.wordleWordList;
     }
