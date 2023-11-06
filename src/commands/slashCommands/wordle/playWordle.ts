@@ -210,7 +210,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         await m.reply({ embeds: [wordleEmbed], allowedMentions: { repliedUser: false } });
     });
 
-    collector.on('end', async (collected) => {
+    /*collector.on('end', async (collected) => {
         // After the game ends, wait 10 seconds and then delete the thread
         setTimeout(async () => {
             await deleteThread(threadChannel);
@@ -224,7 +224,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
         } catch (e) {
             console.error(e);
         }
-    });
+    });*/
 }
 
 export const playWordle: CommandInterface = {
