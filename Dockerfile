@@ -11,9 +11,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 RUN npm install
-RUN apk update
-RUN apk add
-RUN apk add ffmpeg
+RUN apt-get update -qq && apt-get install ffmpeg -y
 
 # To bundle your app's source code inside the Docker image, use the COPY instruction
 COPY . .
