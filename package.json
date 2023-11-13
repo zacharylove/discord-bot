@@ -37,7 +37,7 @@
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
-    "@types/fluent-ffmpeg": "^2.1.22",
+    "@types/fluent-ffmpeg": "^2.1.24",
     "@types/node": "^20.8.10",
     "@types/spotify-web-api-node": "^5.0.9",
     "fluent-ffmpeg": "^2.1.2",
