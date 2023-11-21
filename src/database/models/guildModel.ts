@@ -15,6 +15,7 @@ export interface GuildDataInterface extends Document {
     messageScanning: {
         wordleResultScanning: boolean;
         starboardScanning: boolean;
+        twitterEmbedFix: boolean;
     },
     channels: {
         confessionChannelId: string;
@@ -74,6 +75,7 @@ export const GuildData = new Schema({
     messageScanning: {
         wordleResultScanning: Boolean,
         starboardScanning: Boolean,
+        twitterEnbedFix: Boolean,
     },
 
     // Channels for features
@@ -119,6 +121,8 @@ export const createNewGuildData = async (guildID: string) => {
             // Wordle scanning is disabled by default
             wordleResultScanning: false,
             starboardScanning: false,
+            // Twitter embed fix is enabled by default (until they get their act together)
+            twitterEmbedFix: true,
         },
         channels: {
             confessionChannelId: "",

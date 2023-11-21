@@ -32,6 +32,19 @@ export const intentEnumToString = ( intent: GatewayIntentBits ): string => {
     }
 }
 
+export const parseManyURLs = (str: string): string[] => {
+    console.debug(`Parsing URLs from string ${str}...`);
+    const regex = new RegExp('\\bhttps?://\\S+\\b', 'g');
+
+    let match;
+    const validURLs = [];
+    while ((match = regex.exec(str)) !== null) {
+        validURLs.push(match[0]);
+    }
+    if (validURLs.length > 0) console.debug(`Found ${validURLs.length} valid URLs`);
+    return validURLs;
+}
+
 /**
  * Returns true if the string matches a valid URL pattern, false otherwise
  * @param str 

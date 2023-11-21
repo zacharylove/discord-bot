@@ -179,6 +179,32 @@ export const removeStoredStarboardPost = async (guildID: string, post: Starboard
     if (leaderboardIndexToRemove != -1) guildData.starboard.leaderboard.splice(leaderboardIndexToRemove, 1);
 }
 
+
+export const isTwitterEmbedFixEnabled = async (guildID: string): Promise<boolean> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    // If not configured, default to true
+    if (guildData.messageScanning.twitterEmbedFix == undefined) {
+        guildData.messageScanning.twitterEmbedFix = true;
+        await update(guildData);
+    }
+    
+    return guildData.messageScanning.twitterEmbedFix;
+}
+
+export const toggleTwitterEmbedFix =  async (guildID: string, enableDisable: boolean): Promise<string> => {
+    var toReturn = "";
+
+    const guildData = await getGuildDataByGuildID(guildID);
+    const isEnabled = await isTwitterEmbedFixEnabled(guildID);
+    // If already enabled
+    if ( enableDisable && isEnabled || !enableDisable && !isEnabled ) { return `Twitter Embed Fix is already ${enableDisable ? "enabled" : "disabled"}, dummy!`; }
+     guildData.messageScanning.twitterEmbedFix = enableDisable;
+     await update(guildData);
+
+     toReturn += `Twitter Embed Fix feature has been ${enableDisable ? "enabled! I will now respond to Twitter/X posts with a fixed embed." : "disabled." }`;
+     return toReturn;
+}
+
 /**
  * Attempts to add a command to the list of enabled commands for the given guild
  * Returns a status message that is sent to the user
