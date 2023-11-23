@@ -1,8 +1,8 @@
 // Utility functions that involve users
 
 import { Guild, ImageExtension, PermissionsBitField, User } from "discord.js";
-import { getAllImagesFromUser } from "./imageUtils";
-import { getServerAvatarURLs, hasServerAvatar } from "api/discordAPI"
+import { getAllImagesFromUser } from "./imageUtils.js";
+import { getServerAvatarURLs, hasServerAvatar } from "../api/discordAPI.js"
 
 
 /* -----------------------------

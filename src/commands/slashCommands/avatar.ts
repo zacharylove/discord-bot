@@ -1,8 +1,8 @@
 // Get the avatar for a user
-import { CommandInterface, CommandProperties } from 'interfaces/Command';
+import { CommandInterface } from '../../interfaces/Command.js';
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { ALLOWED_EXTENSIONS, CommandInteraction, ImageExtension, User } from 'discord.js';
-import { getGlobalAvatar, getGlobalBanner, getServerProfileAvatar } from 'utils/userUtils';
+import { ImageExtension } from 'discord.js';
+import { getGlobalAvatar, getGlobalBanner, getServerProfileAvatar } from '../../utils/userUtils.js';
 
 
 

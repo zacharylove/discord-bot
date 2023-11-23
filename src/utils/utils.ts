@@ -32,6 +32,19 @@ export const intentEnumToString = ( intent: GatewayIntentBits ): string => {
     }
 }
 
+export const parseManyURLs = (str: string): string[] => {
+    console.debug(`Parsing URLs from string ${str}...`);
+    const regex = new RegExp('\\bhttps?://\\S+\\b', 'g');
+
+    let match;
+    const validURLs = [];
+    while ((match = regex.exec(str)) !== null) {
+        validURLs.push(match[0]);
+    }
+    if (validURLs.length > 0) console.debug(`Found ${validURLs.length} valid URLs`);
+    return validURLs;
+}
+
 /**
  * Returns true if the string matches a valid URL pattern, false otherwise
  * @param str 
@@ -61,4 +74,48 @@ export const truncateString = (str: string, num: number): string => {
       return str
     }
     return str.slice(0, num) + '...'
+}
+
+/**
+ * Randomizes the order of a given array
+ * @param array 
+ */
+export const shuffleArray = (array: any[]): any[] => {
+    let currentIndex = array.length,  randomIndex;
+  
+    // While there remain elements to shuffle...
+    while (currentIndex != 0) {
+  
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+  
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+  
+    return array;
+}
+
+
+export const secondsToTimestamp = async (seconds: number, markers?: boolean): Promise<string> => {
+    function leadingZeroes(num: number, size: number) {
+        let strNum = num.toString();
+        while (strNum.length < size) strNum = "0" + strNum;
+        return strNum;
+    }
+
+    let m = 0;
+    let h = 0;
+    let s = seconds;
+    while (s > 60) {
+        m++;
+        s -= 60;
+    }
+    while (m > 60) {
+        h++;
+        m -= 60;
+    }
+    s = Math.floor(s);
+    return `${h > 0 ? `${leadingZeroes(h,2)}${markers ? "h " : ":"}` : ''}${m > 0 ? `${leadingZeroes(m,2)}${markers ? "m " : ":"}` : '00'}${leadingZeroes(s,2)}${markers ? "s" : ""}`;
 }

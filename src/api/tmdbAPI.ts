@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from "axios";
-import { RequestInterface } from "interfaces/RequestInterface";
-import { tmdbAPI } from "config/config.json";
+import { RequestInterface } from "../interfaces/RequestInterface.js";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
 
 export interface parsedQuery {
     title: string,
@@ -136,28 +137,28 @@ export const TMDBAPI: RequestInterface = {
         return res;
     },
     formRequestURL: (info: tmdbRequestInfo): string => {
-        let requestURL = tmdbAPI.baseURL + "/" + tmdbAPI.version;
+        let requestURL = config.tmdbAPI.baseURL + "/" + config.tmdbAPI.version;
         let error : boolean = false;
         switch ( info.type ) {
             case tmdbRequestType.Search:
                 if (!info.query) error = true;
-                else requestURL += `/${tmdbAPI.endpoints.search}?query=${info.query.replace(" ", "+")}`;
+                else requestURL += `/${config.tmdbAPI.endpoints.search}?query=${info.query.replace(" ", "+")}`;
                 break;
             case tmdbRequestType.Discover:
-                requestURL += `/${tmdbAPI.endpoints.discover}`;
+                requestURL += `/${config.tmdbAPI.endpoints.discover}`;
                 break;
             case tmdbRequestType.Find:
-                requestURL += `/${tmdbAPI.endpoints.find}`;
+                requestURL += `/${config.tmdbAPI.endpoints.find}`;
                 break;
             case tmdbRequestType.Configuration:
-                requestURL += `/${tmdbAPI.endpoints.configuration}`;
+                requestURL += `/${config.tmdbAPI.endpoints.configuration}`;
                 break;
             case tmdbRequestType.Genre:
-                requestURL += `/${tmdbAPI.endpoints.genre}`;
+                requestURL += `/${config.tmdbAPI.endpoints.genre}`;
                 break;
             case tmdbRequestType.Movie:
                 if (!info.id) error = true;
-                else requestURL += `/${tmdbAPI.endpoints.movie}/${info.id}`;
+                else requestURL += `/${config.tmdbAPI.endpoints.movie}/${info.id}`;
                 break;
         }
 

@@ -1,6 +1,6 @@
 // Runs this event every set interval
 import { Client } from "discord.js";
-import { EventInterface } from "interfaces/Event";
+import { EventInterface } from "../interfaces/Event.js";
 
 // This event is run in onReady
 export const onTick : EventInterface = {

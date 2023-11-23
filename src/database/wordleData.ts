@@ -1,4 +1,4 @@
-import wordleModel, { WordleDataInterface, createNewWordleData } from "@models/wordleModel";
+import wordleModel, { WordleDataInterface, createNewWordleData } from "./models/wordleModel.js";
 
 
 

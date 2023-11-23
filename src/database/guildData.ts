@@ -1,12 +1,13 @@
-import { CommandInterface } from "interfaces/Command";
-import { validateEventPermissions } from "utils/validateProperties";
-import { wordleStats } from "commands/slashCommands/wordleStats";
-import guildModel, { GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel";
-import { getCommandList, isCommandDisabled, isCommandEnabled } from "utils/commandUtils";
+import { CommandInterface } from "../interfaces/Command.js";
+import { validateEventPermissions } from "../utils/validateProperties.js";
+import { wordleStats } from "../commands/slashCommands/wordle/wordleStats.js";
+import guildModel, { GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel.js";
+import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils.js";
 import { FilterQuery } from "mongoose";
-import { wordleConfig } from "config/config.json"
-import { onMessage } from "events/onMessage";
-import { onMessageReactionAdd } from "events/onMessageReaction";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
+import { onMessage } from "../events/onMessage.js";
+import { onMessageReactionAdd } from "../events/onMessageReaction.js";
 
 /**
  * Updates an existing GuildData object in the database
@@ -43,7 +44,7 @@ export const enableWordleFeatures = async (guildID: string): Promise<string> => 
     // Enable result scanning
     guildData.messageScanning.wordleResultScanning = true;
     // Enable commands
-    for( const command of wordleConfig. wordleCommands) {
+    for( const command of config.wordleConfig. wordleCommands) {
         if( guildData.commands.enabledCommands.includes(command.toLowerCase()) ) { continue; }
         guildData.commands.enabledCommands.push(command.toLowerCase());
     }
@@ -68,7 +69,7 @@ export const disableWordleFeatures = async (guildID: string): Promise<string> =>
     guildData.messageScanning.wordleResultScanning = false;
     // Disable commands
     guildData.commands.enabledCommands.filter( function( el ) {
-        return !wordleConfig.wordleCommands.includes( el.toLowerCase() );
+        return !config.wordleConfig.wordleCommands.includes( el.toLowerCase() );
       } );
 
 
@@ -178,6 +179,32 @@ export const removeStoredStarboardPost = async (guildID: string, post: Starboard
     if (leaderboardIndexToRemove != -1) guildData.starboard.leaderboard.splice(leaderboardIndexToRemove, 1);
 }
 
+
+export const isTwitterEmbedFixEnabled = async (guildID: string): Promise<boolean> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    // If not configured, default to true
+    if (guildData.messageScanning.twitterEmbedFix == undefined) {
+        guildData.messageScanning.twitterEmbedFix = true;
+        await update(guildData);
+    }
+    
+    return guildData.messageScanning.twitterEmbedFix;
+}
+
+export const toggleTwitterEmbedFix =  async (guildID: string, enableDisable: boolean): Promise<string> => {
+    var toReturn = "";
+
+    const guildData = await getGuildDataByGuildID(guildID);
+    const isEnabled = await isTwitterEmbedFixEnabled(guildID);
+    // If already enabled
+    if ( enableDisable && isEnabled || !enableDisable && !isEnabled ) { return `Twitter Embed Fix is already ${enableDisable ? "enabled" : "disabled"}, dummy!`; }
+     guildData.messageScanning.twitterEmbedFix = enableDisable;
+     await update(guildData);
+
+     toReturn += `Twitter Embed Fix feature has been ${enableDisable ? "enabled! I will now respond to Twitter/X posts with a fixed embed." : "disabled." }`;
+     return toReturn;
+}
+
 /**
  * Attempts to add a command to the list of enabled commands for the given guild
  * Returns a status message that is sent to the user
@@ -270,3 +297,9 @@ export const getGlobalGuildCounterStats = async () => {
         numStarboardMessages: numStarboardMessages
     }
 }
+
+
+// ====================
+// Music Bot Functions
+// ====================
+

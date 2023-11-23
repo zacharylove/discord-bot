@@ -1,6 +1,11 @@
 # Use LTS version of Node 18
 FROM node:18
 
+# Install Ffmpeg
+RUN apt-get update && \
+    apt-get install -y ffmpeg tini libssl-dev ca-certificates git && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create working directory to hold the application code inside the image 
 WORKDIR /usr/src/app
 
@@ -19,4 +24,4 @@ RUN npm run build
 
 # define the command to run your app using CMD which defines your runtime
 # Using -r dotenv/config starts your node app with dotenv preloaded
-CMD node -r dotenv/config ./prod/index.js
+CMD TS_NODE_BASEURL=./prod node -r dotenv/config -r tsconfig-paths/register ./prod/index.js

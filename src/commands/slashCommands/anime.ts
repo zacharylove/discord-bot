@@ -1,11 +1,10 @@
-import axios, { AxiosResponse } from "axios";
-import { CommandInterface } from "interfaces/Command";
-import { ButtonStyle, CommandInteraction, Interaction, Message, SlashCommandBuilder, User } from "discord.js";
-import { broadcastCommandFailed } from "utils/commandUtils";
-import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
-import { animeStatus, animeType, getAnime } from "api/jikanAPI";
+import { CommandInterface } from "../../interfaces/Command.js";
+import { Message, SlashCommandBuilder } from "discord.js";
+import { broadcastCommandFailed } from "../../utils/commandUtils.js";
+import { EmbedBuilder } from "@discordjs/builders";
+import { getAnime } from "../../api/jikanAPI.js";
 
-import { toTitleCase } from "utils/utils";
+import { toTitleCase } from "../../utils/utils.js";
 
 
 const createEmbed = async (interaction: Message<boolean>, anime: any): Promise<Message<boolean>> => {

@@ -1,0 +1,313 @@
+import { ChatInputCommandInteraction, GuildMember } from "discord.js";
+import Player, { MusicStatus, QueuedSong, SongMetadata, MediaSource } from "./player.js";
+import { getMemberVoiceChannel, getMostPopularVoiceChannel } from "../../utils/voiceChannelUtils.js";
+import { getYoutubeVideoByQuery, getYoutubeVideoByURL } from "../../api/youtubeAPI.js";
+import { EmbedBuilder } from "@discordjs/builders";
+import { parseSpotifyURL } from "../../api/spotifyAPI.js";
+import ffmpeg from 'fluent-ffmpeg';
+import { secondsToTimestamp } from "../../utils/utils.js";
+
+// Queuer parses input queries and calls the corresponding player object
+export class Queuer {
+
+    constructor(private readonly guildQueueManager: guildQueueManager) {}
+
+    // Max limit for number of songs in a playlist to parse
+    private playlistLimit: number = 100;
+
+    private parseQuery = async (query: string): Promise<[SongMetadata[], string]> => {
+        let newSongs: SongMetadata[] = [];
+        let extraMsg = '';
+        try {
+            
+            const url = new URL(query);
+
+            // === YouTube ===
+            const YOUTUBE_HOSTS = [
+            'www.youtube.com',
+            'youtu.be',
+            'youtube.com',
+            'music.youtube.com',
+            'www.music.youtube.com',
+            ];
+            if (YOUTUBE_HOSTS.includes(url.host)) {
+                if (url.searchParams.get('list')) {
+                    // YouTube playlist
+                    // TODO: playlist support
+                } else {
+                    const songs = await getYoutubeVideoByURL(url.href);
+                    if (songs) newSongs.push(songs);
+                    else throw new Error("Invalid youtube url");
+                }
+            } 
+            
+            // === Spotify ===
+            else if (url.protocol === 'spotify:' || url.host === 'open.spotify.com') {
+                const [convertedSongs, nSongsNotFound, totalSongs] = await parseSpotifyURL(query, this.playlistLimit);
+                if (totalSongs > this.playlistLimit) {
+                    extraMsg = `a random sample of ${this.playlistLimit} songs was taken`;
+                }
+                if (totalSongs > this.playlistLimit && nSongsNotFound !== 0) {
+                    extraMsg += ' and ';
+                }
+        
+                if (nSongsNotFound !== 0) {
+                    if (nSongsNotFound === 1) {
+                        extraMsg += '1 song was not found';
+                    } else {
+                        extraMsg += `${nSongsNotFound.toString()} songs were not found`;
+                    }
+                }
+                newSongs.push(...convertedSongs);
+            } 
+            
+            // === Http livestream (fallback) ===
+            else {
+                const song = await this.getHttpLivestream(query);
+                if (song) newSongs.push(song);
+                else throw new Error("Invalid http livestream url");
+            }
+        } catch (e: unknown) {
+            console.debug(e);
+            // Not a URL, must search YouTube
+            const songs = await getYoutubeVideoByQuery(query);
+      
+            if (songs) {
+              newSongs.push(songs);
+            } else {
+              throw new Error('that doesn\'t exist');
+            }
+        }
+        if (newSongs.length === 0) throw new Error('no songs found');
+        // TODO: shuffle support
+        return [newSongs, extraMsg];
+    }
+
+    public async addToQueue({
+        query,
+        interaction
+    }: {
+        query: string,
+        interaction: ChatInputCommandInteraction
+    }, shuffle: boolean, next: boolean): Promise<void> {
+        const guildId: string = interaction.guild!.id;
+        const player = this.guildQueueManager.get(guildId);
+        const songAlreadyPlaying: boolean = player.getCurrent() !== null;
+        const [targetVoiceChannel] = getMemberVoiceChannel(interaction.member as GuildMember) ?? getMostPopularVoiceChannel(interaction.guild!);
+
+        //const settings = await getGuildSettings(guildId);
+        //const {playlistLimit} = settings;
+        
+        let extraMsg: string = '';
+        let results: [SongMetadata[], string] = await this.parseQuery(query);
+        const songs = results[0];
+        extraMsg = results[1];
+        songs.forEach(song => {
+            player.add({
+                ...song,
+                addedInChannelId: interaction.channel!.id,
+                requestedBy: interaction.member!.user.id,
+            }, next);
+        });
+        if (shuffle) player.shuffle();
+        const firstSong = songs[0];
+        
+        let statusMessage: string = '';
+        
+
+        // Connect to voice channel
+        if (player.voiceConnection === null) {
+            await player.connect(targetVoiceChannel);
+            // Play!
+            await player.play();
+            if (songAlreadyPlaying) {
+                statusMessage = 'resuming playback';
+            }
+            await interaction.editReply({
+                content: 'Getting your song....',
+            });
+        } else if (player.status === MusicStatus.IDLE) {
+            // Player is idle, start playback instead
+            await player.play();
+        }
+
+        // Build response message
+        if (statusMessage !== '') {
+            if (extraMsg === '') {
+              extraMsg = statusMessage;
+            } else {
+              extraMsg = `${statusMessage}, ${statusMessage}`;
+            }
+        }
+    
+        if (extraMsg !== '') {
+            extraMsg = ` (${extraMsg})`;
+        }
+        const queueLength = player.getQueue().length;
+        if (songs.length === 1) {
+            if (queueLength > 1) {
+                await interaction.editReply(`Okay, **${firstSong.title}** was added to the queue and will play after ${queueLength - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
+            } else {
+                await interaction.editReply(`Okay, **${firstSong.title}** is now playing${extraMsg}`);
+            } 
+        } else {
+            if (queueLength > 1) {
+                await interaction.editReply(`Okay, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue and will play after ${queueLength - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
+            } else {
+                await interaction.editReply(`Okay, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue${extraMsg}`);
+            }
+        }
+
+        
+    }
+
+    
+
+    public createQueueEmbed = async (guildId: string, page: number): Promise<EmbedBuilder> => {
+       
+        const player = this.guildQueueManager.get(guildId);
+        const queue = player.getQueue();
+        const progressInCurrentSong = await secondsToTimestamp(await player.getPosition());
+
+        const embed = new EmbedBuilder()
+            .setTimestamp()
+        ;
+
+        let title = '';
+        switch (player.status) {
+            case MusicStatus.PLAYING:
+                title += '▶️';
+                break;
+            case MusicStatus.PAUSED:
+                title += '⏸️';
+                break;
+            case MusicStatus.IDLE:
+                title += '⏹️';
+                break;
+        }
+        title += ` Queue${player.currentVoiceChannel ? ` for ${player.currentVoiceChannel.name}` : ''}`;
+
+
+        // Split songs into multiple pages if there are more than 10
+        let splitQueue: QueuedSong[][] = [];
+        for (let i = 0; i < queue.length; i += 10) {
+            splitQueue.push(queue.slice(i, i + 10));
+        }
+        
+
+        let currentPage = page - 1;
+
+        let description = splitQueue.length > 1 ? `Page ${currentPage + 1}/${splitQueue.length}\n` : '';
+        let counter = 1;
+        let totalDuration = 0;
+        
+        for ( const song of splitQueue.at(currentPage) ?? []) {
+            description += `${counter}.`;
+            description += ` **[${song.title}](https://www.youtube.com/watch?v=${song.url})**`;
+            description += `${song.requestedBy ? ` (<@${song.requestedBy}>` : ''})`;
+            if (counter === 1) {
+                description += ` - \`[${progressInCurrentSong}/${await secondsToTimestamp(song.length)}]\``;
+            } else {
+                description += ' - `[' + await secondsToTimestamp(song.length) + ']`';
+            }
+            description += '\n';
+            counter++;
+            totalDuration += song.length;
+        }
+        description += `There are ${queue.length} tracks with a remaining length of \`${await secondsToTimestamp(totalDuration - player.getPosition())}\`.\n`;
+
+        embed.setTitle(title);
+        embed.setThumbnail(player.getCurrent()?.thumbnailUrl ?? null);
+        embed.setDescription(description);
+        embed.setFooter({text: 'Use /queue <page> to view specific pages'});
+
+
+        return embed;
+    }
+
+    public createNowPlayingEmbed = async (guildId: string): Promise<EmbedBuilder> => {
+        const player = this.guildQueueManager.get(guildId);
+        const queue = player.getQueue();
+        const progressInCurrentSong = await secondsToTimestamp(await player.getPosition());
+
+        const embed = new EmbedBuilder()
+            .setTimestamp()
+            .setColor(player.getStatus() === MusicStatus.PLAYING ? 2067276 : 10038562)
+            .setTitle(player.getStatus() === MusicStatus.PLAYING ? 'Now Playing' : 'Paused')
+        ;
+
+        
+        const song = player.getCurrent();
+        let playerStr = '';
+        if (song) {
+            const position = await player.getPosition()
+            const barWidth = 15;
+            const button = player.status === MusicStatus.PLAYING ? '⏹️' : '▶️';
+            const dotPosition = Math.floor(barWidth * position / song.length);
+            let progressBar = '';
+            for (let i = 0; i < barWidth; i++) {
+                if (i === dotPosition) {
+                    progressBar += '🔘';
+                } else {
+                  progressBar += '▬';
+                }
+            }
+
+
+            //const progressBar = getProgressBar(15, position / song.length);
+            const elapsedTime = song.isLive ? 'live' : `${await secondsToTimestamp(position)}/${await secondsToTimestamp(song.length)}`;
+            const loop = player.loopCurrentSong ? '🔁' : '';
+            playerStr = `${button} ${progressBar} \`[${elapsedTime}]\` 🔉 ${loop}`;
+            embed.setDescription(`**[${song?.title}](https://www.youtube.com/watch?v=${song?.url})**\nRequested By <@${song?.requestedBy}>\n${playerStr}`);
+            embed.setThumbnail(song?.thumbnailUrl ?? null);
+            embed.setFooter({text: `Source: ${song?.artist ?? 'Unknown'}`});
+        } else {
+            embed.setDescription('Nothing is currently playing');
+        }
+
+        
+        return embed;
+    }
+
+    async getHttpLivestream(url: string): Promise<SongMetadata> {
+        return new Promise((resolve, reject) => {
+            ffmpeg(url).ffprobe((err, _) => {
+              if (err) {
+                reject();
+              }
+      
+              resolve({
+                url,
+                source: MediaSource.HLS,
+                isLive: true,
+                title: url,
+                artist: url,
+                length: 0,
+                offset: 0,
+                playlist: null,
+                thumbnailUrl: null,
+              });
+            });
+          });
+    }
+}
+
+// Manager for all guild queues
+export class guildQueueManager {
+    // Guild ID -> Player
+    private readonly guildPlayers: Map<string, Player>;
+    // private readonly fileCache: FileCacheProvider;
+
+    constructor() {
+        this.guildPlayers = new Map<string, Player>();
+    }
+
+    get(guildId: string): Player {
+        let player = this.guildPlayers.get(guildId);
+        if (!player) {
+            player = new Player(guildId);
+            this.guildPlayers.set(guildId, player);
+        }
+        return player;
+    }
+}

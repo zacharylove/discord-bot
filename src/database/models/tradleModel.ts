@@ -1,6 +1,6 @@
 // Database model for a user's tradle data
 import { Document, model, Schema, ObjectId, Types } from 'mongoose';
-import { getUserData } from '../userData';
+import { getUserData } from '../userData.js';
 
 // NOTE: Although Tradle data is basically identical to Wordle, we still want it stored in a separate collection
 // And we also want to make this extensible for other wordle-type games that have different outputs and values.

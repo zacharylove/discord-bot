@@ -1,6 +1,6 @@
 import { GatewayIntentBits, MessageReaction, Partials, User } from "discord.js";
-import { EventInterface } from "interfaces/Event";
-import { parseStarReact } from "utils/starboardUtils";
+import { EventInterface } from "../interfaces/Event.js";
+import { parseStarReact } from "../utils/starboardUtils.js";
 
 
 

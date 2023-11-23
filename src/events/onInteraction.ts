@@ -1,8 +1,8 @@
-import { CommandList } from 'commands/_CommandList';
+import { CommandList } from '../commands/_CommandList.js';
 import { Interaction } from 'discord.js';
-import { EventInterface } from 'interfaces/Event';
-import { broadcastCommandFailed, isCommandDisabled, isCommandEnabled } from '../utils/commandUtils';
-import { hasPermissions } from 'utils/userUtils';
+import { EventInterface } from '../interfaces/Event.js';
+import { broadcastCommandFailed, isCommandDisabled, isCommandEnabled } from '../utils/commandUtils.js';
+import { hasPermissions } from '../utils/userUtils.js';
 
 // Handles onInteraction event
 export const onInteraction : EventInterface = {

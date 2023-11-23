@@ -1,12 +1,12 @@
-import { CommandInterface } from "interfaces/Command";
+import { CommandInterface } from "../../interfaces/Command.js";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { BOT } from "index";
-import { countGuilds, getGlobalGuildCounterStats } from "database/guildData";
-import { countUsers } from "database/userData";
-import { IntentOptions } from "config/IntentOptions";
-import { intentEnumToString } from "utils/utils";
-import CommandList from "commands/_CommandList";
-import { getGlobalWordleStats } from "database/wordleData";
+import { BOT } from "../../index.js";
+import { countGuilds, getGlobalGuildCounterStats } from "../../database/guildData.js";
+import { countUsers } from "../../database/userData.js";
+import { IntentOptions } from "../../config/IntentOptions.js";
+import { intentEnumToString } from "../../utils/utils.js";
+import CommandList from "../../commands/_CommandList.js";
+import { getGlobalWordleStats } from "../../database/wordleData.js";
 
 
 export const stats: CommandInterface = {

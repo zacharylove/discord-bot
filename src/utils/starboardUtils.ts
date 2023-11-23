@@ -1,10 +1,11 @@
 import { EmbedBuilder, Message, MessageReaction, TextChannel, User } from "discord.js";
-import { BOT } from "index";
-import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "database/models/guildModel";
-import { starboardConfig } from "config/config.json";
-import { getGuildDataByGuildID, isStarboardEnabled, removeStoredStarboardPost, setStarboardDefaults, setStarboardEmojis, update } from "database/guildData";
-import { truncateString } from "utils/utils";
-import { getUserData } from "database/userData";
+import { BOT } from "../index.js";
+import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "../database/models/guildModel.js";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
+import { getGuildDataByGuildID, isStarboardEnabled, removeStoredStarboardPost, setStarboardDefaults, update } from "../database/guildData.js";
+import { truncateString } from "../utils/utils.js";
+import { getUserData } from "../database/userData.js";
 
 
  /**
@@ -39,7 +40,7 @@ import { getUserData } from "database/userData";
  */
 export const getExistingStarboardMessage = async (guildData: GuildDataInterface, messageId: string, starChannel: TextChannel): Promise<Message<boolean> | null> => {
     let messageList: Message[] = new Array();
-    const messages = await starChannel.messages.fetch({ limit: starboardConfig.fetchLimit });
+    const messages = await starChannel.messages.fetch({ limit: config.starboardConfig.fetchLimit });
     // Filter to be one type
     messages.forEach( m => { if (m.embeds.length > 0 && m.author.bot) messageList.push(m) } );
 

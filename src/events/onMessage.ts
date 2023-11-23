@@ -1,10 +1,12 @@
 // Runs on every message
 // Make sure bot has the correct scope and permissions!
 
-import { Bot } from "bot";
-import { areWordleFeaturesEnabled } from "database/guildData";
+import Bot from "../bot";
+import { areWordleFeaturesEnabled, isTwitterEmbedFixEnabled } from "../database/guildData.js";
 import { Message, GatewayIntentBits, TextChannel, DMChannel } from "discord.js";
-import { EventInterface } from "interfaces/Event";
+import { EventInterface } from "../interfaces/Event.js";
+import { parseManyURLs, validURL } from "../utils/utils.js";
+import { twitterEmbedFix } from "./responses/twitterEmbedFix.js";
 
 const sayCommand = async (Message: Message) => {
 
@@ -46,8 +48,6 @@ export const onMessage : EventInterface = {
         if (!Message.guildId) {
             return;
         }
-
-        const messageContent = Message.content;
         
         
     
@@ -56,6 +56,13 @@ export const onMessage : EventInterface = {
             BOT.getWordleUtil().parseMessage(Message);
             BOT.getTradleUtil().parseMessage(Message);
         }
+
+        // Check if message contains a valid URL
+        const messageURLS: string[] = parseManyURLs(Message.content);
+        if (messageURLS.length > 0) {
+            if (await isTwitterEmbedFixEnabled(Message.guildId)) await twitterEmbedFix(Message, messageURLS);
+        }
+
         
     },
     properties: {

@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
-import userModel from "@models/userModel";
+import userModel from "./models/userModel.js";
 
 
 // Makes mongoose connection to MongoDB Atlas database
 export const connectDatabase = async() => {
+    console.log("Attempting database connection...");
     let databaseOutput: string = "";
     let errorOccurred: boolean = false;
     mongoose.set("strictQuery", false);
     try {
-        mongoose.connect(process.env.MONGO_URI as string).then(() => {
+        await mongoose.connect(process.env.MONGO_URI as string).then(() => {
             databaseOutput += "Database connection established.";
         });
     } catch (err) {

@@ -1,11 +1,12 @@
-import { CommandInterface } from 'interfaces/Command';
+import { CommandInterface } from '../../interfaces/Command.js';
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { User } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
-import { getAvatarURL } from 'utils/userUtils';
-import { imagePath } from 'utils/imageUtils';
+import { getAvatarURL } from '../../utils/userUtils.js';
+import { imagePath } from '../../utils/imageUtils.js';
 import { createHash } from 'crypto';
-import { shipMessages } from "config/config.json";
+// @ts-ignore
+import { default as config } from "../../config/config.json" assert { type: "json" };
 
 
 
@@ -83,20 +84,20 @@ export const ship: CommandInterface = {
             let messageList: string[];
 
             // Really bad
-            if (shipNum < 10) messageList = shipMessages.reallybad;
+            if (shipNum < 10) messageList = config.shipMessages.reallybad;
             // Bad
-            else if (shipNum < 25) messageList = shipMessages.bad;
+            else if (shipNum < 25) messageList = config.shipMessages.bad;
             // Kind of bad
-            else if (shipNum < 40) messageList = shipMessages.kindofbad;
+            else if (shipNum < 40) messageList = config.shipMessages.kindofbad;
             // Okay
-            else if (shipNum < 60) messageList = shipMessages.okay;
+            else if (shipNum < 60) messageList = config.shipMessages.okay;
             // Good
-            else if (shipNum < 85) messageList = shipMessages.good;
+            else if (shipNum < 85) messageList = config.shipMessages.good;
             //Great
-            else if (shipNum < 95) messageList = shipMessages.great;
+            else if (shipNum < 95) messageList = config.shipMessages.great;
             // Really great
-            else if (shipNum <= 100) messageList = shipMessages.reallygreat;
-            else messageList = shipMessages.okay;
+            else if (shipNum <= 100) messageList = config.shipMessages.reallygreat;
+            else messageList = config.shipMessages.okay;
 
             // Randomly select message
             message = messageList[Math.floor(Math.random() * messageList.length)];

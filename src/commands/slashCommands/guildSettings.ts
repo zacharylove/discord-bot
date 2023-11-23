@@ -1,11 +1,13 @@
 // View a list of guild-specific settings and enable/disable commands and features.
-import { CommandInterface } from "interfaces/Command";
+import { CommandInterface } from "../../interfaces/Command.js";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled } from "database/guildData";
-import { GuildDataInterface } from "database/models/guildModel";
-import { commandNotImplemented, getCommandListAsString } from "utils/commandUtils";
-import { CommandInteraction, Embed, PermissionsBitField, User } from "discord.js";
-import { hasPermissions } from "utils/userUtils";
+import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled, isTwitterEmbedFixEnabled, toggleTwitterEmbedFix } from "../../database/guildData.js";
+import { GuildDataInterface } from "../../database/models/guildModel.js";
+import { commandNotImplemented, getCommandListAsString } from "../../utils/commandUtils.js";
+import { CommandInteraction, PermissionsBitField } from "discord.js";
+import { hasPermissions } from "../../utils/userUtils.js";
+
+// TODO: clean up enabled/disabled features.... lots of repeated code rn
 
 
 // Required permission to enable/disable
@@ -95,6 +97,12 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
         contentScanningString += "Enabled\n";
     } else { contentScanningString += "Disabled\n"; }
 
+    // Twitter Embed Fix
+    contentScanningString += "Twitter URL Scanning: ";
+    if ( guildData.messageScanning.twitterEmbedFix ) {
+        contentScanningString += "Enabled\n";
+    } else { contentScanningString += "Disabled\n"; }
+
     embed.addFields({name: 'Available Features', value: contentScanningString});
 
     if ( guildData.messageScanning.starboardScanning ) {
@@ -144,6 +152,15 @@ const enableFeature = async ( interaction: CommandInteraction, featureName: stri
             }
             break;
 
+        case "twitterembedfix":
+            // Check if feature is already enabled
+            if (await isTwitterEmbedFixEnabled(interaction.guildId)) {
+                embed.setDescription("Twitter Embed Fix feature is already enabled.");
+            } else {
+                embed.setDescription(await toggleTwitterEmbedFix(interaction.guildId, true));
+            }
+            break;
+
         default:
             embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
             break;
@@ -169,6 +186,15 @@ const disableFeature = async ( interaction: CommandInteraction, featureName: str
                 embed.setDescription("Starboard feature is already disabled.");
             }
             else embed.setDescription(await disableStarboardFeature(interaction.guildId));
+            break;
+
+        case "twitterembedfix":
+            // Check if feature is already enabled
+            if (!await isTwitterEmbedFixEnabled(interaction.guildId)) {
+                embed.setDescription("Twitter Embed Fix feature is already disabled.");
+            } else {
+                embed.setDescription(await toggleTwitterEmbedFix(interaction.guildId, false));
+            }
             break;
         default:
             embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
@@ -244,7 +270,8 @@ export const guildSettings: CommandInterface = {
                                 .setRequired(true)
                                 .addChoices(
                                     { name: 'Wordle', value: 'wordle' },
-                                    { name: 'Starboard', value: 'starboard' }
+                                    { name: 'Starboard', value: 'starboard' },
+                                    { name: 'TwitterEmbedFix', value: 'twitterembedfix' }
                                 )
                         )
                 )
@@ -260,7 +287,8 @@ export const guildSettings: CommandInterface = {
                                 .setRequired(true)
                                 .addChoices(
                                     { name: 'Wordle', value: 'wordle' },
-                                    { name: 'Starboard', value: 'starboard' }
+                                    { name: 'Starboard', value: 'starboard' },
+                                    { name: 'TwitterEmbedFix', value: 'twitterembedfix' }
                                 )
                         )
                 )

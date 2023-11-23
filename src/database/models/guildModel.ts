@@ -1,7 +1,8 @@
 // Per-Server configuration
 import { Document, model, Schema } from 'mongoose';
-import { CommandInterface } from "interfaces/Command";
-import { starboardConfig } from "config/config.json";
+import { CommandInterface } from "../../interfaces/Command.js";
+// @ts-ignore
+import { default as config } from "../../config/config.json" assert { type: "json" };
 
 export interface GuildDataInterface extends Document {
     _id: String;
@@ -14,6 +15,7 @@ export interface GuildDataInterface extends Document {
     messageScanning: {
         wordleResultScanning: boolean;
         starboardScanning: boolean;
+        twitterEmbedFix: boolean;
     },
     channels: {
         confessionChannelId: string;
@@ -73,6 +75,7 @@ export const GuildData = new Schema({
     messageScanning: {
         wordleResultScanning: Boolean,
         starboardScanning: Boolean,
+        twitterEnbedFix: Boolean,
     },
 
     // Channels for features
@@ -118,15 +121,17 @@ export const createNewGuildData = async (guildID: string) => {
             // Wordle scanning is disabled by default
             wordleResultScanning: false,
             starboardScanning: false,
+            // Twitter embed fix is enabled by default (until they get their act together)
+            twitterEmbedFix: true,
         },
         channels: {
             confessionChannelId: "",
             starboardChannelId: "",
         },
         starboard: {
-            emoji: starboardConfig.defaultEmoji,
-            threshold: starboardConfig.defaultThreshold,
-            successEmoji: starboardConfig.defaultSuccessEmoji,
+            emoji: config.starboardConfig.defaultEmoji,
+            threshold: config.starboardConfig.defaultThreshold,
+            successEmoji: config.starboardConfig.defaultSuccessEmoji,
             leaderboard: new Array({
                 messageID: String,
                 channelID: String,

@@ -3,10 +3,13 @@ import { Canvas } from 'canvas';
 import { ImageExtension, User } from 'discord.js';
 import { ParsedFrame } from 'gifuct-js';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Valid image formats according to Discord
 const validFormats : ImageExtension[] = ["webp", "png", "jpg", "jpeg"];
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 export const imagePath = path.join(__dirname, '..', '..', 'assets', 'img');
 
 /**

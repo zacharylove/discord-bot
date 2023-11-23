@@ -1,7 +1,7 @@
-import { CommandInterface, CommandProperties } from '../../interfaces/Command';
+import { CommandInterface, CommandProperties } from '../../interfaces/Command.js';
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { getUserData } from 'database/userData';
-import { BOT } from 'index';
+import { getUserData } from '../../database/userData.js';
+import { BOT } from '../../index.js';
 
 export const poke: CommandInterface = {
     data: new SlashCommandBuilder()
