@@ -96,6 +96,8 @@ interface puzzleInfo {
 
 }
 
+const wordleConfig = config.wordle.config;
+
 // Wordle
 export class wordle {
     info: gameInfo;
@@ -104,12 +106,12 @@ export class wordle {
     constructor() {
         // Load wordle info from config
         this.info = {
-            solutionLength: config.wordleConfig.wordLength,
-            letterMatch: config.wordleConfig.letterMatch,
-            letterClose: config.wordleConfig.letterClose,
-            letterWrong: config.wordleConfig.letterWrong,
-            maxPuzzles: config.wordleConfig.maxPuzzles,
-            numAllowedGuesses: config.wordleConfig.numGuesses
+            solutionLength: wordleConfig.wordLength,
+            letterMatch: wordleConfig.letterMatch,
+            letterClose: wordleConfig.letterClose,
+            letterWrong: wordleConfig.letterWrong,
+            maxPuzzles: wordleConfig.maxPuzzles,
+            numAllowedGuesses: wordleConfig.numGuesses
         }
         
     }
@@ -212,6 +214,8 @@ export class wordle {
     }
 }
 
+const tradleConfig = config.tradle.config;
+
 // Tradle
 // Very similar to Wordle in a lot of ways... TODO: merge functionality?
 export class tradle {
@@ -219,12 +223,12 @@ export class tradle {
 
     constructor() {
         this.info = {
-            solutionLength: config.tradleConfig.outputLength,
-            letterMatch: config.tradleConfig.letterMatch,
-            letterClose: config.tradleConfig.letterClose,
-            letterWrong: config.tradleConfig.letterWrong,
-            maxPuzzles: config.tradleConfig.maxPuzzles,
-            numAllowedGuesses: config.tradleConfig.numGuesses
+            solutionLength: tradleConfig.outputLength,
+            letterMatch: tradleConfig.letterMatch,
+            letterClose: tradleConfig.letterClose,
+            letterWrong: tradleConfig.letterWrong,
+            maxPuzzles: tradleConfig.maxPuzzles,
+            numAllowedGuesses: tradleConfig.numGuesses
         }
     }
 

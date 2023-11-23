@@ -1,109 +1,137 @@
 {
-    "version": "1.4.2",
+    "version": "1.4.5",
     "statuses": [ "Back and better than ever!", ":)" ],
-    "starboardConfig": {
-        "fetchLimit": 100,
-        "defaultEmoji": "⭐",
-        "defaultThreshold": 5,
-        "defaultSuccessEmoji": "🌟"
+    "starboard": {
+        "config": {
+            "fetchLimit": 100,
+            "defaultEmoji": "⭐",
+            "defaultThreshold": 5,
+            "defaultSuccessEmoji": "🌟"
+        },
+        "commands": [
+            "starboard"
+        ]
     },
-    "wordleConfig": {
-        "wordLength": 5,
-        "numGuesses": 6,
-        "letterMatch": ["🟩", "🟧"],
-        "letterClose": ["🟨", "🟦"],
-        "letterWrong": ["⬛", "⬜"],
-        "maxPuzzles": 2315,
-        "wordleCommands": [
+
+    "wordle": {
+        "config": {
+            "wordLength": 5,
+            "numGuesses": 6,
+            "letterMatch": ["🟩", "🟧"],
+            "letterClose": ["🟨", "🟦"],
+            "letterWrong": ["⬛", "⬜"],
+            "maxPuzzles": 2315
+        },
+        "commands": [
             "wordlestats"
         ]
     },
-    "tradleConfig": {
-        "outputLength": 5,
-        "numGuesses": 6,
-        "letterMatch": ["🟩"],
-        "letterClose": ["🟨"],
-        "letterWrong": ["⬜"],
-        "maxPuzzles": 848, 
-        "tradleCommands": [
-            
-        ]
-    },
-    "discordAPI": {
-        "baseURL": "https://discord.com/api",
-        "version": "10",
-        "cdnURL": "https://cdn.discordapp.com"
-    },
-    "tmdbAPI": {
-        "baseURL": "https://api.themoviedb.org",
-        "version": "3",
-        "endpoints": {
-            "search": "search/movie",
-            "discover": "discover/movie",
-            "find": "find",
-            "configuration": "configuration",
-            "genre": "genre/movie/list",
-            "movie": "movie"
-        }
-    },
-    "jikanAPI": {
-        "baseURL": "https://api.jikan.moe",
-        "version": "4",
-        "endpoints": {
-            "anime": "anime"
-        }
-    },
-    "youtubeAPI": {
-        "baseURL": "https://www.googleapis.com/youtube",
-        "version": "3",
-        "endpoints": {
-            "search": "search",
-            "id": "videos"
+
+    "tradle": {
+        "config": {
+            "outputLength": 5,
+            "numGuesses": 6,
+            "letterMatch": ["🟩"],
+            "letterClose": ["🟨"],
+            "letterWrong": ["⬜"],
+            "maxPuzzles": 848
         },
-        "suggestionsURL": "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q="
-    },
-    "shipMessages": {
-        "reallybad": [
-            "No chance.",
-            "Dude...",
-            "Haha.... no.",
-            "Is this even possible..?"
-        ],
-        "bad": [
-            "Maybe? If you close your eyes?",
-            "I don't think so.",
-            "Yeah, looking rough.",
-            "Jeez.",
-            "Unfortunate.",
-            "Yikes..."
-        ],
-        "kindofbad": [
-            "I don't know about that.",
-            "I'm not feeling it.",
-            "I'm not sure about that."
-        ],
-        "okay": [
-            "You could make it work!",
-            "It'd take some work, but it could be done.",
-            "Maybe!",
-            "I've seen worse."
-        ],
-        "good": [
-            "Looking good.",
-            "Very nice.",
-            "Pretty solid."
-        ],
-        "great": [
-            "Looking like a good combo.",
-            "I like it!",
-            "Oh yeah, I'm feeling it!"
-        ],
-        "reallygreat": [
-            "A match made in heaven!",
-            "It was meant to be!",
-            "Yoooooo!",
-            "Damn."
+        "commands": [
+                
         ]
+    },
+
+    "discord": {
+        "API": {
+            "baseURL": "https://discord.com/api",
+            "version": "10",
+            "cdnURL": "https://cdn.discordapp.com"
+        }
+    },
+
+    "music": {
+        "youtubeAPI": {
+            "baseURL": "https://www.googleapis.com/youtube",
+            "version": "3",
+            "endpoints": {
+                "search": "search",
+                "id": "videos"
+            },
+            "suggestionsURL": "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q="
+        },
+        "commands": [
+            "playSong", "skipSong", "stopSong", "queue", "shuffleQueue", "clearQueue", "nowPlaying", "pause", "resume"
+        ]
+    },
+
+    "movie": {
+        "tmdbAPI": {
+            "baseURL": "https://api.themoviedb.org",
+            "version": "3",
+            "endpoints": {
+                "search": "search/movie",
+                "discover": "discover/movie",
+                "find": "find",
+                "configuration": "configuration",
+                "genre": "genre/movie/list",
+                "movie": "movie"
+            }
+        }
+    },
+
+    "anime": {
+        "jikanAPI": {
+            "baseURL": "https://api.jikan.moe",
+            "version": "4",
+            "endpoints": {
+                "anime": "anime"
+            }
+        }
+    },
+    "roleplay": {
+        "shipMessages": {
+            "reallybad": [
+                "No chance.",
+                "Dude...",
+                "Haha.... no.",
+                "Is this even possible..?"
+            ],
+            "bad": [
+                "Maybe? If you close your eyes?",
+                "I don't think so.",
+                "Yeah, looking rough.",
+                "Jeez.",
+                "Unfortunate.",
+                "Yikes..."
+            ],
+            "kindofbad": [
+                "I don't know about that.",
+                "I'm not feeling it.",
+                "I'm not sure about that."
+            ],
+            "okay": [
+                "You could make it work!",
+                "It'd take some work, but it could be done.",
+                "Maybe!",
+                "I've seen worse."
+            ],
+            "good": [
+                "Looking good.",
+                "Very nice.",
+                "Pretty solid."
+            ],
+            "great": [
+                "Looking like a good combo.",
+                "I like it!",
+                "Oh yeah, I'm feeling it!"
+            ],
+            "reallygreat": [
+                "A match made in heaven!",
+                "It was meant to be!",
+                "Yoooooo!",
+                "Damn."
+            ]
+        }
     },
     "responseMessages": {
         "confirmation": [

@@ -55,6 +55,35 @@ export const CommandList: CommandInterface[] = [
 
 export default CommandList;
 
+
+/**
+ * Map of features to associated commands
+ * Used to batch enable/disable commands when feature is enabled/disabled
+ */
+export const FeatureCommandMap: Map<Feature, CommandInterface[]> = new Map([
+    // Wordle (does not include playwordle)
+    [Feature.Wordle, [
+        wordleStats
+    ]],
+    // Music
+    [Feature.Music, [
+        playSong, skipSong, stopSong, queue, shuffleQueue, clearQueue, nowPlaying, pause, resume
+    ]],
+    // Starboard
+    [Feature.Starboard, [
+        starboard
+    ]],
+    // Confession
+    [Feature.Confession, [
+        confess
+    ]],
+    // TwitterEmbedFix
+    [Feature.TwitterEmbedFix, [
+
+    ]]
+]);
+
+
 export const toggleMusicCommands = (enabled: boolean) => {
     for (const command of CommandList) {
         if (command.properties.Feature == Feature.Music) {

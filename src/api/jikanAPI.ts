@@ -4,6 +4,7 @@ import axios, { AxiosResponse } from "axios";
 import { RequestInterface } from "../interfaces/RequestInterface.js";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
+const jikanAPIConfig = config.anime.jikanAPI;
 
 export enum animeType {
     tv,
@@ -77,10 +78,10 @@ export const JikanAPI: RequestInterface = {
         return res;
     },
     formRequestURL: (info: jikanRequestInfo): string => {
-        let requestURL = config.jikanAPI.baseURL + "/v" + config.jikanAPI.version + "/";
+        let requestURL = jikanAPIConfig.baseURL + "/v" + jikanAPIConfig.version + "/";
         let error : boolean = false;
         // Assuming anime search
-        requestURL += config.jikanAPI.endpoints.anime;
+        requestURL += jikanAPIConfig.endpoints.anime;
 
         // TODO: handle all parameters if implemented
         requestURL += "?q=" + info.query.replace(new RegExp(`\\s`,'g'), "+");

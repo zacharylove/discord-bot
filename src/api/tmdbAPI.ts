@@ -137,28 +137,30 @@ export const TMDBAPI: RequestInterface = {
         return res;
     },
     formRequestURL: (info: tmdbRequestInfo): string => {
-        let requestURL = config.tmdbAPI.baseURL + "/" + config.tmdbAPI.version;
+        const tmdbConfig = config.movie.tmdbAPI;
+
+        let requestURL = tmdbConfig.baseURL + "/" + tmdbConfig.version;
         let error : boolean = false;
         switch ( info.type ) {
             case tmdbRequestType.Search:
                 if (!info.query) error = true;
-                else requestURL += `/${config.tmdbAPI.endpoints.search}?query=${info.query.replace(" ", "+")}`;
+                else requestURL += `/${tmdbConfig.endpoints.search}?query=${info.query.replace(" ", "+")}`;
                 break;
             case tmdbRequestType.Discover:
-                requestURL += `/${config.tmdbAPI.endpoints.discover}`;
+                requestURL += `/${tmdbConfig.endpoints.discover}`;
                 break;
             case tmdbRequestType.Find:
-                requestURL += `/${config.tmdbAPI.endpoints.find}`;
+                requestURL += `/${tmdbConfig.endpoints.find}`;
                 break;
             case tmdbRequestType.Configuration:
-                requestURL += `/${config.tmdbAPI.endpoints.configuration}`;
+                requestURL += `/${tmdbConfig.endpoints.configuration}`;
                 break;
             case tmdbRequestType.Genre:
-                requestURL += `/${config.tmdbAPI.endpoints.genre}`;
+                requestURL += `/${tmdbConfig.endpoints.genre}`;
                 break;
             case tmdbRequestType.Movie:
                 if (!info.id) error = true;
-                else requestURL += `/${config.tmdbAPI.endpoints.movie}/${info.id}`;
+                else requestURL += `/${tmdbConfig.endpoints.movie}/${info.id}`;
                 break;
         }
 
