@@ -1,7 +1,6 @@
 # Cinnamon
 A rewrite of Cinnamon in Typescript, merging the old functionality with the Synonym wordle bot I've been working on.
 
-
 The features of this bot are divided into two categories:
  - **Commands**: Direct interactions with the user through slash commands or context commands
    - Roleplay: Context-based commands to enhance interactions and drive conversations between users
@@ -35,3 +34,6 @@ All sensitive information such as tokens and keys are stored in a `.env` file. T
 Make sure the latest version of Node.js is installed.
 Run `npm i` and then `npm run deploy`
  - MacOS requires additional libraries for the `node-canvas` package, which can be installed via Homebrew with `brew install pkg-config cairo pango libpng jpeg giflib librsvg`.
+
+## Docker
+I am using Github Actions to compile and publish a Docker container on every commit to the master branch, which can be pulled from `ghcr.io/zacharylove/discord-bot:master`. Make sure to define all of the values in `example.env` as environment variables in the container before running.
