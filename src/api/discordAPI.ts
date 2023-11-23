@@ -39,7 +39,7 @@ export const DiscordAPI: RequestInterface = {
     },
     
     formRequestURL: (info: discordRequestInfo): string => {
-        let requestURL = config.discordAPI.baseURL + "/v" + config.discordAPI.version;
+        let requestURL = config.discord.API.baseURL + "/v" + config.discord.API.version;
     
         // Form URL based on requested info
         let error : boolean = false;
@@ -56,7 +56,7 @@ export const DiscordAPI: RequestInterface = {
     },
 
     formCdnURL: async (info: discordRequestInfo): Promise<string> => {
-        let url = config.discordAPI.cdnURL;
+        let url = config.discord.API.cdnURL;
     
         let error : boolean = false;
         switch ( info.type ) {        

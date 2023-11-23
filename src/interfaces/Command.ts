@@ -6,8 +6,10 @@ export enum Feature {
     Music,
     Wordle,
     Starboard,
-    Confession
+    Confession,
+    TwitterEmbedFix
 }
+
 
 // Interface for all commands, defines requirements and some additional properties
 export interface CommandProperties {

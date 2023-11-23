@@ -67,19 +67,20 @@ export const youtubeAPI: RequestInterface = {
         return res;
     },
     formRequestURL: (info: youtubeRequestInfo): string => {
-        let requestURL = config.youtubeAPI.baseURL + "/v" + config.youtubeAPI.version;
+        const youtubeConfig = config.music.youtubeAPI;
+        let requestURL = youtubeConfig.baseURL + "/v" + youtubeConfig.version;
         let error: boolean = false;
         if (!info.query) error = true;
         switch (info.type) {
             case "search":
-                requestURL += `/${config.youtubeAPI.endpoints.search}`;
+                requestURL += `/${youtubeConfig.endpoints.search}`;
                 requestURL += `?q=${info.query.replace(" ", "+")}`;
                 requestURL += `&key=${process.env.YOUTUBE_API_KEY}`;
                 break;
             case "playlist":
                 break;
             case "id":
-                requestURL += `/${config.youtubeAPI.endpoints.id}`;
+                requestURL += `/${youtubeConfig.endpoints.id}`;
                 requestURL += `?id=${info.query}`;
                 requestURL += `&key=${process.env.YOUTUBE_API_KEY}`;
                 break;

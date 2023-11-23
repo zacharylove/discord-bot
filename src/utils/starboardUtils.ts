@@ -40,7 +40,7 @@ import { getUserData } from "../database/userData.js";
  */
 export const getExistingStarboardMessage = async (guildData: GuildDataInterface, messageId: string, starChannel: TextChannel): Promise<Message<boolean> | null> => {
     let messageList: Message[] = new Array();
-    const messages = await starChannel.messages.fetch({ limit: config.starboardConfig.fetchLimit });
+    const messages = await starChannel.messages.fetch({ limit: config.starboard.config.fetchLimit });
     // Filter to be one type
     messages.forEach( m => { if (m.embeds.length > 0 && m.author.bot) messageList.push(m) } );
 
