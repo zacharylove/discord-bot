@@ -244,33 +244,17 @@ export const addDisabledCommand = async (command: CommandInterface, guildID: str
     return "Command successfully disabled.";
 }
 
-/**
- * Returns a list of all enabled commands for the given guild in string format
- * That's all the commands that are enabled in the guild, plus all the commands that are enabled by default and not disabled in the guild
- * @param guildID 
- * @returns 
- */
-export const getEnabledCommandListAsString = async (guildID: string): Promise<string[]> => {
-    const enabledCommands: string[] = [];
+
+export const getEnabledDisabledCommands = async (guildID: string): Promise<Map<string, boolean>> => {
+    const enabledDisabledMap = new Map<string, boolean>();
     for ( const command of getCommandList() ) {
-        if ( await isCommandEnabled(command, guildID) ) { enabledCommands.push(command.properties.Name); }
+        // Ignore commands that cannot be disabled
+        if (command.properties.CanBeDisabled == false) continue;
+        if ( await isCommandEnabled(command, guildID) ) enabledDisabledMap.set(command.properties.Name, true);
+        else enabledDisabledMap.set(command.properties.Name, false);
     }
 
-    return enabledCommands;
-}
-
-
-/**
- * Returns a list of all disabled commands for the given guild in string format
- * @param guildID 
- * @returns 
- */
-export const getDisabledCommandListAsString = async (guildID: string): Promise<string[]> => {
-    const disabledCommands: string[] = [];
-    for ( const command of getCommandList() ) {
-        if ( await isCommandDisabled(command, guildID) ) { disabledCommands.push(command.properties.Name); }
-    }
-    return disabledCommands;
+    return enabledDisabledMap;
 }
 
 /**

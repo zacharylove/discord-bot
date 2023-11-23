@@ -13,6 +13,12 @@
         ]
     },
 
+    "confession": {
+        "commands": [
+            "confess"
+        ]
+    },
+
     "wordle": {
         "config": {
             "wordLength": 5,
@@ -23,7 +29,7 @@
             "maxPuzzles": 2315
         },
         "commands": [
-            "wordlestats"
+            "wordlestats", "playwordle"
         ]
     },
 
@@ -59,7 +65,7 @@
             }
         },
         "commands": [
-            "playSong", "skipSong", "stopSong", "queue", "shuffleQueue", "clearQueue", "nowPlaying", "pause", "resume"
+            "play", "skip", "stop", "queue", "shuffle", "clear", "nowplaying", "pause", "resume"
         ]
     },
 

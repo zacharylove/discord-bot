@@ -1,17 +1,22 @@
 // View a list of guild-specific settings and enable/disable commands and features.
 import { CommandInterface } from "../../interfaces/Command.js";
-import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled, isTwitterEmbedFixEnabled, toggleTwitterEmbedFix } from "../../database/guildData.js";
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
+import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getEnabledDisabledCommands, getGuildDataByGuildID, isStarboardEnabled, isTwitterEmbedFixEnabled, toggleTwitterEmbedFix } from "../../database/guildData.js";
 import { GuildDataInterface } from "../../database/models/guildModel.js";
 import { commandNotImplemented, getCommandListAsString } from "../../utils/commandUtils.js";
-import { CommandInteraction, PermissionsBitField } from "discord.js";
+import { ButtonBuilder, ButtonStyle, CommandInteraction, PermissionsBitField } from "discord.js";
 import { hasPermissions } from "../../utils/userUtils.js";
+// @ts-ignore
+import { default as config } from "../../config/config.json" assert { type: "json" };
+
 
 // TODO: clean up enabled/disabled features.... lots of repeated code rn
 
 
 // Required permission to enable/disable
 const requiredPermissions = PermissionsBitField.Flags.ManageGuild;
+let enabledDisabledCommands: Map<string, boolean>;
+let guildData: GuildDataInterface;
 
 // Settings command
 // If no arguments are provided, display a list of all guild-specific settings
@@ -41,75 +46,156 @@ const displaySettingsOverview = async (interaction: CommandInteraction, embed: E
  * Sends a list of available/enabled/disabled commands and feature settings for the guild
  * @param interaction 
  */
-const displaySettingsList = async (interaction: CommandInteraction, embed: EmbedBuilder): Promise<EmbedBuilder>  => {
+
+const commandFeatureList = async (interaction: CommandInteraction) => {
     // shut up typescript
-    if ( !interaction.guild || !interaction.guildId ) { return embed; }
+    if ( !interaction.guild || !interaction.guildId ) { return; }
 
-    // List all settings
-    const guildData: GuildDataInterface = await getGuildDataByGuildID(interaction.guildId);
+    const embed = new EmbedBuilder();
 
-    let description: string = "Configuration for " + interaction.guild.name;
-    description += "Here, you can enable and disable commands and features for this server. \n"
-    description += "For more information, use `/settings help`.\n"
+    
+
+    let description: string = ""
+    description += "Here are all of the commands and features available.\n"
+    description += "To enable/disable, hit the 'toggle' button. To configure features, hit 'configure'.\n"
+
+    embed.setTitle("Command List for " + interaction.guild.name);
+    embed.setDescription(description);
 
     // Now remember:
     // - Globally disabled commands are disabled everywhere
     // - Globally enabled commands are enabled UNLESS they are specifically disabled
     // 
 
-    // This loops twice, but who cares- there's not gonna be THAT many commands
-    const enabledCommandList: string[] = await getEnabledCommandListAsString(interaction.guildId);
-    const disabledCommandList: string[] = await getDisabledCommandListAsString(interaction.guildId);
-    const availableCommandList: string[] = await getCommandListAsString();
+    const wordleCommands: string[] = [];
+    const starboardCommands: string[] = [];
+    const musicCommands: string[] = [];
+    const confessionCommands: string[] = [];
+    const twitterFixCommands: string[] = [];
 
 
-    let enabledCommandsString: string = 'None';
-    let disabledCommandsString: string = 'None';
-    let availableCommandsString: string = 'None';
+    let enabledCommandsString: string = '';
+    let disabledCommandsString: string = '';
     let contentScanningString: string = '';
 
-    if ( availableCommandList.length > 0 ) {
-        availableCommandsString = " - " + availableCommandList.join('\n- ');
+    for (const [command, enabled] of enabledDisabledCommands.entries()) {
+        let commandName: string = command.toLowerCase().replace(/ /g, '');
+        if (config.wordle.commands.includes(commandName)) wordleCommands.push(command);
+        else if (config.starboard.commands.includes(commandName)) starboardCommands.push(command);
+        else if (config.music.commands.includes(commandName)) musicCommands.push(command);
+        else if (config.confession.commands.includes(commandName)) confessionCommands.push(command);
+        
+        else if (enabled) enabledCommandsString += `- ${command}\n`;
+        else disabledCommandsString += `- ${command}\n`;
     }
-    embed.addFields({name: 'Available Commands', value: availableCommandsString, inline: true});
+    if (enabledCommandsString == '') enabledCommandsString = "None";
+    if (disabledCommandsString == '') disabledCommandsString = "None";
 
-    if ( enabledCommandList.length > 0 ) {
-        enabledCommandsString = " - " + enabledCommandList.join('\n- ');
-    }
-    embed.addFields({name: 'Enabled', value: enabledCommandsString, inline: true});
-    if ( disabledCommandList.length > 0 ) {
-        disabledCommandsString = " - " + disabledCommandList.join('\n- ');
-    }
-    embed.addFields({name: 'Disabled', value: disabledCommandsString, inline: true});
+    embed.addFields({name: 'Enabled Commands', value: enabledCommandsString, inline: true});
+    embed.addFields({name: 'Disabled Commands', value: disabledCommandsString, inline: true});
     
+
+    embed.addFields({name: "Feature List", value: "Here are the commands and settings for each feature. You can configure them in the 'Configure' menu.", inline: false});
     // ======
     // Features
-    
-    // Wordle
-    contentScanningString += "Wordle Results Scanning: ";
-    if ( guildData.messageScanning.wordleResultScanning ) {
-        contentScanningString += "Enabled\n";
-    } else { contentScanningString += "Disabled\n"; }
 
+    // Wordle
+    let wordleString = ``;
+    wordleString += `Commands:${wordleCommands.length > 0 ? `\n - ${wordleCommands.join("\n- ")}` : `\nNone`}`;
+    wordleString += `\n-----\nResults Scanning: ${guildData.messageScanning.wordleResultScanning ? "\`Enabled\`" : "\`Disabled\`"}\n`;
+
+    embed.addFields({
+        name: '🔠 Wordle',
+        value: wordleString,
+        inline: true
+    });
+    
     // Starboard
-    contentScanningString += "Starboard Reaction Scanning: ";
-    if ( guildData.messageScanning.starboardScanning ) {
-        contentScanningString += "Enabled\n";
-    } else { contentScanningString += "Disabled\n"; }
+    let starboardString = ``;
+    starboardString += `Commands:${starboardCommands.length > 0 ? `\n - ${starboardCommands.join("\n- ")}` : `\nNone`}`;
+
+    starboardString += `\n-----\nReaction Scanning: ${guildData.messageScanning.starboardScanning ? "\`Enabled\`" : "\`Disabled\`"}\n`;
+    starboardString += `\nChannel: ${guildData.channels.starboardChannelId != "" ? `<#${guildData.channels.starboardChannelId}>` : "`Not set`"}\n`;
+
+    /*starboardString += `- Channel: ${guildData.channels.starboardChannelId ? `<#${guildData.channels.starboardChannelId}>\n` : `Not set`}`;
+    starboardString += `- Emoji: ${guildData.starboard.emoji}`;
+    starboardString += `- Threshold: ${guildData.starboard.threshold}\n`;
+    starboardString += `- Success Emoji: ${guildData.starboard.successEmoji}\n`;
+    starboardString += `- Blacklist?: ${guildData.starboard.blacklistEnabled ? "Enabled" : "Disabled"}\n`;
+    if (guildData.starboard.blacklistChannels.length > 0 ) starboardString += ` - Blacklisted Channels: ${guildData.starboard.blacklistChannels.map((channelId) => `<#${channelId}>`).join(', ')}`;
+    */
+    
+    embed.addFields({
+        name: '🌟 Starboard',
+        value: starboardString,
+        inline: true
+    });
+
+    // Music
+    let musicString = `Commands:${musicCommands.length > 0 ? `\n - ${musicCommands.join("\n- ")}`: `\nNone`}`;
+    
+    embed.addFields({
+        name: '🎵 Music',
+        value: musicString,
+        inline: true
+    });
 
     // Twitter Embed Fix
-    contentScanningString += "Twitter URL Scanning: ";
-    if ( guildData.messageScanning.twitterEmbedFix ) {
-        contentScanningString += "Enabled\n";
-    } else { contentScanningString += "Disabled\n"; }
+    let twitterString = `URL Scanning: ${guildData.messageScanning.twitterEmbedFix ? "\`Enabled\`": "\`Disabled\`"}\n`;
+    embed.addFields({
+        name: '🐥 Twitter/X Embed Fix',
+        value: twitterString,
+        inline: true
+    });
 
-    embed.addFields({name: 'Available Features', value: contentScanningString});
+    // Confessions
+    let confessionString = `Commands:${confessionCommands.length > 0 ? `\n - ${confessionCommands.join("\n- ")}`: ``}`;
+    confessionString += `\n-----\nChannel: ${guildData.channels.confessionChannelId != "" ? `<#${guildData.channels.confessionChannelId}>` : "`Not set`"}\n`;
+    embed.addFields({
+        name: '😶 Confessions',
+        value: confessionString,
+        inline: true
+    });
 
-    if ( guildData.messageScanning.starboardScanning ) {
-        embed.addFields({name: 'Starboard Settings', value: ` - Channel: <#${guildData.channels.starboardChannelId}>\n- Emoji: ${guildData.starboard.emoji}\n- Threshold: ${guildData.starboard.threshold}\n- Success Emoji: ${guildData.starboard.successEmoji}\n- Blacklist?: ${guildData.starboard.blacklistEnabled}\n - Blacklisted Channels: ${guildData.starboard.blacklistChannels.map((channelId) => `<#${channelId}>`).join(', ')}`});
+
+
+
+    const navigation: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    const list = new ButtonBuilder()
+        .setCustomId('home')
+        .setStyle(ButtonStyle.Secondary)
+        .setLabel("Home")
+        .setEmoji({ name: "🏠" });
+    const toggle = new ButtonBuilder()
+        .setCustomId('toggle')
+        .setStyle(ButtonStyle.Primary)
+        .setLabel("Toggle")
+        .setEmoji({ name: "🔳" });
+    const configure = new ButtonBuilder()
+        .setCustomId('configure')
+        .setStyle(ButtonStyle.Success)
+        .setLabel("Configure")
+        .setEmoji({ name: "📝" });
+
+    navigation.addComponents(list, toggle, configure);
+
+    const response = await interaction.editReply({ content: "", embeds: [embed], components: [navigation]});
+
+
+    const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
+    const buttonResponse = await response.awaitMessageComponent({ filter: collectorFilter, time: 60000 });
+    if (buttonResponse.user == interaction.user ) {
+        await buttonResponse.deferUpdate();
+        switch (buttonResponse.customId) {
+            case 'home':
+                await homeMenu(interaction);
+            case 'toggle':
+                break;
+            case 'configure':
+                break;
+        }
     }
-
-    return embed;
+    
 }
 
 const checkPermission = async ( interaction: CommandInteraction ): Promise<boolean> => {
@@ -120,7 +206,7 @@ const checkPermission = async ( interaction: CommandInteraction ): Promise<boole
         return false;
     }
     if (!hasPermissions(requiredPermissions, interaction.guild, interaction.user)) {
-        const messageContent: string = "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, uh, manage the server.";
+        const messageContent: string = "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, well, manage the server.";
         if (interaction.replied || interaction.deferred ) await interaction.editReply({content: messageContent})
         else await interaction.reply({content: messageContent, ephemeral: true});
         return false;
@@ -213,7 +299,7 @@ const disableFeature = async ( interaction: CommandInteraction, featureName: str
 
 
 */
-export const guildSettings: CommandInterface = {
+/*export const guildSettings: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('settings')
         .setDescription('View and modify server-specific bot settings')
@@ -404,4 +490,106 @@ export const guildSettings: CommandInterface = {
         Intents: [],
         CanBeDisabled: false
     }
+}*/
+
+
+const homeMenu = async (interaction: CommandInteraction) => {
+    if (!interaction.guildId || !interaction.guild || !interaction.isChatInputCommand()) return;
+    const author = interaction.user;
+
+    let embedToSend: EmbedBuilder = new EmbedBuilder();
+    embedToSend
+        .setTitle('Server Settings for ' + interaction.guild.name)
+        .setTimestamp()
+        .setFooter({text: "To modify these settings, use the /settings subcommands."});
+
+    let description = `**Welcome to the settings menu!**\n`;
+    description += "Using this interface, you can edit server-specific settings and turn features and commands on/off.\n";
+    description += "Features are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.\n";
+    description += "Some commands/features are enabled by default, and some are disabled by default.\n";
+    description += "In order to enable a command or feature, you must have the `Manage Server` permission.\n";
+    description += "You can navigate between pages using the buttons below this embed.\n";
+
+    embedToSend.setDescription(description);
+
+    // We will use an action menu to move between each page
+    const navigation: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    const list = new ButtonBuilder()
+        .setCustomId('list')
+        .setStyle(ButtonStyle.Secondary)
+        .setLabel("List")
+        .setEmoji({ name: "📃" });
+    const toggle = new ButtonBuilder()
+        .setCustomId('toggle')
+        .setStyle(ButtonStyle.Primary)
+        .setLabel("Toggle")
+        .setEmoji({ name: "🔳" });
+    const configure = new ButtonBuilder()
+        .setCustomId('configure')
+        .setStyle(ButtonStyle.Success)
+        .setLabel("Configure")
+        .setEmoji({ name: "📝" });
+
+    navigation.addComponents(list, toggle, configure);
+
+    const response = await interaction.editReply({ content: "", embeds: [embedToSend], components: [navigation]});
+
+    const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === author.id;
+    try {
+        const buttonResponse = await response.awaitMessageComponent({ filter: collectorFilter, time: 60000 });
+        if (buttonResponse.user == author ) {
+            await buttonResponse.deferUpdate();
+            switch (buttonResponse.customId) {
+                case 'list':
+                    await commandFeatureList(interaction);
+                case 'toggle':
+                    break;
+                case 'configure':
+                    break;
+            }
+        }
+    } catch (e) {}
 }
+
+
+export const guildSettings: CommandInterface = {
+    data: new SlashCommandBuilder()
+        .setName('settings')
+        .setDescription('View and modify server-specific bot settings')
+    ,
+    run: async (interaction) => {
+        // Disable context menu
+        if (!interaction.isChatInputCommand()) {
+            await interaction.editReply('This command cannot be used in a context menu');
+            return;
+        }
+        // Disable DMS
+        if (!interaction.guildId || !interaction.guild) {
+            await interaction.editReply('This command cannot be used in DMs');
+            return;
+        }
+
+        // Check user permissions- are they an administrator or a user?
+        const canManageGuild = checkPermission(interaction);
+        if (!canManageGuild) return;
+
+        
+        interaction.editReply({content: "Loading guild settings, this might take a moment..."});
+        guildData = await getGuildDataByGuildID(interaction.guildId);
+        enabledDisabledCommands = await getEnabledDisabledCommands(interaction.guildId);
+          
+        await homeMenu(interaction);
+
+    },
+    properties: {
+        Name: 'Settings',
+        Aliases: ['Config', 'Server Settings', 'Server Config'],
+        Scope: 'global',
+        GuildOnly: true,
+        Enabled: true,
+        DefaultEnabled: true,
+        Intents: [],
+        CanBeDisabled: false
+    }
+}
+    
