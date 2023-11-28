@@ -126,3 +126,25 @@ const spotifyToYoutube = async (tracks: SpotifyTrack[], playlist? :QueuedPlaylis
       }, []);
       return [songs, numSongsNotFound, tracks.length];
 }
+
+
+const filterDuplicates = <T extends {name: string}>(items: T[]) => {
+    const results: T[] = [];
+  
+    for (const item of items) {
+      if (!results.some(result => result.name === item.name)) {
+        results.push(item);
+      }
+    }
+  
+    return results;
+  };
+
+export const getSpotifySuggestionsForQuery = async (query: string): Promise<[SpotifyApi.TrackObjectFull[], SpotifyApi.AlbumObjectSimplified[]]> => {
+    const spotifyAPI: SpotifyWebApi = BOT.getSpotifyAPI();
+    const res = await spotifyAPI.search(query, ['track', 'album'], {limit: 5});
+    if (res == undefined) return [[],[]];
+    const spotifyAlbums = filterDuplicates(res.body.albums?.items ?? []);
+    const spotifyTracks = filterDuplicates(res.body.tracks?.items ?? []);
+    return [spotifyTracks, spotifyAlbums]
+}

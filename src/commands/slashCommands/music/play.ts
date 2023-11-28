@@ -1,7 +1,9 @@
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
-import { ChatInputCommandInteraction, CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { APIApplicationCommandOptionChoice, AutocompleteInteraction, ChatInputCommandInteraction, CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BOT } from "../../../index.js";
 import { GatewayIntentBits } from "discord-api-types/v9";
+import { getYoutubeSuggestionsForQuery } from "../../../api/youtubeAPI.js";
+import { getSpotifySuggestionsForQuery } from "../../../api/spotifyAPI.js";
 
 export const playSong: CommandInterface = {
     data: new SlashCommandBuilder()
@@ -12,6 +14,7 @@ export const playSong: CommandInterface = {
                 .setName('query')
                 .setDescription('The song to play')
                 .setRequired(true)
+                .setAutocomplete(true)
         )
         .addBooleanOption((option) =>
             option
@@ -35,6 +38,56 @@ export const playSong: CommandInterface = {
             query: query,
             interaction: interaction
         }, shuffle, next);
+    },
+    autocomplete: async (interaction: AutocompleteInteraction, limit = 10) => {
+        const query = interaction.options.getString('query')?.trim();
+        if (!query || query.length === 0) {
+            await interaction.respond([]);
+            return;
+        }
+
+        // Ignore direct URLs
+        try {
+            new URL(query);
+            await interaction.respond([]);
+            return;
+        } catch {}
+
+        const youtubeSuggestions = await getYoutubeSuggestionsForQuery(query);
+        const spotifyResponse: [SpotifyApi.TrackObjectFull[], SpotifyApi.AlbumObjectSimplified[]] = await getSpotifySuggestionsForQuery(query);
+        const spotifyTrackSuggestions = spotifyResponse[0];
+        const spotifyAlbumSuggestions = spotifyResponse[1];
+
+        const maxSpotifySuggestions = Math.min(limit /2, spotifyTrackSuggestions.length + spotifyAlbumSuggestions.length);
+        const maxSpotifyAlbumSuggestions = Math.min(Math.floor(maxSpotifySuggestions / 2), spotifyAlbumSuggestions.length ?? 0);
+        const maxSpotifyTrackSuggestions = maxSpotifySuggestions - maxSpotifyAlbumSuggestions;
+        const maxYoutubeSuggestions = Math.min(limit - maxSpotifySuggestions, youtubeSuggestions.length);
+        
+        const suggestions: APIApplicationCommandOptionChoice[] = [];
+        suggestions.push(
+            ...youtubeSuggestions
+              .slice(0, maxYoutubeSuggestions)
+              .map(suggestion => ({
+                name: `YouTube: ${suggestion}`,
+                value: suggestion,
+              }),
+        ));
+
+        suggestions.push(
+            ...spotifyAlbumSuggestions.slice(0, maxSpotifyAlbumSuggestions).map(album => ({
+              name: `Spotify: 💿 ${album.name}${album.artists.length > 0 ? ` - ${album.artists[0].name}` : ''}`,
+              value: `spotify:album:${album.id}`,
+            })),
+          );
+        
+          suggestions.push(
+            ...spotifyTrackSuggestions.slice(0, maxSpotifyTrackSuggestions).map(track => ({
+              name: `Spotify: 🎵 ${track.name}${track.artists.length > 0 ? ` - ${track.artists[0].name}` : ''}`,
+              value: `spotify:track:${track.id}`,
+            })),
+          );
+
+        await interaction.respond(suggestions);
     },
     properties: {
         Name: "play",

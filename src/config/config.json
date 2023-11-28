@@ -59,7 +59,8 @@
         "endpoints": {
             "search": "search",
             "id": "videos"
-        }
+        },
+        "suggestionsURL": "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q="
     },
     "shipMessages": {
         "reallybad": [

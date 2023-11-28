@@ -1,6 +1,6 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder } from "@discordjs/builders";
 import { GatewayIntentBits } from "discord-api-types/v9";
-import { CommandInteraction, PermissionsBitField } from "discord.js";
+import { AutocompleteInteraction, CommandInteraction, PermissionsBitField } from "discord.js";
 
 export enum Feature {
     Music,
@@ -44,7 +44,8 @@ export interface CommandInterface {
     data: Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand"> | SlashCommandSubcommandsOnlyBuilder | Omit<ContextMenuCommandBuilder, "addSubcommandGroup" | "addSubcommand"> | ContextMenuCommandBuilder;
     // Holds callback function and command logic, must return void promise
     run: (interaction: CommandInteraction) => Promise<void>;
-
+    // Holds autocomplete logic
+    autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
     // Holds information about the command
     properties: CommandProperties;
 }
