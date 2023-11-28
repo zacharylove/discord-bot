@@ -186,6 +186,11 @@ export default class Player {
         return this.positionInSeconds;
     }
 
+    // Get current position (#) in queue
+    getQueuePosition(): number {
+        return this.queuePosition;
+    }
+
     // Get player status
     getStatus(): MusicStatus {
         return this.status;
@@ -254,7 +259,7 @@ export default class Player {
             }
         } catch (error: unknown) {
             // Try to skip to next song
-            //await this.forward(1);
+            await this.forward(1);
       
             if ((error as {statusCode: number}).statusCode === 410 && currentSong) {
               const channelId = currentSong.addedInChannelId;

@@ -82,22 +82,23 @@ export const ship: CommandInterface = {
             shipNum = await generateMatchNumber(user1, user2);
 
             let messageList: string[];
+            const shipMessages = config.roleplay.shipMessages;
 
             // Really bad
-            if (shipNum < 10) messageList = config.shipMessages.reallybad;
+            if (shipNum < 10) messageList = shipMessages.reallybad;
             // Bad
-            else if (shipNum < 25) messageList = config.shipMessages.bad;
+            else if (shipNum < 25) messageList = shipMessages.bad;
             // Kind of bad
-            else if (shipNum < 40) messageList = config.shipMessages.kindofbad;
+            else if (shipNum < 40) messageList = shipMessages.kindofbad;
             // Okay
-            else if (shipNum < 60) messageList = config.shipMessages.okay;
+            else if (shipNum < 60) messageList = shipMessages.okay;
             // Good
-            else if (shipNum < 85) messageList = config.shipMessages.good;
+            else if (shipNum < 85) messageList = shipMessages.good;
             //Great
-            else if (shipNum < 95) messageList = config.shipMessages.great;
+            else if (shipNum < 95) messageList = shipMessages.great;
             // Really great
-            else if (shipNum <= 100) messageList = config.shipMessages.reallygreat;
-            else messageList = config.shipMessages.okay;
+            else if (shipNum <= 100) messageList = shipMessages.reallygreat;
+            else messageList = shipMessages.okay;
 
             // Randomly select message
             message = messageList[Math.floor(Math.random() * messageList.length)];

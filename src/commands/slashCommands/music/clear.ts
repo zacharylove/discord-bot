@@ -2,6 +2,7 @@ import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
 import { BOT } from "../../../index.js";
 import { GatewayIntentBits } from "discord-api-types/v9";
+import { confirmationMessage } from "../../../utils/utils.js";
 
 export const clearQueue: CommandInterface = {
     data: new SlashCommandBuilder()
@@ -24,7 +25,7 @@ export const clearQueue: CommandInterface = {
             return;
         }
         player.clear(clearCurrent);
-        await interaction.editReply(`Okay, cleared ${clearCurrent ? numSongs : numSongs - 1} songs in the queue!${clearCurrent ? ' Stopping playback.' : ''}`);
+        await interaction.editReply(`${confirmationMessage()} cleared ${clearCurrent ? numSongs : numSongs - 1} songs in the queue!${clearCurrent ? ' Stopping playback.' : ''}`);
     },
     properties: {
         Name: "clear",

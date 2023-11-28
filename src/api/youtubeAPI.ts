@@ -67,19 +67,20 @@ export const youtubeAPI: RequestInterface = {
         return res;
     },
     formRequestURL: (info: youtubeRequestInfo): string => {
-        let requestURL = config.youtubeAPI.baseURL + "/v" + config.youtubeAPI.version;
+        const youtubeConfig = config.music.youtubeAPI;
+        let requestURL = youtubeConfig.baseURL + "/v" + youtubeConfig.version;
         let error: boolean = false;
         if (!info.query) error = true;
         switch (info.type) {
             case "search":
-                requestURL += `/${config.youtubeAPI.endpoints.search}`;
+                requestURL += `/${youtubeConfig.endpoints.search}`;
                 requestURL += `?q=${info.query.replace(" ", "+")}`;
                 requestURL += `&key=${process.env.YOUTUBE_API_KEY}`;
                 break;
             case "playlist":
                 break;
             case "id":
-                requestURL += `/${config.youtubeAPI.endpoints.id}`;
+                requestURL += `/${youtubeConfig.endpoints.id}`;
                 requestURL += `?id=${info.query}`;
                 requestURL += `&key=${process.env.YOUTUBE_API_KEY}`;
                 break;
@@ -139,13 +140,17 @@ export const getYoutubeVideoByQuery = async (query: string): Promise<SongMetadat
     return await getYoutubeMetadataFromVideoId(videoId);
 }
 
-
-
 export const getYoutubeVideoByURL = async (url: string): Promise<SongMetadata> => {
     // Parse id
     const id: string | null = await getYouTubeID(url);
     if (!id) throw new Error("Invalid youtube url");
     return await getYoutubeMetadataFromVideoId(id);
+}
+
+export const getYoutubeSuggestionsForQuery = async (query: string): Promise<string[]> => {
+  let requestURL: string = config.music.youtubeAPI.suggestionsURL + `"` + query + `"`;
+  const res = await youtubeAPI.makeRequest(requestURL);
+  return res ? res.data[1] : [];
 }
 
 

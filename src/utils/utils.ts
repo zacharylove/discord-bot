@@ -1,6 +1,8 @@
 // General-purpose utility functions
 
 import { GatewayIntentBits } from "discord.js";
+// @ts-ignore
+import { default as config } from "../config/config.json" assert { type: "json" };
 
 export const toTitleCase = (text: string): string => {
     return text.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -118,4 +120,19 @@ export const secondsToTimestamp = async (seconds: number, markers?: boolean): Pr
     }
     s = Math.floor(s);
     return `${h > 0 ? `${leadingZeroes(h,2)}${markers ? "h " : ":"}` : ''}${m > 0 ? `${leadingZeroes(m,2)}${markers ? "m " : ":"}` : '00'}${leadingZeroes(s,2)}${markers ? "s" : ""}`;
+}
+
+export const confirmationMessage = (): string => {
+    const messages = config.responseMessages.confirmation;
+    return messages[Math.floor(Math.random() * messages.length)];
+}
+
+export const denialMessage = (): string => {
+    const messages = config.responseMessages.confirmation;
+    return messages[Math.floor(Math.random() * messages.length)];
+}
+
+export const invalidMessage = (): string => {
+    const messages = config.responseMessages.invalid;
+    return messages[Math.floor(Math.random() * messages.length)];
 }

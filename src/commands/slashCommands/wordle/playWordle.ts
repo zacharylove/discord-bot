@@ -3,7 +3,7 @@ import { CommandInterface, Feature } from '../../../interfaces/Command.js';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import * as fs from 'fs';
 import path from 'path'
-import { secondsToTimestamp } from '../../../utils/utils.js';
+import { confirmationMessage, secondsToTimestamp } from '../../../utils/utils.js';
 import { BOT } from '../../../index.js';
 import { addThread, removeThread } from '../../../database/internalData.js';
 
@@ -133,7 +133,7 @@ const createWordleGame = async (interaction: CommandInteraction, threadChannel: 
     // Listen for messages
     collector.on('collect', async (m: Message) => {
         if (m.content.toLowerCase() == "stop") {
-            await m.reply({ content: "Okay! Stopping the game." });
+            await m.reply({ content: `${confirmationMessage()} Stopping the game.` });
             endMessage = `The game was stopped by ${m.author.username}.`;
             collector.stop();
             return;

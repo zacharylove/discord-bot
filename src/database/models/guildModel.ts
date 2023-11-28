@@ -3,6 +3,7 @@ import { Document, model, Schema } from 'mongoose';
 import { CommandInterface } from "../../interfaces/Command.js";
 // @ts-ignore
 import { default as config } from "../../config/config.json" assert { type: "json" };
+const starboardConfig = config.starboard.config;
 
 export interface GuildDataInterface extends Document {
     _id: String;
@@ -129,9 +130,9 @@ export const createNewGuildData = async (guildID: string) => {
             starboardChannelId: "",
         },
         starboard: {
-            emoji: config.starboardConfig.defaultEmoji,
-            threshold: config.starboardConfig.defaultThreshold,
-            successEmoji: config.starboardConfig.defaultSuccessEmoji,
+            emoji: starboardConfig.defaultEmoji,
+            threshold: starboardConfig.defaultThreshold,
+            successEmoji: starboardConfig.defaultSuccessEmoji,
             leaderboard: new Array({
                 messageID: String,
                 channelID: String,
