@@ -37,3 +37,7 @@ Run `npm i` and then `npm run deploy`
 
 ## Docker
 I am using Github Actions to compile and publish a Docker container on every commit to the master branch, which can be pulled from `ghcr.io/zacharylove/discord-bot:master`. Make sure to define all of the values in `example.env` as environment variables in the container before running.
+
+
+## Attribution
+The music functionality is inspired by (and in most cases directly ripped from) [codetheweb/muse](https://github.com/codetheweb/muse)
