@@ -5,7 +5,7 @@ import { getYoutubeVideoByQuery, getYoutubeVideoByURL } from "../../api/youtubeA
 import { EmbedBuilder } from "@discordjs/builders";
 import { parseSpotifyURL } from "../../api/spotifyAPI.js";
 import ffmpeg from 'fluent-ffmpeg';
-import { secondsToTimestamp } from "../../utils/utils.js";
+import { confirmationMessage, secondsToTimestamp } from "../../utils/utils.js";
 
 // Queuer parses input queries and calls the corresponding player object
 export class Queuer {
@@ -146,15 +146,15 @@ export class Queuer {
         const queueLength = player.getQueue().length;
         if (songs.length === 1) {
             if (queueLength > 1) {
-                await interaction.editReply(`Okay, **${firstSong.title}** was added to the queue and will play after ${queueLength - player.getQueuePosition() - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
+                await interaction.editReply(`${confirmationMessage()} **${firstSong.title}** was added to the queue and will play after ${queueLength - player.getQueuePosition() - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
             } else {
-                await interaction.editReply(`Okay, **${firstSong.title}** is now playing${extraMsg}`);
+                await interaction.editReply(`${confirmationMessage()} **${firstSong.title}** is now playing${extraMsg}`);
             } 
         } else {
             if (queueLength > 1) {
-                await interaction.editReply(`Okay, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue and will play after ${queueLength - player.getQueuePosition() - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
+                await interaction.editReply(`${confirmationMessage()} **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue and will play after ${queueLength - player.getQueuePosition() - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
             } else {
-                await interaction.editReply(`Okay, **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue${extraMsg}`);
+                await interaction.editReply(`${confirmationMessage()} **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue${extraMsg}`);
             }
         }
 
@@ -217,7 +217,7 @@ export class Queuer {
             if (counter >= queuePosition) totalDuration += song.length;
             counter++;
         }
-        if (queue.length > 0 ) description += `${player.getStatus() == MusicStatus.PLAYING ? "Playing" : "Paused with"} ${queuePosition}/${queue.length} tracks with a remaining length of \`${await secondsToTimestamp(totalDuration - player.getPosition())}\`.\n`;
+        if (queue.length > 0 ) description += `${player.getStatus() == MusicStatus.PLAYING ? "Playing" : "Paused with"} ${queue.length > 1 ? `${queuePosition+1}/${queue.length}` : `${queuePosition+1}`} tracks with a remaining length of \`${await secondsToTimestamp(totalDuration - player.getPosition())}\`.\n`;
         else description += `There are no tracks queued. Use /play while in a voice channel to add something!\n`;
 
         embed.setTitle(title);

@@ -2,6 +2,7 @@ import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
 import { BOT } from "../../../index.js";
 import { GatewayIntentBits } from "discord-api-types/v9";
+import { confirmationMessage } from "../../../utils/utils.js";
 
 
 export const shuffleQueue: CommandInterface = {
@@ -18,7 +19,7 @@ export const shuffleQueue: CommandInterface = {
             return;
         }
         await player.shuffle();
-        await interaction.editReply(`Okay, shuffled ${numSongs} songs in the queue! Up next is **${player.getQueue()[1].title}**`);
+        await interaction.editReply(`${confirmationMessage()} shuffled ${numSongs} songs in the queue! Up next is **${player.getQueue()[1].title}**`);
     },
     properties: {
         Name: "shuffle",

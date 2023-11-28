@@ -104,5 +104,33 @@
             "Yoooooo!",
             "Damn."
         ]
+    },
+    "responseMessages": {
+        "confirmation": [
+            "Okay!",
+            "OK,",
+            "Okie-dokie!",
+            "Sure thing!",
+            "You got it!",
+            "You betcha,",
+            "10-4!",
+            "🫡",
+            "Gotcha,",
+            "Alrighty,"
+        ],
+        "denial": [
+            "Nope!",
+            "Sorry...",
+            "Not happening.",
+            "Yeah.... no.",
+            "Request denied."
+        ],
+        "invalid": [
+            "Invalid command!",
+            "That command isn't right...",
+            "Nope!",
+            "I don't understand...",
+            "Huh?"
+        ]
     }
 }

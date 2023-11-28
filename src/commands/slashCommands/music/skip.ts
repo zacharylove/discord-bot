@@ -2,6 +2,7 @@ import { GatewayIntentBits } from "discord-api-types/v9";
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BOT } from "../../../index.js";
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
+import { confirmationMessage } from "../../../utils/utils.js";
 
 
 export const skipSong: CommandInterface = {
@@ -24,7 +25,7 @@ export const skipSong: CommandInterface = {
         
         const success: boolean = await player.forward(numToSkip);
         if (!success) interaction.editReply(`Command failed! You can't skip more songs than there are in the queue!`);
-        else interaction.editReply(`Okay, skipped ${numToSkip} songs!`);
+        else interaction.editReply(`${confirmationMessage()} skipped ${numToSkip} songs!`);
     },
     properties: {
         Name: "skip",

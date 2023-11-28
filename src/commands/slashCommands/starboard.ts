@@ -4,7 +4,7 @@ import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel a
 import { hasPermissions } from "../../utils/userUtils.js";
 import { EmbedBuilder } from "@discordjs/builders";
 import { BOT } from "../../index.js";
-import { truncateString } from "../../utils/utils.js";
+import { confirmationMessage, truncateString } from "../../utils/utils.js";
 import { StarboardLeaderboard, StarboardPost } from "../../database/models/guildModel.js";
 import { commandNotImplemented } from "../../utils/commandUtils.js";
 
@@ -175,13 +175,13 @@ const blacklistChannels = async (interaction: CommandInteraction) => {
         collector.on('collect', async (reaction, user) => {
             if (user != interaction.user) return;
             if (reaction.emoji.name === '✅') {
-                await replyMessage.edit('Okay, starboard channel blacklist enabled.');
+                await replyMessage.edit('${confirmationMessage()} starboard channel blacklist enabled.');
                 await replyMessage.reactions.removeAll();
                 isBlacklistChanged = true;
                 await collector.stop();
                 return;
             } else {
-                await replyMessage.edit('Okay, starboard channel blacklist not enabled.');
+                await replyMessage.edit(`${confirmationMessage()} starboard channel blacklist not enabled.`);
                 await replyMessage.reactions.removeAll();
                 await collector.stop();
                 return;
@@ -217,7 +217,7 @@ const blacklistChannels = async (interaction: CommandInteraction) => {
                     removeChannels = true;
                     await collector.stop();
                 } else {
-                    await replyMessage.edit("Okay, mention all the channels you want to add to the blacklist and say 'DONE' when you're done.");
+                    await replyMessage.edit(`${confirmationMessage()} mention all the channels you want to add to the blacklist and say 'DONE' when you're done.`);
                     await replyMessage.reactions.removeAll();
                     await collector.stop();
                     return;
