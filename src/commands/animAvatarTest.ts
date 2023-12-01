@@ -4,8 +4,9 @@ import { getAvatarURL } from '../utils/userUtils.js';
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
 import { createCanvas, ImageData, loadImage } from 'canvas';
 import path from 'path';
-
-
+import {GIFEncoder} from "../utils/GIFEncoder/GIFEncoder.js";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 export const animAvatarTest: CommandInterface = {
     data: new SlashCommandBuilder()
@@ -36,8 +37,6 @@ export const animAvatarTest: CommandInterface = {
         let loadedFrames: ParsedFrame[];
         let needsDisposal: boolean = false;
         
-        // Encoder to build output gif
-        const GIFencoder = require('gif-encoder-2');
         
 
         // Fetch gif and split into array of all GIF image frames and metadata
@@ -66,13 +65,15 @@ export const animAvatarTest: CommandInterface = {
         const gifPatchCtx = gifPatchCanvas.getContext('2d');
 
         // Gif encoder
-        const encoder = new GIFencoder(canvasWidth, canvasHeight, "neuquant", true);
+        const encoder = new GIFEncoder(canvasWidth, canvasHeight, "neuquant", true);
         encoder.setThreshold(60);
         encoder.setDelay(firstFrame.delay);
         encoder.start();
 
         // Load overlay
-        const overlay = await loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'beautiful.png'));
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const overlay = await loadImage(path.join(__dirname, '..', '..', '..', 'assets', 'img', 'beautiful.png'));
 
         // Render gif
         renderGif(loadedFrames);

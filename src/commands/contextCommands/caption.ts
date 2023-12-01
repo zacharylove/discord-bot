@@ -1,5 +1,4 @@
 // Command to add text to GIFs
-// TODO: Also make context menu command
 
 import { ActionRowBuilder, ContextMenuCommandBuilder, ModalActionRowComponentBuilder } from "@discordjs/builders";
 import { ApplicationCommandType, CommandInteraction, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
@@ -7,6 +6,10 @@ import { CommandInterface } from "../../interfaces/Command.js";
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
 import { createCanvas, ImageData, loadImage, registerFont } from 'canvas';
 import { renderFrame } from "../../utils/imageUtils.js";
+import {GIFEncoder} from "../../utils/GIFEncoder/GIFEncoder.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 let topText: string = "";
 let bottomText: string = "";
@@ -16,7 +19,9 @@ const addTextCaption = (outputCtx?: any, width?: number, height?: number) => {
     if (!outputCtx || !width || !height) return;
     const fontSize = height > 250 ? height * 0.15 :  height * 0.2;
     // Register impact font
-    registerFont(require("@canvas-fonts/impact"), { family: "Impact" });
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    registerFont(path.join(__dirname, '..', '..', '..', 'assets', 'font', 'Impact.ttf'), { family: "Impact" });
     outputCtx.font = `bold ${fontSize}px Impact`;
     outputCtx.fillStyle = "#ffffff";
     outputCtx.lineWidth = 2;
@@ -35,9 +40,7 @@ const editGIF = async (imageURL: string, overlayFn: () => void): Promise<Buffer>
     let frameIndex: number = 0;
     let loadedFrames: ParsedFrame[];
     let needsDisposal: boolean = false;
-    
-    // Encoder to build output gif
-    const GIFencoder = require('gif-encoder-2');
+
 
     // Fetch gif and split into array of all GIF image frames and metadata
     loadedFrames = await fetch(imageURL)
@@ -65,7 +68,7 @@ const editGIF = async (imageURL: string, overlayFn: () => void): Promise<Buffer>
     const gifPatchCtx = gifPatchCanvas.getContext('2d');
 
     // Gif encoder
-    const encoder = new GIFencoder(canvasWidth, canvasHeight, "octree", true);
+    const encoder = new GIFEncoder(canvasWidth, canvasHeight, "octree", true);
     encoder.setThreshold(60);
     encoder.setDelay(firstFrame.delay);
     encoder.start();

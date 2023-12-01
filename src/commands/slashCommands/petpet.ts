@@ -1,10 +1,14 @@
 // Based on https://github.com/aDu/pet-pet-gif
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { CommandInterface } from "../../interfaces/Command.js";
 import { broadcastCommandFailed } from "../../utils/commandUtils.js";
 import { createCanvas, loadImage } from "canvas";
 import path from 'path';
 import { getAvatarURL } from "../../utils/userUtils.js";
+import {GIFEncoder} from "../../utils/GIFEncoder/GIFEncoder.js";
+
 
 const gifOptions = {
     resolution: 128,
@@ -14,14 +18,17 @@ const gifOptions = {
 }
 
 const createPetPetGif = async (targetURL: string, handedness: string) => {
+        
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
     
     
     // Encoder to build output gif
-    const GIFencoder = require('gif-encoder-2');
 
 
 
-    const encoder = new GIFencoder(gifOptions.resolution, gifOptions.resolution);
+
+    const encoder = new GIFEncoder(gifOptions.resolution, gifOptions.resolution);
     encoder.start();
     encoder.setRepeat(0);
     encoder.setDelay(gifOptions.delay);
@@ -48,7 +55,7 @@ const createPetPetGif = async (targetURL: string, handedness: string) => {
         const offsetX = (1 - width) * 0.5 + 0.1
         const offsetY = (1 - height) - 0.08
 
-        if (i == petGifCache.length) petGifCache.push(await loadImage(path.resolve(path.join(__dirname, '..', '..', 'assets', 'img', 'petpet', `pet${i}.gif`))));
+        if (i == petGifCache.length) petGifCache.push(await loadImage(path.resolve(path.join(__dirname, '..', '..', '..', 'assets', 'img', 'petpet', `pet${i}.gif`))));
         const righthanded: boolean = handedness == 'right';
         ctx.drawImage(avatar, righthanded ? 0 : gifOptions.resolution * offsetX, gifOptions.resolution * offsetY, gifOptions.resolution * width, gifOptions.resolution * height)
         ctx.scale(righthanded ? -1 : 1, 1);

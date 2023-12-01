@@ -12,7 +12,6 @@
   "author": "inco",
   "license": "ISC",
   "dependencies": {
-    "@canvas-fonts/impact": "^1.0.4",
     "@discordjs/builders": "^1.6.5",
     "@discordjs/opus": "^0.9.0",
     "@discordjs/rest": "^2.2.0",
@@ -40,7 +39,6 @@
     "@types/node": "^20.8.10",
     "@types/spotify-web-api-node": "^5.0.9",
     "fluent-ffmpeg": "^2.1.2",
-    "gif-encoder-2": "^1.0.5",
     "spotify-web-api-node": "^5.0.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2"
