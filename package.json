@@ -15,10 +15,10 @@
     "@discordjs/builders": "^1.6.5",
     "@discordjs/opus": "^0.9.0",
     "@discordjs/rest": "^2.2.0",
-    "@discordjs/voice": "^0.16.0",
+    "@discordjs/voice": "^0.16.1",
     "axios": "^1.6.2",
     "canvas": "^2.11.2",
-    "discord-api-types": "^0.37.64",
+    "discord-api-types": "^0.37.65",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.2.0",
@@ -36,12 +36,12 @@
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.24",
-    "@types/node": "^20.8.10",
-    "@types/spotify-web-api-node": "^5.0.9",
+    "@types/node": "^20.10.0",
+    "@types/spotify-web-api-node": "^5.0.11",
     "fluent-ffmpeg": "^2.1.2",
     "spotify-web-api-node": "^5.0.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.2"
   },
   "_moduleAliases": {
     "@modules": "prod/modules",
