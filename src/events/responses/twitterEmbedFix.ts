@@ -49,8 +49,8 @@ export const twitterEmbedFix = async (message: Message, postURLs: string[]) => {
     // Just gonna replace it without consent :/
 
     let responseMessage = "";
-    if (xPostUrls.length > 1) responseMessage += `\nDetected ${xPostUrls.length} Twitter/X URLs, which do not embed properly on Discord. Let me fix that for you: `;
-    else responseMessage += `\nDetected a Twitter/X URL, which does not embed properly on Discord. Let me fix that for you: `;
+    if (xPostUrls.length > 1) responseMessage += `\nDetected ${xPostUrls.length} Twitter/X URLs. Fixed embed: `;
+    else responseMessage += `\nDetected a Twitter/X URL. Fixed embed: `;
     // If there are multiple posts, we will make a new reply for every post after the first, allowing all of them to embed.
     responseMessage += `${reformatXUrl(xPostUrls.shift()!)}`
     responseMessage += `\n*This feature can be disabled by an administrator using \`/settings feature disable twitterEmbedFix\`*`;
