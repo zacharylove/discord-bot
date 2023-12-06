@@ -99,6 +99,7 @@ export enum CommandStatus {
     DisabledInGuild, // Command is disabled in guild
     DisabledGlobally, // Command is globally disabled
     CriticallyFailed, // Something went VERY wrong!
+    NoResults, // No results for a query
 
 }
 
@@ -106,7 +107,9 @@ export interface commandStatusInfo {
     reason?: string[] | string, 
     command?: CommandInterface, 
     error?: any, 
-    apiName?: string
+    apiName?: string,
+    // If for a search
+    query?: string
 }
 
 export const broadcastCommandStatus = async (interaction: CommandInteraction | ChatInputCommandInteraction, status: CommandStatus, 
@@ -182,6 +185,9 @@ export const broadcastCommandStatus = async (interaction: CommandInteraction | C
         case CommandStatus.CriticallyFailed:
             errorMessage += `**Critical failure in ${commandName}!**`
             invalid = true;
+            break;
+        case CommandStatus.NoResults:
+            errorMessage += `No results found${info.query? ` for query ${info.query}` : ""}.`;
             break;
     }
 

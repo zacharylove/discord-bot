@@ -5,6 +5,9 @@ import {toSeconds, parse} from 'iso8601-duration';
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import axios, { AxiosResponse } from "axios";
+import { CommandStatus, broadcastCommandStatus, commandStatusInfo } from "../utils/commandUtils.js";
+import { ChatInputCommandInteraction } from "discord.js";
+import { playSong } from "../commands/slashCommands/music/play.js";
 /*
     Dependencies:
      - get-youtube-id: gets a youtube id from a url
@@ -160,14 +163,18 @@ export const getYoutubeSuggestionsForQuery = async (query: string): Promise<stri
    - Convert spotify url to youtube url
 */
 
-export const searchYoutube = async (query: string, shouldSplitChapters: boolean, singleResult: boolean): Promise<SongMetadata[]> => {
+export const searchYoutube = async (query: string, shouldSplitChapters: boolean, singleResult: boolean, interaction: ChatInputCommandInteraction): Promise<SongMetadata[] | null> => {
     const request: youtubeRequestInfo = {
         query: query,
         type: "search",
         maxResults: 5,
     };
     const res = await youtubeAPI.makeRequest(youtubeAPI.formRequestURL(request));
-    if (!res) throw new Error("Invalid youtube url");
+    if (!res) {
+      await broadcastCommandStatus(interaction, CommandStatus.BadAPIResponse, 
+        {command: playSong, reason: "No response from API", apiName: "YouTube"});
+      return null;
+    }
     const videos = res.data.items;
     const metadata: SongMetadata[] = [];
 

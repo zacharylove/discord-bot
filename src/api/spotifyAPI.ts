@@ -6,6 +6,7 @@ import SpotifyWebApi from 'spotify-web-api-node';
 import { QueuedPlaylist, SongMetadata } from '../utils/music/player.js';
 import { shuffleArray } from '../utils/utils.js';
 import { searchYoutube } from './youtubeAPI.js';
+import { ChatInputCommandInteraction } from 'discord.js';
 
 /*
 Dependencies:
@@ -74,7 +75,7 @@ const getSpotifyArtist = async (url: string, spotifyAPI: SpotifyWebApi, playlist
     return limitTracks(body.tracks, playlistLimit ? playlistLimit : -1).map(toSpotifyTrack);
 }
 
-export const parseSpotifyURL = async (url: string, playlistLimit?: number): Promise<[SongMetadata[], number, number]> => {
+export const parseSpotifyURL = async (url: string, interaction: ChatInputCommandInteraction, playlistLimit?: number): Promise<[SongMetadata[], number, number]> => {
     const parsed = parse(url);
     const spotifyAPI: SpotifyWebApi = BOT.getSpotifyAPI();
 
@@ -84,20 +85,20 @@ export const parseSpotifyURL = async (url: string, playlistLimit?: number): Prom
     switch (parsed.type) {
         case 'album':
             [tracks, playlist] = await getSpotifyAlbum(url, spotifyAPI, playlistLimit);
-            return spotifyToYoutube(tracks, playlist);
+            return spotifyToYoutube(tracks, interaction, playlist);
 
         case 'playlist':
             [tracks, playlist] = await getSpotifyPlaylist(url, spotifyAPI, playlistLimit);
-            return spotifyToYoutube(tracks, playlist);
+            return spotifyToYoutube(tracks, interaction, playlist);
 
         case 'track':
             let track = await getSpotifyTrack(url, spotifyAPI);
-            return spotifyToYoutube([track]);
+            return spotifyToYoutube([track], interaction);
             
 
         case 'artist':
             tracks = await getSpotifyArtist(url, spotifyAPI, playlistLimit);
-            return spotifyToYoutube(tracks);
+            return spotifyToYoutube(tracks, interaction);
 
         default: {
             return [[],0,0];
@@ -105,14 +106,15 @@ export const parseSpotifyURL = async (url: string, playlistLimit?: number): Prom
     }
 }
 
-const spotifyToYoutube = async (tracks: SpotifyTrack[], playlist? :QueuedPlaylist | undefined): Promise<[SongMetadata[], number, number]> => {
-    const promisedResults = tracks.map(async track => searchYoutube(`"${track.name}" "${track.artist}"`, false, tracks.length === 1));
+const spotifyToYoutube = async (tracks: SpotifyTrack[], interaction: ChatInputCommandInteraction, playlist? :QueuedPlaylist | undefined): Promise<[SongMetadata[], number, number]> => {
+    const promisedResults = tracks.map(async track => searchYoutube(`"${track.name}" "${track.artist}"`, false, tracks.length === 1, interaction));
     const searchResults = await Promise.allSettled(promisedResults);
+    if (searchResults == null || promisedResults == null) return [[],-1,-1];
 
     let numSongsNotFound = 0;
     let songs: SongMetadata[] = searchResults.reduce((accum: SongMetadata[], result) => {
         if (result.status === 'fulfilled') {
-          for (const v of result.value) {
+          for (const v of result.value!) {
             accum.push({
               ...v,
               ...(playlist ? {playlist} : {}),

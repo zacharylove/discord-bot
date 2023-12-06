@@ -6,6 +6,8 @@ import { EmbedBuilder } from "@discordjs/builders";
 import { parseSpotifyURL } from "../../api/spotifyAPI.js";
 import ffmpeg from 'fluent-ffmpeg';
 import { confirmationMessage, secondsToTimestamp } from "../../utils/utils.js";
+import { CommandStatus, broadcastCommandStatus } from "../commandUtils.js";
+import { playSong } from "../../commands/slashCommands/music/play.js";
 
 // Queuer parses input queries and calls the corresponding player object
 export class Queuer {
@@ -15,12 +17,16 @@ export class Queuer {
     // Max limit for number of songs in a playlist to parse
     private playlistLimit: number = 100;
 
-    private parseQuery = async (query: string): Promise<[SongMetadata[], string]> => {
+    private parseQuery = async (query: string, interaction: ChatInputCommandInteraction): Promise<[SongMetadata[], string]> => {
         let newSongs: SongMetadata[] = [];
         let extraMsg = '';
-        try {
-            
-            const url = new URL(query);
+        testUrl: try {
+            let url;
+            try { 
+                url = new URL(query);
+            } catch {
+                break testUrl;
+            }
 
             // === YouTube ===
             const YOUTUBE_HOSTS = [
@@ -43,7 +49,7 @@ export class Queuer {
             
             // === Spotify ===
             else if (url.protocol === 'spotify:' || url.host === 'open.spotify.com') {
-                const [convertedSongs, nSongsNotFound, totalSongs] = await parseSpotifyURL(query, this.playlistLimit);
+                const [convertedSongs, nSongsNotFound, totalSongs] = await parseSpotifyURL(query, interaction, this.playlistLimit);
                 if (totalSongs > this.playlistLimit) {
                     extraMsg = `a random sample of ${this.playlistLimit} songs was taken`;
                 }
@@ -78,7 +84,10 @@ export class Queuer {
               throw new Error('that doesn\'t exist');
             }
         }
-        if (newSongs.length === 0) throw new Error('no songs found');
+        if (newSongs.length === 0) {
+            await broadcastCommandStatus(interaction, CommandStatus.NoResults, {command: playSong, query: query, reason: "No songs found."});
+            return [[], ""];
+        }
         // TODO: shuffle support
         return [newSongs, extraMsg];
     }
@@ -99,9 +108,10 @@ export class Queuer {
         //const {playlistLimit} = settings;
         
         let extraMsg: string = '';
-        let results: [SongMetadata[], string] = await this.parseQuery(query);
+        let results: [SongMetadata[], string] = await this.parseQuery(query, interaction);
         const songs = results[0];
         extraMsg = results[1];
+        if (songs.length == 0) return;
         songs.forEach(song => {
             player.add({
                 ...song,
