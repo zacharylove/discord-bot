@@ -1,7 +1,7 @@
 import { CommandList } from '../commands/_CommandList.js';
 import { Interaction } from 'discord.js';
 import { EventInterface } from '../interfaces/Event.js';
-import { broadcastCommandFailed, isCommandDisabled, isCommandEnabled } from '../utils/commandUtils.js';
+import { CommandStatus, broadcastCommandStatus, isCommandDisabled, isCommandEnabled } from '../utils/commandUtils.js';
 import { hasPermissions } from '../utils/userUtils.js';
 import { CommandInterface } from '../interfaces/Command.js';
 
@@ -30,7 +30,7 @@ export const onInteraction : EventInterface = {
                 const Command = getCommandByName(interaction.commandName);
                 if (!Command) {
                     console.error("Command failed!");
-                    await broadcastCommandFailed(interaction, errorList);
+                    await broadcastCommandStatus(interaction, CommandStatus.Failed, {reason: "Command does not match any registered command names", error: errorList});
                     return;
                 }
                 // Defer reply according to properties
@@ -93,8 +93,7 @@ export const onInteraction : EventInterface = {
 
                 console.error(" === Command " + Command.data.name + " failed onInteraction validation- logging error! ===");
             } catch(e) {
-                console.error(`Error running command: ${e}`);
-                await broadcastCommandFailed(interaction, "An error occurred while running this command.", undefined, e);
+                await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {reason: "Low-level error occurred"});
             }
         }
         else if (interaction.isAutocomplete()) {

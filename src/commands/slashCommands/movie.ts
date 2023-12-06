@@ -1,6 +1,6 @@
 import { CommandInterface } from "../../interfaces/Command.js";
 import { ButtonStyle, Message, SlashCommandBuilder, User } from "discord.js";
-import { broadcastCommandFailed } from "../../utils/commandUtils.js";
+import { CommandStatus, broadcastCommandStatus } from "../../utils/commandUtils.js";
 import { TMDBAPI, getMovie, getMovieDetails, getMovieProviders, tmdbDetailType, tmdbResponseType, tmdbResultType } from "../../api/tmdbAPI.js";
 import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
 
@@ -283,7 +283,7 @@ export const movie: CommandInterface = {
         ,
     run: async (interaction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
-            await broadcastCommandFailed(interaction, "Interaction is NOT poggers!");
+            await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {command: movie, reason: "Invalid interaction!"});
             return;
         }
         const query = interaction.options.getString('query');

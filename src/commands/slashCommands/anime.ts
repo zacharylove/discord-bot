@@ -1,6 +1,6 @@
 import { CommandInterface } from "../../interfaces/Command.js";
 import { Message, SlashCommandBuilder } from "discord.js";
-import { broadcastCommandFailed } from "../../utils/commandUtils.js";
+import { CommandStatus, broadcastCommandStatus } from "../../utils/commandUtils.js";
 import { EmbedBuilder } from "@discordjs/builders";
 import { getAnime } from "../../api/jikanAPI.js";
 
@@ -123,7 +123,7 @@ export const anime: CommandInterface = {
         ,
     run: async (interaction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
-            await broadcastCommandFailed(interaction, "Interaction is NOT poggers!");
+            await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {command: anime, reason: "Invalid interaction!"});
             return;
         }
         const query = interaction.options.getString('query');

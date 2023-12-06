@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { CommandInterface } from "../../interfaces/Command.js";
-import { broadcastCommandFailed } from "../../utils/commandUtils.js";
+import { CommandStatus, broadcastCommandStatus } from "../../utils/commandUtils.js";
 import { createCanvas, loadImage } from "canvas";
 import path from 'path';
 import { getAvatarURL } from "../../utils/userUtils.js";
@@ -95,7 +95,7 @@ export const petPet: CommandInterface = {
         ),
     run: async (interaction: CommandInteraction) => {
         if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
-            await broadcastCommandFailed(interaction, "Interaction is NOT poggers!");
+            await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {command: petPet, reason: "Invalid interaction!"});
             return;
         }
 

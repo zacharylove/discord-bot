@@ -4,11 +4,11 @@ import { CommandInteraction, EmbedBuilder, PermissionsBitField, SlashCommandBuil
 import { CommandInterface, Feature } from '../../interfaces/Command.js';
 import { getGuildDataByGuildID, update } from '../../database/guildData.js';
 import { hasPermissions } from '../../utils/userUtils.js';
-import { broadcastCommandFailed } from '../../utils/commandUtils.js';
+import { CommandStatus, broadcastCommandStatus } from '../../utils/commandUtils.js';
 
 const createNewConfession = async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
-        await broadcastCommandFailed(interaction, "Interaction is NOT poggers!");
+        await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {command: confess, reason: "Invalid interaction!"});
         return;
     }
 
@@ -83,7 +83,7 @@ const createNewConfession = async (interaction: CommandInteraction) => {
 
 const setConfessionChannel = async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel || !interaction.member) {
-        await broadcastCommandFailed(interaction, "Interaction is NOT poggers!");
+        await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {command: confess, reason: "Invalid interaction!"});
         return;
     }
     // Must be a mod
