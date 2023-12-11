@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.24",
-    "@types/node": "^20.10.0",
+    "@types/node": "^20.10.4",
     "@types/spotify-web-api-node": "^5.0.11",
     "fluent-ffmpeg": "^2.1.2",
     "spotify-web-api-node": "^5.0.2",
