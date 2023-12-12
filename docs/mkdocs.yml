@@ -1,0 +1,7 @@
+site_name: Cinnamon Documentation
+site_url: https://cinnamon.inco.ooo/docs
+nav:
+  - Home: index.md
+  - Feature List: features.md
+  - Command List: commands.md
+theme: readthedocs

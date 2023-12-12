@@ -1,10 +1,19 @@
-# Use LTS version of Node 18
-FROM node:18
+FROM ubuntu:20.04
 
 # Install Ffmpeg
 RUN apt-get update && \
     apt-get install -y ffmpeg tini libssl-dev ca-certificates git && \
     rm -rf /var/lib/apt/lists/*
+
+# Install Python
+RUN apt-get update && apt-get install -y python3.9 python3.9-dev
+
+# Install Node.js
+RUN curl --silent --location https://deb.nodesource.com/setup_4.x |  bash -
+RUN apt-get install -y apt-transport-https --yes node
+RUN apt-get install --yes build-essential
+COPY . /var/www/
+
 
 # Create working directory to hold the application code inside the image 
 WORKDIR /usr/src/app
