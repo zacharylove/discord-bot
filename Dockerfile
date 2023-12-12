@@ -18,6 +18,11 @@ COPY . /var/www/
 # Create working directory to hold the application code inside the image 
 WORKDIR /usr/src/app
 
+# Install Python dependencies
+RUN cd docs
+RUN python3 -m pip install mkdocs
+RUN cd ../
+
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
