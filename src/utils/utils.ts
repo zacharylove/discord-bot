@@ -64,6 +64,14 @@ export const validImageURL = (str: string): boolean => {
     const imageURLPattern = new RegExp("(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)");
     return imageURLPattern.test(str);
 }
+/**
+ * Returns true if the string matches a valid image URL pattern, false otherwise
+ * @param str 
+ */
+export const validVideoURL = (str: string): boolean => {
+    const imageURLPattern = new RegExp("(http(s?):)([/|.|\w|\s|-])*\.(?:mp4|webm)\??.*$");
+    return imageURLPattern.test(str);
+}
 
 /**
  * Truncates a string to a specified length, adding an ellipsis if the string is longer than the specified length

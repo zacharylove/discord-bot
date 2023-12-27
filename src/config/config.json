@@ -48,6 +48,14 @@
             "cdnURL": "https://cdn.discordapp.com"
         }
     },
+    "vxtwitter": {
+        "API": {
+            "baseURL": "https://api.vxtwitter.com/",
+            "endpoints": {
+                "status": "status"
+            }
+        }
+    },
 
     "music": {
         "youtubeAPI": {
