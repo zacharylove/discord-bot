@@ -1,4 +1,4 @@
-import { MediaSource, SongMetadata } from "../utils/music/player.js";
+import { MediaSource, QueuedPlaylist, SongMetadata } from "../utils/music/player.js";
 import getYouTubeID from 'get-youtube-id';
 import { RequestInterface } from "../interfaces/RequestInterface.js";
 import {toSeconds, parse} from 'iso8601-duration';
@@ -57,7 +57,7 @@ interface PlaylistItem {
 
 export interface youtubeRequestInfo {
     query: string,
-    type: "search" | "playlist" | "id",
+    type: "search" | "playlist" | "playlistItems" | "id",
     maxResults?: number,
     // Part is only used for id
     part?: string,
@@ -81,6 +81,14 @@ export const youtubeAPI: RequestInterface = {
                 requestURL += `&key=${process.env.YOUTUBE_API_KEY}`;
                 break;
             case "playlist":
+                requestURL += `/${youtubeConfig.endpoints.playlist}`;
+                requestURL += `?key=${process.env.YOUTUBE_API_KEY}`;
+                requestURL += `&id=${info.query}`
+                break;
+            case "playlistItems":
+                requestURL += `/${youtubeConfig.endpoints.playlistItems}`;
+                requestURL += `?key=${process.env.YOUTUBE_API_KEY}`;
+                requestURL += `&playlistId=${info.query}`
                 break;
             case "id":
                 requestURL += `/${youtubeConfig.endpoints.id}`;
@@ -148,6 +156,44 @@ export const getYoutubeVideoByURL = async (url: string): Promise<SongMetadata> =
     const id: string | null = await getYouTubeID(url);
     if (!id) throw new Error("Invalid youtube url");
     return await getYoutubeMetadataFromVideoId(id);
+}
+
+export const getYoutubePlaylistById = async (playlistId: string, limit: number): Promise<{songs: SongMetadata[], playlistMetadata: QueuedPlaylist}> => {
+  const infoRequest: youtubeRequestInfo = {
+    query: playlistId,
+    type: "playlist",
+    maxResults: 50,
+    part: "id,snippet,contentDetails"
+  }
+  // Get playlist information
+  const infoRes = await youtubeAPI.makeRequest(youtubeAPI.formRequestURL(infoRequest));
+  if (!infoRes) throw new Error("Invalid youtube playlist url");
+
+  const playlistMetadata: QueuedPlaylist = {
+    title: infoRes.data.items[0].snippet.title,
+    source: "Youtube",
+    url: `https://www.youtube.com/playlist?list=${infoRes.data.items[0].id}`
+  };
+
+  // Get playlist items
+  const playlistRequest: youtubeRequestInfo = {
+    query: playlistId,
+    type: "playlistItems",
+    maxResults: limit,
+    part: "contentDetails"
+  }
+  const playlistRes = await youtubeAPI.makeRequest(youtubeAPI.formRequestURL(playlistRequest));
+  if (!playlistRes) throw new Error("Invalid youtube playlist url");
+  const items = playlistRes.data.items;
+  let videoId = "";
+  const songs: SongMetadata[] = [];
+  for ( const playlistItem of items ) {
+      videoId = playlistItem.contentDetails.videoId;
+      let song = await getYoutubeMetadataFromVideoId(videoId);
+      song.playlist = playlistMetadata;
+      songs.push(song);
+  }
+  return {songs: songs, playlistMetadata: playlistMetadata};
 }
 
 export const getYoutubeSuggestionsForQuery = async (query: string): Promise<string[]> => {

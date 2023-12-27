@@ -63,9 +63,12 @@
             "version": "3",
             "endpoints": {
                 "search": "search",
-                "id": "videos"
+                "id": "videos",
+                "playlist": "playlists",
+                "playlistItems": "playlistItems"
             },
-            "suggestionsURL": "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q="
+            "suggestionsURL": "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=",
+            "playlistLimit": 100
         },
         "commands": [
             "playSong", "skipSong", "stopSong", "queue", "shuffleQueue", "clearQueue", "nowPlaying", "pause", "resume"

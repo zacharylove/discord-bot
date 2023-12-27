@@ -46,6 +46,7 @@ type YTDLVideoFormat = videoFormat & {loudnessDb?: number};
 export interface QueuedPlaylist {
     title: string;
     source: string;
+    url?: string;
 }
 export enum MediaSource {
     Youtube,
@@ -98,7 +99,7 @@ export default class Player {
     // Skip Backward
     goBackward(num: number): boolean {
         // If we can go backward
-        if ((this.queuePosition - num -1) > 0) {
+        if ((this.queuePosition - num) > 0) {
             this.queuePosition -= num;
             this.positionInSeconds = 0;
             this.stopTrackingPosition();

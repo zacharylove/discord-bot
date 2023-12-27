@@ -1,21 +1,22 @@
 import { ChatInputCommandInteraction, GuildMember } from "discord.js";
-import Player, { MusicStatus, QueuedSong, SongMetadata, MediaSource } from "./player.js";
+import Player, { MusicStatus, QueuedSong, SongMetadata, MediaSource, QueuedPlaylist } from "./player.js";
 import { getMemberVoiceChannel, getMostPopularVoiceChannel } from "../../utils/voiceChannelUtils.js";
-import { getYoutubeVideoByQuery, getYoutubeVideoByURL } from "../../api/youtubeAPI.js";
+import { getYoutubePlaylistById, getYoutubeVideoByQuery, getYoutubeVideoByURL } from "../../api/youtubeAPI.js";
 import { EmbedBuilder } from "@discordjs/builders";
 import { parseSpotifyURL } from "../../api/spotifyAPI.js";
 import ffmpeg from 'fluent-ffmpeg';
 import { confirmationMessage, secondsToTimestamp } from "../../utils/utils.js";
 import { CommandStatus, broadcastCommandStatus } from "../commandUtils.js";
 import { playSong } from "../../commands/slashCommands/music/play.js";
-
+// @ts-ignore
+import { default as config } from "../../config/config.json" assert { type: "json" };
 // Queuer parses input queries and calls the corresponding player object
 export class Queuer {
 
     constructor(private readonly guildQueueManager: guildQueueManager) {}
 
     // Max limit for number of songs in a playlist to parse
-    private playlistLimit: number = 100;
+    private playlistLimit: number = config.music.youtubeAPI.playlistLimit;
 
     private parseQuery = async (query: string, interaction: ChatInputCommandInteraction): Promise<[SongMetadata[], string]> => {
         let newSongs: SongMetadata[] = [];
@@ -41,7 +42,12 @@ export class Queuer {
             if (YOUTUBE_HOSTS.includes(url.host)) {
                 if (url.searchParams.get('list')) {
                     // YouTube playlist
-                    // TODO: playlist support
+                    const response = await getYoutubePlaylistById(url.searchParams.get('list')!, this.playlistLimit);
+                    if (response.songs) {
+                        if (response.songs.length > this.playlistLimit) extraMsg += `a sample of ${this.playlistLimit} songs was taken`;
+                        newSongs.push(...response.songs);
+                    }
+                    else throw new Error("Invalid youtube playlist url");
                 } else {
                     const songs = await getYoutubeVideoByURL(url.href);
                     if (songs) newSongs.push(songs);
@@ -117,6 +123,9 @@ export class Queuer {
         const songs = results[0];
         extraMsg = results[1];
         if (songs.length == 0) return;
+        let isPlaylist: boolean = songs[0].playlist != null;
+        const playlistInfo = songs[0].playlist;
+        const numSongsBeforePlay = player.getQueue().length - player.getQueuePosition();
         songs.forEach(song => {
             player.add({
                 ...song,
@@ -159,19 +168,27 @@ export class Queuer {
             extraMsg = ` (${extraMsg})`;
         }
         const queueLength = player.getQueue().length;
+        let replyMessage = "";
         if (songs.length === 1) {
+            replyMessage = `${confirmationMessage()} **${firstSong.title}** `;
             if (queueLength > 1) {
-                await interaction.editReply(`${confirmationMessage()} **${firstSong.title}** was added to the queue and will play after ${queueLength - player.getQueuePosition() - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
+                replyMessage += `was added to the queue and will play after ${numSongsBeforePlay} song${numSongsBeforePlay > 1 ? 's': ''}${extraMsg}`;
             } else {
-                await interaction.editReply(`${confirmationMessage()} **${firstSong.title}** is now playing${extraMsg}`);
+                replyMessage += ` is now playing${extraMsg}`;
             } 
         } else {
-            if (queueLength > 1) {
-                await interaction.editReply(`${confirmationMessage()} **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue and will play after ${queueLength - player.getQueuePosition() - 1} song${queueLength > 1 ? 's': ''}${extraMsg}`);
+            if (isPlaylist && playlistInfo) {
+                replyMessage = `${confirmationMessage()} ${songs.length - 1} songs from the playlist [${playlistInfo.title}](${playlistInfo.url}) have been added to the queue`;
             } else {
-                await interaction.editReply(`${confirmationMessage()} **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue${extraMsg}`);
+                replyMessage = `${confirmationMessage()} **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue`;
+            }
+            if (numSongsBeforePlay > 1) {
+                replyMessage += ` and will play after ${numSongsBeforePlay} song${numSongsBeforePlay > 1 ? 's': ''}${extraMsg}`;
+            } else {
+                replyMessage += `${extraMsg}`;
             }
         }
+        await interaction.editReply(replyMessage);
 
         
     }
