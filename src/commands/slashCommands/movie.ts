@@ -3,6 +3,8 @@ import { ButtonStyle, Message, SlashCommandBuilder, User } from "discord.js";
 import { CommandStatus, broadcastCommandStatus } from "../../utils/commandUtils.js";
 import { TMDBAPI, getMovie, getMovieDetails, getMovieProviders, tmdbDetailType, tmdbResponseType, tmdbResultType } from "../../api/tmdbAPI.js";
 import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
+// @ts-ignore
+import { default as config } from "../../config/config.json" assert { type: "json" };
 
 const createEmbed = async (interaction: Message<boolean>, movie: tmdbResultType): Promise<Message<boolean>> => {
     const embed = new EmbedBuilder();
@@ -53,8 +55,26 @@ const createEmbed = async (interaction: Message<boolean>, movie: tmdbResultType)
             .setLabel("IMDb")
             .setStyle(ButtonStyle.Link)
             .setURL(`https://www.imdb.com/title/${details.imdb_id}`);
+        if (config.movie.emojiIds.IMDb) {
+            imdbButton.setEmoji({
+                name: "IMDb",
+                id: config.movie.emojiIds.IMDb
+            });
+        }
         row.addComponents(imdbButton);
     }
+    const moviedbButton = new ButtonBuilder()
+        .setLabel("TMDb")
+        .setStyle(ButtonStyle.Link)
+        .setURL(`https://www.themoviedb.org/movie/${topResult.id}`);
+    if (config.movie.emojiIds.TMDb) {
+        moviedbButton.setEmoji({
+            name: "TMDb",
+            id: config.movie.emojiIds.TMDb
+        });
+    }
+    row.addComponents(moviedbButton);
+
     if (details.homepage) {
         const homepageButton = new ButtonBuilder()
             .setLabel("Homepage")
@@ -62,11 +82,6 @@ const createEmbed = async (interaction: Message<boolean>, movie: tmdbResultType)
             .setURL(details.homepage);
         row.addComponents(homepageButton);
     }
-    const moviedbButton = new ButtonBuilder()
-        .setLabel("TMDb")
-        .setStyle(ButtonStyle.Link)
-        .setURL(`https://www.themoviedb.org/movie/${topResult.id}`);
-    row.addComponents(moviedbButton);
 
     const incorrectButton = new ButtonBuilder()
         .setCustomId("incorrect")
@@ -239,7 +254,7 @@ const sendEmbedAndCollectResponse = async (interaction: Message<boolean>, movie:
             }
 
             const followUpMessage: Message<boolean> = await buttonResponse.followUp({ content: followUpString, components: [], ephemeral: true });
-            
+            if (results.results.length == 1) return null;
             // Collect chat responses
             const messageCollectorFilter = (m: Message<boolean>) => m.author.id === author.id;
             followUpMessage.channel.awaitMessages({ filter: messageCollectorFilter, max: 1, time: 30000, errors: ['time'] }).then(async collected => {

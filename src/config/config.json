@@ -84,6 +84,10 @@
                 "genre": "genre/movie/list",
                 "movie": "movie"
             }
+        },
+        "emojiIds": {
+            "IMDb": "1189657838881083403",
+            "TMDb": "1189665917408391248"
         }
     },
 
@@ -94,6 +98,10 @@
             "endpoints": {
                 "anime": "anime"
             }
+        },
+        "emojiIds": {
+            "MyAnimeList": "1189657752792998018",
+            "YouTube": "1189659331453526066"
         }
     },
     "roleplay": {
