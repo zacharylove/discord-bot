@@ -1,7 +1,7 @@
 // View a list of guild-specific settings and enable/disable commands and features.
 import { CommandInterface } from "../../interfaces/Command.js";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled, isTwitterEmbedFixEnabled, toggleTwitterEmbedFix } from "../../database/guildData.js";
+import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../database/guildData.js";
 import { GuildDataInterface } from "../../database/models/guildModel.js";
 import { commandNotImplemented, getCommandListAsString } from "../../utils/commandUtils.js";
 import { CommandInteraction, PermissionsBitField } from "discord.js";
@@ -103,6 +103,12 @@ const displaySettingsList = async (interaction: CommandInteraction, embed: Embed
         contentScanningString += "Enabled\n";
     } else { contentScanningString += "Disabled\n"; }
 
+     // TikTok Embed Fix
+     contentScanningString += "TikTok URL Scanning: ";
+     if ( guildData.messageScanning.tiktokEmbedFix ) {
+         contentScanningString += "Enabled\n";
+     } else { contentScanningString += "Disabled\n"; }
+
     embed.addFields({name: 'Available Features', value: contentScanningString});
 
     if ( guildData.messageScanning.starboardScanning ) {
@@ -160,6 +166,14 @@ const enableFeature = async ( interaction: CommandInteraction, featureName: stri
                 embed.setDescription(await toggleTwitterEmbedFix(interaction.guildId, true));
             }
             break;
+        case "tiktokembedfix":
+            // Check if feature is already enabled
+            if (await isTikTokEmbedFixEnabled(interaction.guildId)) {
+                embed.setDescription("TikTok Embed Fix feature is already enabled.");
+            } else {
+                embed.setDescription(await toggleTikTokEmbedFix(interaction.guildId, true));
+            }
+            break;
 
         default:
             embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
@@ -194,6 +208,14 @@ const disableFeature = async ( interaction: CommandInteraction, featureName: str
                 embed.setDescription("Twitter Embed Fix feature is already disabled.");
             } else {
                 embed.setDescription(await toggleTwitterEmbedFix(interaction.guildId, false));
+            }
+            break;
+        case "tiktokembedfix":
+            // Check if feature is already enabled
+            if (!await isTikTokEmbedFixEnabled(interaction.guildId)) {
+                embed.setDescription("TikTok Embed Fix feature is already disabled.");
+            } else {
+                embed.setDescription(await toggleTikTokEmbedFix(interaction.guildId, false));
             }
             break;
         default:
@@ -271,7 +293,8 @@ export const guildSettings: CommandInterface = {
                                 .addChoices(
                                     { name: 'Wordle', value: 'wordle' },
                                     { name: 'Starboard', value: 'starboard' },
-                                    { name: 'TwitterEmbedFix', value: 'twitterembedfix' }
+                                    { name: 'TwitterEmbedFix', value: 'twitterembedfix' },
+                                    { name: 'TikTokEmbedFix', value: 'tiktokembedfix'}
                                 )
                         )
                 )
@@ -288,7 +311,8 @@ export const guildSettings: CommandInterface = {
                                 .addChoices(
                                     { name: 'Wordle', value: 'wordle' },
                                     { name: 'Starboard', value: 'starboard' },
-                                    { name: 'TwitterEmbedFix', value: 'twitterembedfix' }
+                                    { name: 'TwitterEmbedFix', value: 'twitterembedfix' },
+                                    { name: 'TikTokEmbedFix', value: 'tiktokembedfix'}
                                 )
                         )
                 )

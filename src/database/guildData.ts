@@ -179,7 +179,7 @@ export const removeStoredStarboardPost = async (guildID: string, post: Starboard
     if (leaderboardIndexToRemove != -1) guildData.starboard.leaderboard.splice(leaderboardIndexToRemove, 1);
 }
 
-
+// Twitter Embed Fix
 export const isTwitterEmbedFixEnabled = async (guildID: string): Promise<boolean> => {
     const guildData = await getGuildDataByGuildID(guildID);
     // If not configured, default to true
@@ -204,6 +204,33 @@ export const toggleTwitterEmbedFix =  async (guildID: string, enableDisable: boo
      toReturn += `Twitter Embed Fix feature has been ${enableDisable ? "enabled! I will now respond to Twitter/X posts with a fixed embed." : "disabled." }`;
      return toReturn;
 }
+
+// Tiktok Embed Fix
+export const isTikTokEmbedFixEnabled = async (guildID: string): Promise<boolean> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    // If not configured, default to true
+    if (guildData.messageScanning.tiktokEmbedFix == undefined) {
+        guildData.messageScanning.tiktokEmbedFix = true;
+        await update(guildData);
+    }
+    
+    return guildData.messageScanning.tiktokEmbedFix;
+}
+
+export const toggleTikTokEmbedFix =  async (guildID: string, enableDisable: boolean): Promise<string> => {
+    var toReturn = "";
+
+    const guildData = await getGuildDataByGuildID(guildID);
+    const isEnabled = await isTikTokEmbedFixEnabled(guildID);
+    // If already enabled
+    if ( enableDisable && isEnabled || !enableDisable && !isEnabled ) { return `TikTok Embed Fix is already ${enableDisable ? "enabled" : "disabled"}, dummy!`; }
+     guildData.messageScanning.tiktokEmbedFix = enableDisable;
+     await update(guildData);
+
+     toReturn += `TikTok Embed Fix feature has been ${enableDisable ? "enabled! I will now respond to TikTok posts with a fixed embed." : "disabled." }`;
+     return toReturn;
+}
+
 
 /**
  * Attempts to add a command to the list of enabled commands for the given guild

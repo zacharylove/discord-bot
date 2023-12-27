@@ -2,11 +2,12 @@
 // Make sure bot has the correct scope and permissions!
 
 import Bot from "../bot";
-import { areWordleFeaturesEnabled, isTwitterEmbedFixEnabled } from "../database/guildData.js";
+import { areWordleFeaturesEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled } from "../database/guildData.js";
 import { Message, GatewayIntentBits, TextChannel, DMChannel } from "discord.js";
 import { EventInterface } from "../interfaces/Event.js";
 import { parseManyURLs, validURL } from "../utils/utils.js";
 import { twitterEmbedFix } from "./responses/twitterEmbedFix.js";
+import { tikTokEmbedFix } from "./responses/tiktokEmbedFix.js";
 
 const sayCommand = async (Message: Message) => {
 
@@ -61,6 +62,7 @@ export const onMessage : EventInterface = {
         const messageURLS: string[] = parseManyURLs(Message.content);
         if (messageURLS.length > 0) {
             if (await isTwitterEmbedFixEnabled(Message.guildId)) await twitterEmbedFix(Message, messageURLS);
+            if (await isTikTokEmbedFixEnabled(Message.guildId)) await tikTokEmbedFix(Message, messageURLS);
         }
 
         

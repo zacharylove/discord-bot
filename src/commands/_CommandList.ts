@@ -80,6 +80,10 @@ export const FeatureCommandMap: Map<Feature, CommandInterface[]> = new Map([
     // TwitterEmbedFix
     [Feature.TwitterEmbedFix, [
 
+    ]],
+    // TikTokEmbedFix
+    [Feature.TikTokEmbedFix, [
+        
     ]]
 ]);
 

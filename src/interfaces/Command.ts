@@ -7,7 +7,8 @@ export enum Feature {
     Wordle,
     Starboard,
     Confession,
-    TwitterEmbedFix
+    TwitterEmbedFix,
+    TikTokEmbedFix
 }
 
 

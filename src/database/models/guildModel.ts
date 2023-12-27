@@ -17,6 +17,7 @@ export interface GuildDataInterface extends Document {
         wordleResultScanning: boolean;
         starboardScanning: boolean;
         twitterEmbedFix: boolean;
+        tiktokEmbedFix: boolean;
     },
     channels: {
         confessionChannelId: string;
@@ -124,6 +125,7 @@ export const createNewGuildData = async (guildID: string) => {
             starboardScanning: false,
             // Twitter embed fix is enabled by default (until they get their act together)
             twitterEmbedFix: true,
+            tiktokEmbedFix: true,
         },
         channels: {
             confessionChannelId: "",
