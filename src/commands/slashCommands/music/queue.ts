@@ -110,7 +110,7 @@ const createEmbed = async (interaction: Message<boolean>, page: number, player: 
 }
 
 const sendEmbedAndCollectResponses = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer): Promise<null> => {
-    interaction.edit("Here's the music queue!");
+    interaction.edit(`Here's the music queue! <a:doggoDance:${config.music.emojiIds.doggoDance}>`);
     const response: Message<boolean> = await createEmbed(interaction, page, player, musicQueuer);
 
     // 2 minute response collection period

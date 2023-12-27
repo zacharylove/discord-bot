@@ -1,6 +1,6 @@
 {
-    "version": "1.4.5",
-    "statuses": [ "Back and better than ever!", ":)" ],
+    "version": "1.4.9",
+    "statuses": [ "I do music!", "I fix Twitter embeds!", "I fix TikTok embeds!", "I support confessions!", "I can caption GIFs!", "I keep track of Wordle scores!", "I do starboards!", "Check out /ship!", "<3" ],
     "starboard": {
         "config": {
             "fetchLimit": 100,
@@ -81,7 +81,8 @@
             "backward": "1189673956093997116",
             "forward": "1189673957373251634",
             "add": "1189685918458716212",
-            "loop": "1189685920291635291"
+            "loop": "1189685920291635291",
+            "doggoDance": "1189713315237208064"
         }
     },
 
