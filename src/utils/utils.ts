@@ -127,7 +127,7 @@ export const secondsToTimestamp = async (seconds: number, markers?: boolean): Pr
         m -= 60;
     }
     s = Math.floor(s);
-    return `${h > 0 ? `${leadingZeroes(h,2)}${markers ? "h " : ":"}` : ''}${m > 0 ? `${leadingZeroes(m,2)}${markers ? "m " : ":"}` : '00'}${leadingZeroes(s,2)}${markers ? "s" : ""}`;
+    return `${h > 0 ? `${leadingZeroes(h,2)}${markers ? "h " : ":"}` : ''}${m > 0 ? `${leadingZeroes(m,2)}${markers ? "m " : ":"}` : `00${markers ? "m " : ":"}`}${leadingZeroes(s,2)}${markers ? "s" : ""}`;
 }
 
 export const confirmationMessage = (): string => {

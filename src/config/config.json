@@ -69,7 +69,17 @@
         },
         "commands": [
             "playSong", "skipSong", "stopSong", "queue", "shuffleQueue", "clearQueue", "nowPlaying", "pause", "resume"
-        ]
+        ],
+        "emojiIds": {
+            "YouTube": "1189659331453526066",
+            "play": "1189673958124027935",
+            "pause": "1189673958698659852",
+            "stop": "1189673955334836224",
+            "backward": "1189673956093997116",
+            "forward": "1189673957373251634",
+            "add": "1189685918458716212",
+            "loop": "1189685920291635291"
+        }
     },
 
     "movie": {

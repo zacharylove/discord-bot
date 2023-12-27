@@ -20,11 +20,13 @@ export class Queuer {
     private parseQuery = async (query: string, interaction: ChatInputCommandInteraction): Promise<[SongMetadata[], string]> => {
         let newSongs: SongMetadata[] = [];
         let extraMsg = '';
+        let isQuery: boolean = false;
         testUrl: try {
             let url;
             try { 
                 url = new URL(query);
             } catch {
+                isQuery = true;
                 break testUrl;
             }
 
@@ -76,6 +78,9 @@ export class Queuer {
         } catch (e: unknown) {
             console.debug(e);
             // Not a URL, must search YouTube
+            isQuery = true;
+        }
+        if (isQuery) {
             const songs = await getYoutubeVideoByQuery(query);
       
             if (songs) {
@@ -177,7 +182,7 @@ export class Queuer {
        
         const player = this.guildQueueManager.get(guildId);
         const queue = player.getQueue();
-        const progressInCurrentSong = await secondsToTimestamp(await player.getPosition());
+        const progressInCurrentSong = await secondsToTimestamp(await player.getPosition(), false);
 
         const embed = new EmbedBuilder()
             .setTimestamp()
@@ -195,7 +200,7 @@ export class Queuer {
                 title += '⏹️';
                 break;
         }
-        title += ` Queue${player.currentVoiceChannel ? ` for ${player.currentVoiceChannel.name}` : ''}`;
+        title += `  Queue${player.currentVoiceChannel ? ` for ${player.currentVoiceChannel.name}` : ''}`;
 
 
         // Split songs into multiple pages if there are more than 10

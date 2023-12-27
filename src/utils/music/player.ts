@@ -94,6 +94,49 @@ export default class Player {
     // ====================
     // Queue Management
     // ====================
+
+    // Skip Backward
+    goBackward(num: number): boolean {
+        // If we can go backward
+        if ((this.queuePosition - num -1) > 0) {
+            this.queuePosition -= num;
+            this.positionInSeconds = 0;
+            this.stopTrackingPosition();
+            return true;
+        } else {
+            // Return to beginning of song if on first
+            if (this.queuePosition == 0) {
+                this.positionInSeconds = 0;
+                this.stopTrackingPosition();
+                this.seek(0);
+                return true;
+            }
+            console.error(`Cannot go backward ${num} songs`);
+            return false;
+        }
+    }
+
+    async backward(num: number): Promise<boolean> {
+        const success: boolean = this.goBackward(num);
+        try {
+            if (this.getCurrent() && this.status !== MusicStatus.PAUSED) await this.play();
+            // Disconnect if something funky happened
+            else {
+                this.audioPlayer?.stop();
+                this.status = MusicStatus.IDLE;
+                // Disconnect after 30s
+                const disconnectTimer = 30;
+                this.disconnectTimer = setTimeout(() => {
+                    if (this.status === MusicStatus.IDLE) this.disconnect();
+                }, disconnectTimer * 1000);
+            }
+        } catch (error: unknown) {
+            this.queuePosition++;
+            console.error(error);
+            return false;
+        }
+        return success ? true : false;
+    }
     
     // Skip forward
     goForward(num: number): boolean {

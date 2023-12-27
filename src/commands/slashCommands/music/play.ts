@@ -4,6 +4,8 @@ import { BOT } from "../../../index.js";
 import { GatewayIntentBits } from "discord-api-types/v9";
 import { getYoutubeSuggestionsForQuery } from "../../../api/youtubeAPI.js";
 import { getSpotifySuggestionsForQuery } from "../../../api/spotifyAPI.js";
+// @ts-ignore
+import { default as config } from "../../../config/config.json" assert { type: "json" };
 
 export const playSong: CommandInterface = {
     data: new SlashCommandBuilder()
@@ -41,7 +43,7 @@ export const playSong: CommandInterface = {
     },
     autocomplete: async (interaction: AutocompleteInteraction, limit = 10) => {
         const query = interaction.options.getString('query')?.trim();
-        if (!query || query.length === 0) {
+        if (!query || query.length <= 3) {
             await interaction.respond([]);
             return;
         }
@@ -68,21 +70,21 @@ export const playSong: CommandInterface = {
             ...youtubeSuggestions
               .slice(0, maxYoutubeSuggestions)
               .map(suggestion => ({
-                name: `YouTube: ${suggestion}`,
+                name: `🎥 ${suggestion.substring(0,85)}`,
                 value: suggestion,
               }),
         ));
 
         suggestions.push(
             ...spotifyAlbumSuggestions.slice(0, maxSpotifyAlbumSuggestions).map(album => ({
-              name: `Spotify: 💿 ${album.name}${album.artists.length > 0 ? ` - ${album.artists[0].name}` : ''}`,
+              name: `💿 ${album.name.substring(0,50)}${album.artists.length > 0 ? ` - ${album.artists[0].name.substring(0,30)}` : ''}`,
               value: `spotify:album:${album.id}`,
             })),
           );
         
           suggestions.push(
             ...spotifyTrackSuggestions.slice(0, maxSpotifyTrackSuggestions).map(track => ({
-              name: `Spotify: 🎵 ${track.name}${track.artists.length > 0 ? ` - ${track.artists[0].name}` : ''}`,
+              name: `🎵 ${track.name.substring(0,50)}${track.artists.length > 0 ? ` - ${track.artists[0].name.substring(0,30)}` : ''}`,
               value: `spotify:track:${track.id}`,
             })),
           );
