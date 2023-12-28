@@ -7,7 +7,10 @@ import Player, { MusicStatus, storedQueueMessage } from "../../../utils/music/pl
 // @ts-ignore
 import { default as config } from "../../../config/config.json" assert { type: "json" };
 import { Queuer } from "../../../utils/music/queuer.js";
+import { sleep } from "../../../utils/utils.js";
 
+
+const embedRefreshDelay = 1000;
 
 export const refreshEmbed = async (storedMessage: storedQueueMessage) => {
     const queuer = BOT.getMusicQueuer();
@@ -119,7 +122,7 @@ export const createEmbed = async (interaction: Message<boolean>, page: number, p
 }
 
 const sendEmbedAndCollectResponses = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer, noButtons: boolean = false): Promise<null> => {
-    interaction.edit(`Here's the music queue! <a:doggoDance:${config.music.emojiIds.doggoDance}>`);
+    await interaction.edit(`Here's the music queue! <a:doggoDance:${config.music.emojiIds.doggoDance}>`);
     const response: Message<boolean> = await createEmbed(interaction, page, player, musicQueuer, noButtons);
 
     // If there is a previous queue message, delete it
@@ -135,47 +138,53 @@ const sendEmbedAndCollectResponses = async (interaction: Message<boolean>, page:
     // 2 minute response collection period
     response.awaitMessageComponent({ componentType: ComponentType.Button }).then( async buttonResponse => {
         let responseStatus: boolean;
+        let newSong, reply;
         switch (buttonResponse.customId) {
             case "playpause":
                 let action = "";
+                let emoji = "";
                 if (player.getStatus() == MusicStatus.PAUSED) {
                     player.resume();
                     action = "resumed";
+                    emoji = `<:play:${config.music.emojiIds.play}>`
                 } else {
                     player.pause();
                     action = "paused";
+                    emoji = `<:pause:${config.music.emojiIds.pause}>`
                 }
+                reply = await buttonResponse.reply(`${emoji} <@${buttonResponse.user.id}> ${action} playback!`);
                 // Recreate embed
-                await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer);
-                await buttonResponse.reply(`<@${buttonResponse.user.id}> ${action} playback!`);
+                sleep(embedRefreshDelay).then( async () => { await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer); });
                 break;
             case "backward":
                 responseStatus = await player.backward(1);
+                newSong = player.getQueue()[player.getQueuePosition()];
                 if (responseStatus == false) {
-                    await buttonResponse.reply(`<@${buttonResponse.user.id}> skipped backwards and reached the beginning of the queue!`);
+                    await buttonResponse.reply(`<:backward:${config.music.emojiIds.backward}> <@${buttonResponse.user.id}> skipped backwards and reached the beginning of the queue!`);
                 } else {
-                    await buttonResponse.reply(`<@${buttonResponse.user.id}> skipped backwards!`);
+                    await buttonResponse.reply(`<:backward:${config.music.emojiIds.backward}> <@${buttonResponse.user.id}> skipped backwards! Now playing [${newSong.title}](<https://www.youtube.com/watch?v=${newSong.url}>) <a:doggoDance:${config.music.emojiIds.doggoDance}>`);
                 }
-                await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer);
+                sleep(embedRefreshDelay).then( async () => { await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer); });
                 break;
             case "forward":
                 responseStatus = await player.forward(1);
+                newSong = player.getQueue()[player.getQueuePosition()];
                 if (responseStatus == false) {
-                    await buttonResponse.reply(`<@${buttonResponse.user.id}> skipped forwards and reached the end of the queue!`);
+                    await buttonResponse.reply(`<:forward:${config.music.emojiIds.forward}> <@${buttonResponse.user.id}> skipped forwards and reached the end of the queue!`);
                 } else {
-                    await buttonResponse.reply(`<@${buttonResponse.user.id}> skipped forwards!`);
+                    await buttonResponse.reply(`<:forward:${config.music.emojiIds.forward}> <@${buttonResponse.user.id}> skipped forwards! Now playing [${newSong.title}](<https://www.youtube.com/watch?v=${newSong.url}>) <a:doggoDance:${config.music.emojiIds.doggoDance}>`);
                 }
-                await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer);
+                sleep(embedRefreshDelay).then( async () => { await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer); });
                 break;
             case "stop":
                 let numCleared = player.stop();
-                await buttonResponse.reply(`<@${buttonResponse.user.id}> stopped playback and cleared ${numCleared} songs from the queue! Disconnecting now...`);
-                await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer, true);
+                await buttonResponse.reply(`<:stop:${config.music.emojiIds.stop}> <@${buttonResponse.user.id}> stopped playback and cleared ${numCleared} songs from the queue! Disconnecting now...`);
+                sleep(embedRefreshDelay).then( async () => { await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer); });
                 break;
             case "loop":
                 player.loopCurrentSong = !player.loopCurrentSong;
-                await buttonResponse.reply(`<@${buttonResponse.user.id}> set the current song to ${player.loopCurrentSong ? "loop" : "stop looping"}!`);
-                await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer);
+                await buttonResponse.reply(`<:loop:${config.music.emojiIds.loop}> <@${buttonResponse.user.id}> set the current song to ${player.loopCurrentSong ? "loop" : "stop looping"}!`);
+                sleep(embedRefreshDelay).then( async () => { await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer); });
                 break;
 
         }

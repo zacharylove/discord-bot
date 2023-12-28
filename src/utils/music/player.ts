@@ -31,7 +31,7 @@ import ytdl, {videoFormat} from 'ytdl-core';
 //import { WriteStream } from "fs-capacitor";
 import ffmpeg from 'fluent-ffmpeg';
 import { WriteStream } from "fs-capacitor";
-import { shuffleArray } from "../../utils/utils.js";
+import { shuffleArray, sleep } from "../../utils/utils.js";
 import { createEmbed, refreshEmbed } from "../../commands/slashCommands/music/queue.js";
 export enum MusicStatus {
     PLAYING,
@@ -177,8 +177,13 @@ export default class Player {
                 }, disconnectTimer * 1000);
             }
 
-            // Update queue embed
-            if (this.activeQueueMessage) await refreshEmbed(this.activeQueueMessage);
+            // Update queue embed after a delay (to stop discord api from freaking out)
+            sleep(2000).then( async () => {
+                if (this.activeQueueMessage) {
+                    await refreshEmbed(this.activeQueueMessage);
+                }
+            });
+
 
         } catch (error: unknown) {
             this.queuePosition--;

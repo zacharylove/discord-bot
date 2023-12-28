@@ -34,6 +34,10 @@ export const intentEnumToString = ( intent: GatewayIntentBits ): string => {
     }
 }
 
+export function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export const parseManyURLs = (str: string): string[] => {
     console.debug(`Parsing URLs from string ${str}...`);
     const regex = new RegExp('\\bhttps?://\\S+\\b', 'g');

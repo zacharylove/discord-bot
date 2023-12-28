@@ -18,6 +18,7 @@ export class Queuer {
     // Max limit for number of songs in a playlist to parse
     private playlistLimit: number = config.music.youtubeAPI.playlistLimit;
 
+
     private parseQuery = async (query: string, interaction: ChatInputCommandInteraction): Promise<[SongMetadata[], string]> => {
         let newSongs: SongMetadata[] = [];
         let extraMsg = '';
