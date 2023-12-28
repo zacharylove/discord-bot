@@ -323,6 +323,7 @@ export default class Player {
         this.queuePosition = 0;
         const prevQueueNum = this.queue.length;
         this.queue = [];
+        this.status = MusicStatus.IDLE;
         return prevQueueNum;
     }
 

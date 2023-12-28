@@ -9,12 +9,12 @@ import { default as config } from "../../../config/config.json" assert { type: "
 import { Queuer } from "../../../utils/music/queuer.js";
 
 
-const createEmbed = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer): Promise<Message<boolean>> => {
+const createEmbed = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer, noButtons: boolean): Promise<Message<boolean>> => {
     const embed = await musicQueuer.createQueueEmbed(interaction.guild!.id, page);
 
     // Create controls
-    const row: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
-    if (player.getStatus() != MusicStatus.IDLE) {
+    if (player.getStatus() != MusicStatus.IDLE && !noButtons) {
+        const row: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
         // Skip Backwards
         const backwardsButton = new ButtonBuilder()
             .setCustomId("backward")
@@ -104,14 +104,17 @@ const createEmbed = async (interaction: Message<boolean>, page: number, player: 
             })
         } else addButton.setLabel("Add Song");*/
 
+        return await interaction.edit({embeds: [embed], components: [row]});
+    } else {
+        return await interaction.edit({embeds: [embed], components: []});
     }
 
-    return await interaction.edit({embeds: [embed], components: [row]});
+    
 }
 
-const sendEmbedAndCollectResponses = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer): Promise<null> => {
+const sendEmbedAndCollectResponses = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer, noButtons: boolean = false): Promise<null> => {
     interaction.edit(`Here's the music queue! <a:doggoDance:${config.music.emojiIds.doggoDance}>`);
-    const response: Message<boolean> = await createEmbed(interaction, page, player, musicQueuer);
+    const response: Message<boolean> = await createEmbed(interaction, page, player, musicQueuer, noButtons);
 
     // 2 minute response collection period
     response.awaitMessageComponent({ componentType: ComponentType.Button }).then( async buttonResponse => {
@@ -151,7 +154,7 @@ const sendEmbedAndCollectResponses = async (interaction: Message<boolean>, page:
             case "stop":
                 let numCleared = player.stop();
                 await buttonResponse.reply(`<@${buttonResponse.user.id}> stopped playback and cleared ${numCleared} songs from the queue! Disconnecting now...`);
-                await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer);
+                await sendEmbedAndCollectResponses(interaction, page, player, musicQueuer, true);
                 break;
             case "loop":
                 player.loopCurrentSong = !player.loopCurrentSong;
