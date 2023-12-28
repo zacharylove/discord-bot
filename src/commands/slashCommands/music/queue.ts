@@ -114,7 +114,7 @@ const sendEmbedAndCollectResponses = async (interaction: Message<boolean>, page:
     const response: Message<boolean> = await createEmbed(interaction, page, player, musicQueuer);
 
     // 2 minute response collection period
-    response.awaitMessageComponent({ componentType: ComponentType.Button, time: 120000 }).then( async buttonResponse => {
+    response.awaitMessageComponent({ componentType: ComponentType.Button }).then( async buttonResponse => {
         let responseStatus: boolean;
         switch (buttonResponse.customId) {
             case "playpause":
