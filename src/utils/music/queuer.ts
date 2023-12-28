@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, GuildMember } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, Message } from "discord.js";
 import Player, { MusicStatus, QueuedSong, SongMetadata, MediaSource, QueuedPlaylist } from "./player.js";
 import { getMemberVoiceChannel, getMostPopularVoiceChannel } from "../../utils/voiceChannelUtils.js";
 import { getYoutubePlaylistById, getYoutubeVideoByQuery, getYoutubeVideoByURL } from "../../api/youtubeAPI.js";
@@ -193,7 +193,6 @@ export class Queuer {
         
     }
 
-    
 
     public createQueueEmbed = async (guildId: string, page: number): Promise<EmbedBuilder> => {
        

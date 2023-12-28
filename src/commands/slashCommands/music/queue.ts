@@ -3,13 +3,19 @@ import { ActionRowBuilder, ButtonStyle, CommandInteraction, ComponentType, Messa
 import { BOT } from "../../../index.js";
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
 import { ButtonBuilder } from "@discordjs/builders";
-import Player, { MusicStatus } from "../../../utils/music/player.js";
+import Player, { MusicStatus, storedQueueMessage } from "../../../utils/music/player.js";
 // @ts-ignore
 import { default as config } from "../../../config/config.json" assert { type: "json" };
 import { Queuer } from "../../../utils/music/queuer.js";
 
 
-const createEmbed = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer, noButtons: boolean): Promise<Message<boolean>> => {
+export const refreshEmbed = async (storedMessage: storedQueueMessage) => {
+    const queuer = BOT.getMusicQueuer();
+    const player = BOT.getMusicQueuerManager().get(storedMessage.guildId);
+    await sendEmbedAndCollectResponses(storedMessage.message, storedMessage.page, player, queuer, false);
+}
+
+export const createEmbed = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer, noButtons: boolean): Promise<Message<boolean>> => {
     const embed = await musicQueuer.createQueueEmbed(interaction.guild!.id, page);
 
     // Create controls
@@ -115,6 +121,16 @@ const createEmbed = async (interaction: Message<boolean>, page: number, player: 
 const sendEmbedAndCollectResponses = async (interaction: Message<boolean>, page: number, player: Player, musicQueuer: Queuer, noButtons: boolean = false): Promise<null> => {
     interaction.edit(`Here's the music queue! <a:doggoDance:${config.music.emojiIds.doggoDance}>`);
     const response: Message<boolean> = await createEmbed(interaction, page, player, musicQueuer, noButtons);
+
+    // If there is a previous queue message, delete it
+    if (player.activeQueueMessage && player.activeQueueMessage.message.id != response.id) {
+        await player.activeQueueMessage.message.delete();
+    }
+    player.activeQueueMessage = {
+        message: response,
+        page: page,
+        guildId: player.guildId
+    };
 
     // 2 minute response collection period
     response.awaitMessageComponent({ componentType: ComponentType.Button }).then( async buttonResponse => {

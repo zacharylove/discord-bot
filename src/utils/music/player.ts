@@ -12,7 +12,7 @@ Requirements:
  - fluent-ffmpeg: Abstraction library for ffmpeg, avoids needing CLI usage
 */
 
-import { Snowflake, VoiceChannel } from "discord.js";
+import { Message, Snowflake, VoiceChannel } from "discord.js";
 
 import {   
     AudioPlayer,
@@ -32,6 +32,7 @@ import ytdl, {videoFormat} from 'ytdl-core';
 import ffmpeg from 'fluent-ffmpeg';
 import { WriteStream } from "fs-capacitor";
 import { shuffleArray } from "../../utils/utils.js";
+import { createEmbed, refreshEmbed } from "../../commands/slashCommands/music/queue.js";
 export enum MusicStatus {
     PLAYING,
     PAUSED,
@@ -68,6 +69,12 @@ export interface QueuedSong extends SongMetadata {
     requestedBy: string;
 }
 
+export interface storedQueueMessage {
+    message: Message<boolean>,
+    page: number,
+    guildId: string,
+}
+
 export default class Player {
     public voiceConnection: VoiceConnection | null = null;
     public status = MusicStatus.PAUSED;
@@ -86,6 +93,9 @@ export default class Player {
     private positionInSeconds = 0;
     //private readonly fileCache: FileCacheProvider;
     private disconnectTimer: NodeJS.Timeout | null = null;
+
+    // One queue message per server
+    public activeQueueMessage: storedQueueMessage | null = null;
     
 
     constructor(guildId: string) {
@@ -99,7 +109,7 @@ export default class Player {
     // Skip Backward
     goBackward(num: number): boolean {
         // If we can go backward
-        if ((this.queuePosition - num) > 0) {
+        if ((this.queuePosition - num) >= 0) {
             this.queuePosition -= num;
             this.positionInSeconds = 0;
             this.stopTrackingPosition();
@@ -166,6 +176,10 @@ export default class Player {
                     if (this.status === MusicStatus.IDLE) this.disconnect();
                 }, disconnectTimer * 1000);
             }
+
+            // Update queue embed
+            if (this.activeQueueMessage) await refreshEmbed(this.activeQueueMessage);
+
         } catch (error: unknown) {
             this.queuePosition--;
             console.error(error);

@@ -30,7 +30,12 @@ export const playSong: CommandInterface = {
         )
         ,
     run: async (interaction: CommandInteraction) => {
-        if( !interaction.isChatInputCommand() ) return;
+        if( !interaction.isChatInputCommand() || !interaction.guild) return;
+        const guildMember = interaction.guild.members.cache.get(interaction.user.id);
+        if (!guildMember?.voice.channel) {
+            interaction.editReply("You are not currently in a voice channel!");
+            return;
+        }
         const query = interaction.options.getString('query')!;
         const next = interaction.options.getBoolean('next') ?? false;
         const shuffle = interaction.options.getBoolean('shuffle') ?? false;
