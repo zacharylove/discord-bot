@@ -28,7 +28,7 @@
     "fs-capacitor": "^8.0.0",
     "get-youtube-id": "^1.0.1",
     "gifuct-js": "^2.1.2",
-    "iso8601-duration": "^2.1.1",
+    "iso8601-duration": "^2.1.2",
     "libsodium": "^0.7.13",
     "libsodium-wrappers": "^0.7.13",
     "module-alias": "^2.2.3",
