@@ -230,3 +230,40 @@ export const queue: CommandInterface = {
         Feature: Feature.Music
     }
 }
+
+// Q alias
+export const q: CommandInterface = {
+    data: new SlashCommandBuilder()
+        .setName('q')
+        .setDescription('(Music) Displays the current queue')
+        .addIntegerOption((option) =>
+            option
+                .setName('page')
+                .setDescription('The page of the queue to display')
+                .setRequired(false)
+        ),
+    run: async (interaction: CommandInteraction) => {
+        if( !interaction.isChatInputCommand() ) return;
+        const page: number = interaction.options.getInteger('page') ?? 1;
+        const message: Message<boolean> = await interaction.editReply("Loading the music queue...");
+        const musicQueuer = BOT.getMusicQueuer();
+        const player = BOT.getMusicQueuerManager().get(interaction.guildId!);
+
+        await sendEmbedAndCollectResponses(message, page, player, musicQueuer);
+
+        
+    },
+    properties: {
+        Name: "q",
+        Aliases: [],
+        Scope: "global",
+        GuildOnly: true,
+        Enabled: true,
+        DefaultEnabled: true,
+        CanBeDisabled: true,
+        Intents: [GatewayIntentBits.GuildVoiceStates],
+        Permissions: [],
+        Ephemeral: false,
+        Feature: Feature.Music
+    }
+}

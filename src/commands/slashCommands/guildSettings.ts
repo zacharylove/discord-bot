@@ -420,7 +420,7 @@ export const guildSettings: CommandInterface = {
     },
     properties: {
         Name: 'Settings',
-        Aliases: ['Config', 'Server Settings', 'Server Config'],
+        Aliases: [],
         Scope: 'global',
         GuildOnly: true,
         Enabled: true,

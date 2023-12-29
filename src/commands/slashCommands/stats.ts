@@ -54,7 +54,7 @@ export const stats: CommandInterface = {
     },
     properties: {
         Name: 'Stats',
-        Aliases: ['Bot Stats', 'Bot Statistics', 'Statistics'],
+        Aliases: [],
         Scope: 'global',
         GuildOnly: false,
         Enabled: true,

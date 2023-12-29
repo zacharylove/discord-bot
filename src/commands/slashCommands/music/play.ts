@@ -105,6 +105,65 @@ export const playSong: CommandInterface = {
     },
     properties: {
         Name: "play",
+        Aliases: ["p"],
+        Scope: "global",
+        GuildOnly: true,
+        Enabled: true,
+        DefaultEnabled: true,
+        CanBeDisabled: true,
+        Intents: [GatewayIntentBits.GuildVoiceStates],
+        Permissions: [],
+        Ephemeral: false,
+        Feature: Feature.Music
+    }
+}
+
+// P alias
+// Apparently cloning the command and changing the name causes some unintended issues so we're going the annoying copy/paste route
+export const pSong: CommandInterface = {
+    data: new SlashCommandBuilder()
+        .setName('p')
+        .setDescription('(Music) Plays a song in your current voice channel')
+        .addStringOption((option) =>
+            option
+                .setName('query')
+                .setDescription('The song to play')
+                .setRequired(true)
+                .setAutocomplete(true)
+        )
+        .addBooleanOption((option) =>
+            option
+                .setName('next')
+                .setDescription('Whether to add to the front of the queue')
+        )
+        .addBooleanOption((option) =>
+            option
+                .setName('shuffle')
+                .setDescription('Whether to shuffle the queue')
+        )
+        ,
+    run: async (interaction: CommandInteraction) => {
+        if( !interaction.isChatInputCommand() || !interaction.guild) return;
+        const guildMember = interaction.guild.members.cache.get(interaction.user.id);
+        if (!guildMember?.voice.channel) {
+            interaction.editReply("You are not currently in a voice channel!");
+            return;
+        }
+        const query = interaction.options.getString('query')!;
+        const next = interaction.options.getBoolean('next') ?? false;
+        const shuffle = interaction.options.getBoolean('shuffle') ?? false;
+        const guildQueuer = BOT.getMusicQueuer();
+
+        await guildQueuer.addToQueue({
+            query: query,
+            interaction: interaction
+        }, shuffle, next);
+    },
+    autocomplete: async (interaction: AutocompleteInteraction, limit = autocompleteLimit) => {
+        await autocompleteQuery(interaction, limit);
+    },
+    properties: {
+        Name: "p",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,
@@ -157,6 +216,59 @@ export const playNext: CommandInterface = {
     },
     properties: {
         Name: "playnext",
+        Aliases: [],
+        Scope: "global",
+        GuildOnly: true,
+        Enabled: true,
+        DefaultEnabled: true,
+        CanBeDisabled: true,
+        Intents: [GatewayIntentBits.GuildVoiceStates],
+        Permissions: [],
+        Ephemeral: false,
+        Feature: Feature.Music
+    }
+}
+
+// Pnext alias
+// Playnext command
+export const pNext: CommandInterface = {
+    data: new SlashCommandBuilder()
+    .setName('pn')
+    .setDescription('(Music) Add a song to the front of the music queue')
+    .addStringOption((option) =>
+        option
+            .setName('query')
+            .setDescription('The song to play')
+            .setRequired(true)
+            .setAutocomplete(true)
+    )
+    .addBooleanOption((option) =>
+        option
+            .setName('shuffle')
+            .setDescription('Whether to shuffle the queue')
+    )
+    ,
+    run: async (interaction: CommandInteraction) => {
+        if( !interaction.isChatInputCommand() || !interaction.guild) return;
+        const guildMember = interaction.guild.members.cache.get(interaction.user.id);
+        if (!guildMember?.voice.channel) {
+            interaction.editReply("You are not currently in a voice channel!");
+            return;
+        }
+        const query = interaction.options.getString('query')!;
+        const next = interaction.options.getBoolean('next') ?? false;
+        const guildQueuer = BOT.getMusicQueuer();
+
+        await guildQueuer.addToQueue({
+            query: query,
+            interaction: interaction
+        }, true, next);
+    },
+    autocomplete: async (interaction: AutocompleteInteraction, limit = autocompleteLimit) => {
+        await autocompleteQuery(interaction, limit);
+    },
+    properties: {
+        Name: "pn",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

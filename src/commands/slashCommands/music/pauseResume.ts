@@ -25,7 +25,7 @@ export const pause: CommandInterface = {
     },
     properties: {
         Name: "pause",
-        Aliases: ["p"],
+        Aliases: [],
         Scope: "global",
         GuildOnly: true,
         Enabled: true,
@@ -59,7 +59,7 @@ export const resume: CommandInterface = {
     },
     properties: {
         Name: "resume",
-        Aliases: ["r"],
+        Aliases: [],
         Scope: "global",
         GuildOnly: true,
         Enabled: true,
