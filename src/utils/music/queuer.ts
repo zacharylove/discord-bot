@@ -165,33 +165,31 @@ export class Queuer {
             }
         }
     
-        if (extraMsg !== '') {
-            extraMsg = ` (${extraMsg})`;
-        }
-        const queueLength = player.getQueue().length;
+        if (extraMsg !== '') extraMsg = ` (${extraMsg})`;
         let replyMessage = "";
-        if (songs.length === 1) {
+        const multipleSongs: boolean = songs.length > 1;
+        if (!multipleSongs) {
             replyMessage = `${confirmationMessage()} **${firstSong.title}** `;
-            if (queueLength > 1) {
-                replyMessage += `was added to the queue and will play after ${numSongsBeforePlay} song${numSongsBeforePlay > 1 ? 's': ''}${extraMsg}`;
-            } else {
-                replyMessage += ` is now playing${extraMsg}`;
-            } 
         } else {
             if (isPlaylist && playlistInfo) {
-                replyMessage = `${confirmationMessage()} ${songs.length - 1} songs from the playlist [${playlistInfo.title}](${playlistInfo.url}) have been added to the queue`;
+                replyMessage = `${confirmationMessage()} ${songs.length - 1} songs from the playlist [${playlistInfo.title}](${playlistInfo.url})`;
             } else {
-                replyMessage = `${confirmationMessage()} **${firstSong.title}** and ${songs.length - 1} other songs were added to the queue`;
-            }
-            if (numSongsBeforePlay > 1) {
-                replyMessage += ` and will play after ${numSongsBeforePlay} song${numSongsBeforePlay > 1 ? 's': ''}${extraMsg}`;
-            } else {
-                replyMessage += `${extraMsg}`;
+                replyMessage = `${confirmationMessage()} **${firstSong.title}** and ${songs.length - 1} other songs`;
             }
         }
-        await interaction.editReply(replyMessage);
 
-        
+        if (next) replyMessage += ` ${multipleSongs ? 'have been' : 'was'} added to the front of the queue`;
+        else replyMessage += ` ${multipleSongs ? 'have been' : 'was'} added to the queue`;
+
+        if (numSongsBeforePlay > 1) {
+            if (shuffle) replyMessage += `, the ${numSongsBeforePlay} other songs in the queue have been shuffled,`;
+            if (next) replyMessage += ` and will play before ${numSongsBeforePlay} song${numSongsBeforePlay > 1 ? 's': ''}`;
+            else replyMessage += ` and will play after ${numSongsBeforePlay} song${numSongsBeforePlay > 1 ? 's': ''}`;
+        } else {
+            replyMessage += ` and ${multipleSongs ? 'are' : 'is'} now playing`;
+        } 
+        replyMessage += extraMsg
+        await interaction.editReply(replyMessage);
     }
 
 

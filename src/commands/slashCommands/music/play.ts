@@ -7,6 +7,60 @@ import { getSpotifySuggestionsForQuery } from "../../../api/spotifyAPI.js";
 // @ts-ignore
 import { default as config } from "../../../config/config.json" assert { type: "json" };
 
+const autocompleteLimit = config.music.autocompleteLimit;
+
+// Autocomplete the 'query' argument with results from Youtube and Spotify
+const autocompleteQuery = async (interaction: AutocompleteInteraction, limit = 10) => {
+    const query = interaction.options.getString('query')?.trim();
+    if (!query || query.length <= 3) {
+        await interaction.respond([]);
+        return;
+    }
+
+    // Ignore direct URLs
+    try {
+        new URL(query);
+        await interaction.respond([]);
+        return;
+    } catch {}
+
+    const youtubeSuggestions = await getYoutubeSuggestionsForQuery(query);
+    const spotifyResponse: [SpotifyApi.TrackObjectFull[], SpotifyApi.AlbumObjectSimplified[]] = await getSpotifySuggestionsForQuery(query);
+    const spotifyTrackSuggestions = spotifyResponse[0];
+    const spotifyAlbumSuggestions = spotifyResponse[1];
+
+    const maxSpotifySuggestions = Math.min(limit /2, spotifyTrackSuggestions.length + spotifyAlbumSuggestions.length);
+    const maxSpotifyAlbumSuggestions = Math.min(Math.floor(maxSpotifySuggestions / 2), spotifyAlbumSuggestions.length ?? 0);
+    const maxSpotifyTrackSuggestions = maxSpotifySuggestions - maxSpotifyAlbumSuggestions;
+    const maxYoutubeSuggestions = Math.min(limit - maxSpotifySuggestions, youtubeSuggestions.length);
+    
+    const suggestions: APIApplicationCommandOptionChoice[] = [];
+    suggestions.push(
+        ...youtubeSuggestions
+          .slice(0, maxYoutubeSuggestions)
+          .map(suggestion => ({
+            name: `🎥 ${suggestion.substring(0,85)}`,
+            value: suggestion,
+          }),
+    ));
+
+    suggestions.push(
+        ...spotifyAlbumSuggestions.slice(0, maxSpotifyAlbumSuggestions).map(album => ({
+          name: `💿 ${album.name.substring(0,50)}${album.artists.length > 0 ? ` - ${album.artists[0].name.substring(0,30)}` : ''}`,
+          value: `spotify:album:${album.id}`,
+        })),
+      );
+    
+      suggestions.push(
+        ...spotifyTrackSuggestions.slice(0, maxSpotifyTrackSuggestions).map(track => ({
+          name: `🎵 ${track.name.substring(0,50)}${track.artists.length > 0 ? ` - ${track.artists[0].name.substring(0,30)}` : ''}`,
+          value: `spotify:track:${track.id}`,
+        })),
+      );
+
+    await interaction.respond(suggestions);
+}
+
 export const playSong: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('play')
@@ -46,58 +100,63 @@ export const playSong: CommandInterface = {
             interaction: interaction
         }, shuffle, next);
     },
-    autocomplete: async (interaction: AutocompleteInteraction, limit = 10) => {
-        const query = interaction.options.getString('query')?.trim();
-        if (!query || query.length <= 3) {
-            await interaction.respond([]);
-            return;
-        }
-
-        // Ignore direct URLs
-        try {
-            new URL(query);
-            await interaction.respond([]);
-            return;
-        } catch {}
-
-        const youtubeSuggestions = await getYoutubeSuggestionsForQuery(query);
-        const spotifyResponse: [SpotifyApi.TrackObjectFull[], SpotifyApi.AlbumObjectSimplified[]] = await getSpotifySuggestionsForQuery(query);
-        const spotifyTrackSuggestions = spotifyResponse[0];
-        const spotifyAlbumSuggestions = spotifyResponse[1];
-
-        const maxSpotifySuggestions = Math.min(limit /2, spotifyTrackSuggestions.length + spotifyAlbumSuggestions.length);
-        const maxSpotifyAlbumSuggestions = Math.min(Math.floor(maxSpotifySuggestions / 2), spotifyAlbumSuggestions.length ?? 0);
-        const maxSpotifyTrackSuggestions = maxSpotifySuggestions - maxSpotifyAlbumSuggestions;
-        const maxYoutubeSuggestions = Math.min(limit - maxSpotifySuggestions, youtubeSuggestions.length);
-        
-        const suggestions: APIApplicationCommandOptionChoice[] = [];
-        suggestions.push(
-            ...youtubeSuggestions
-              .slice(0, maxYoutubeSuggestions)
-              .map(suggestion => ({
-                name: `🎥 ${suggestion.substring(0,85)}`,
-                value: suggestion,
-              }),
-        ));
-
-        suggestions.push(
-            ...spotifyAlbumSuggestions.slice(0, maxSpotifyAlbumSuggestions).map(album => ({
-              name: `💿 ${album.name.substring(0,50)}${album.artists.length > 0 ? ` - ${album.artists[0].name.substring(0,30)}` : ''}`,
-              value: `spotify:album:${album.id}`,
-            })),
-          );
-        
-          suggestions.push(
-            ...spotifyTrackSuggestions.slice(0, maxSpotifyTrackSuggestions).map(track => ({
-              name: `🎵 ${track.name.substring(0,50)}${track.artists.length > 0 ? ` - ${track.artists[0].name.substring(0,30)}` : ''}`,
-              value: `spotify:track:${track.id}`,
-            })),
-          );
-
-        await interaction.respond(suggestions);
+    autocomplete: async (interaction: AutocompleteInteraction, limit = autocompleteLimit) => {
+        await autocompleteQuery(interaction, limit);
     },
     properties: {
         Name: "play",
+        Aliases: [],
+        Scope: "global",
+        GuildOnly: true,
+        Enabled: true,
+        DefaultEnabled: true,
+        CanBeDisabled: true,
+        Intents: [GatewayIntentBits.GuildVoiceStates],
+        Permissions: [],
+        Ephemeral: false,
+        Feature: Feature.Music
+    }
+}
+
+// Playnext command
+export const playNext: CommandInterface = {
+    data: new SlashCommandBuilder()
+    .setName('playnext')
+    .setDescription('(Music) Add a song to the front of the music queue')
+    .addStringOption((option) =>
+        option
+            .setName('query')
+            .setDescription('The song to play')
+            .setRequired(true)
+            .setAutocomplete(true)
+    )
+    .addBooleanOption((option) =>
+        option
+            .setName('shuffle')
+            .setDescription('Whether to shuffle the queue')
+    )
+    ,
+    run: async (interaction: CommandInteraction) => {
+        if( !interaction.isChatInputCommand() || !interaction.guild) return;
+        const guildMember = interaction.guild.members.cache.get(interaction.user.id);
+        if (!guildMember?.voice.channel) {
+            interaction.editReply("You are not currently in a voice channel!");
+            return;
+        }
+        const query = interaction.options.getString('query')!;
+        const next = interaction.options.getBoolean('next') ?? false;
+        const guildQueuer = BOT.getMusicQueuer();
+
+        await guildQueuer.addToQueue({
+            query: query,
+            interaction: interaction
+        }, true, next);
+    },
+    autocomplete: async (interaction: AutocompleteInteraction, limit = autocompleteLimit) => {
+        await autocompleteQuery(interaction, limit);
+    },
+    properties: {
+        Name: "playnext",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

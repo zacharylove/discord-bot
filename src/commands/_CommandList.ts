@@ -14,7 +14,7 @@ import { ship } from "./slashCommands/ship.js";
 import { starboard } from "./slashCommands/starboard.js";
 import { stats } from "./slashCommands/stats.js";
 import { wordleStats } from "./slashCommands/wordle/wordleStats.js";
-import { playSong } from "./slashCommands/music/play.js";
+import { playNext, playSong } from "./slashCommands/music/play.js";
 import { skipSong } from "./slashCommands/music/skip.js";
 import { stopSong } from "./slashCommands/music/stop.js";
 import { queue } from "./slashCommands/music/queue.js";
@@ -42,6 +42,7 @@ export const CommandList: CommandInterface[] = [
     anime,
     caption,
     playSong,
+    playNext,
     skipSong,
     stopSong,
     queue,
@@ -67,7 +68,7 @@ export const FeatureCommandMap: Map<Feature, CommandInterface[]> = new Map([
     ]],
     // Music
     [Feature.Music, [
-        playSong, skipSong, stopSong, queue, shuffleQueue, clearQueue, nowPlaying, pause, resume
+        playSong, playNext, skipSong, stopSong, queue, shuffleQueue, clearQueue, nowPlaying, pause, resume
     ]],
     // Starboard
     [Feature.Starboard, [
