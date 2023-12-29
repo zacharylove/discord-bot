@@ -21,7 +21,7 @@
     "axios": "^1.6.2",
     "canvas": "^2.11.2",
     "concurrently": "^8.2.2",
-    "discord-api-types": "^0.37.65",
+    "discord-api-types": "^0.37.66",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.2.0",
