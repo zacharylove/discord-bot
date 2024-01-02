@@ -231,6 +231,32 @@ export const toggleTikTokEmbedFix =  async (guildID: string, enableDisable: bool
      return toReturn;
 }
 
+// Instagram Embed Fix
+export const isInstagramEmbedFixEnabled = async (guildID: string): Promise<boolean> => {
+    const guildData = await getGuildDataByGuildID(guildID);
+    // If not configured, default to true
+    if (guildData.messageScanning.instagramEmbedFix == undefined) {
+        guildData.messageScanning.instagramEmbedFix = true;
+        await update(guildData);
+    }
+    
+    return guildData.messageScanning.instagramEmbedFix;
+}
+
+export const toggleInstagramEmbedFix =  async (guildID: string, enableDisable: boolean): Promise<string> => {
+    var toReturn = "";
+
+    const guildData = await getGuildDataByGuildID(guildID);
+    const isEnabled = await isInstagramEmbedFixEnabled(guildID);
+    // If already enabled
+    if ( enableDisable && isEnabled || !enableDisable && !isEnabled ) { return `Instagram Embed Fix is already ${enableDisable ? "enabled" : "disabled"}, dummy!`; }
+     guildData.messageScanning.instagramEmbedFix = enableDisable;
+     await update(guildData);
+
+     toReturn += `Instagram Embed Fix feature has been ${enableDisable ? "enabled! I will now respond to Instagram posts with a fixed embed." : "disabled." }`;
+     return toReturn;
+}
+
 
 /**
  * Attempts to add a command to the list of enabled commands for the given guild
