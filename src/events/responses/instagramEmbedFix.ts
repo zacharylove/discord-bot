@@ -45,7 +45,9 @@ export const instagramEmbedFix = async (message: Message, postURLs: string[]) =>
 
     let prevMessage: Message = message;
     // Remove original embed
-    prevMessage.suppressEmbeds(true);
+    try {
+        prevMessage.suppressEmbeds(true);
+    } catch (e) {}
     prevMessage = await prevMessage.reply({content: responseMessage});
     while (fixedURLs.length > 0) {
         prevMessage = await prevMessage.reply({content: `${fixedURLs.shift()!}`});
