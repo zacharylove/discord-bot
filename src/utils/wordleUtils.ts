@@ -167,6 +167,18 @@ export class wordle {
                 scores: [puzzleInfo.score]
             });
         }
+        // If there has been a submission in the last 48 hours, increment streak
+        if (userData.lastWordleSubmission) {
+            if (!userData.wordleStreak) userData.wordleStreak = 1
+            else {
+                const twoDaysAgo = new Date(new Date().getTime() - (48 * 60 * 60 * 1000));
+                if (userData.lastWordleSubmission >= twoDaysAgo) {
+                    userData.wordleStreak++;
+                } else if (userData.wordleStreak > 0) userData.wordleStreak = 0;
+            }
+        }
+        // Set last submission date to now
+        userData.lastWordleSubmission = new Date();
 
         // Update stats
         if (puzzleInfo.puzzleComplete) userData.numComplete++;
@@ -207,6 +219,32 @@ export class wordle {
             if ( sharedWordleUtils.checkWordleResult(cleanedMessage, this.info ) ) {
                 await message.react("✅");
                 await this.storeWordleResult(cleanedMessage);
+
+                // Notify streaks
+                const userData = await getWordleDataByUserID(cleanedMessage.authorID);
+                if (userData.wordleStreak > 0) {
+                    switch (userData.wordleStreak) {
+                        case 5:
+                            await message.reply("Nice! You're on a 5-day Wordle streak 🔥");
+                            await message.react("🔥");
+                            break;
+                        case 7:
+                            await message.reply("Great work! That's a 7-day Wordle streak 🔥🔥")
+                            await message.react("🔥");
+                            break;
+                        case 14:
+                            await message.reply("Beautiful! A 2-week Wordle streak 🔥🔥🔥")
+                            await message.react("🔥");
+                            break;
+                        default:
+                            // Generic message every week past two weeks
+                            if (userData.wordleStreak % 7 == 0) {
+                                await message.reply(`You're on a ${userData.wordleStreak}-day Wordle streak! 🔥🔥🔥`);
+                                await message.react("🔥");
+                            }
+                            break;
+                    }
+                }
             } else {
                 await message.react("❎");
             }
