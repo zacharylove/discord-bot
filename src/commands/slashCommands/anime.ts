@@ -10,7 +10,7 @@ import { toTitleCase } from "../../utils/utils.js";
 import { BOT } from "../../index.js";
 
 
-const createEmbed = async (interaction: Message<boolean>, anime: any): Promise<Message<boolean>> => {
+export const createAnimeEmbed = async (interaction: Message<boolean>, anime: any, message?: string, isTrace: boolean = false): Promise<Message<boolean>> => {
     const embed = new EmbedBuilder();
     const topResult = anime;
     if (topResult == undefined) throw new Error('Undefined response!');
@@ -146,19 +146,22 @@ const createEmbed = async (interaction: Message<boolean>, anime: any): Promise<M
         row.addComponents(trailerButton);
     }
     // Incorrect Result button
-    const incorrectButton = new ButtonBuilder()
-        .setCustomId("incorrect")
-        .setLabel("Incorrect Result?")
-        .setStyle(ButtonStyle.Danger);
-    row.addComponents(incorrectButton);
-
-    const response = await interaction.edit({ embeds: [embed], components: [row] });
+    if (!isTrace) {
+        const incorrectButton = new ButtonBuilder()
+            .setCustomId("incorrect")
+            .setLabel("Incorrect Result?")
+            .setStyle(ButtonStyle.Danger);
+        row.addComponents(incorrectButton);
+    }
+    let response;
+    if (message) response = await interaction.edit({content: message, embeds: [embed], components: [row] });
+    else response = await interaction.edit({embeds: [embed], components: [row] });
     return response;
 }
 
 const sendEmbedAndCollectResponse = async (interaction: Message<boolean>, anime: any, results: any, query: string, author: User): Promise<null> => {
     interaction.edit({ content: `Anime result for "${query}":` });
-    const response: Message<boolean> = await createEmbed(interaction, anime);
+    const response: Message<boolean> = await createAnimeEmbed(interaction, anime);
     const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === author.id;
 
     // Collect button responses

@@ -23,6 +23,7 @@ import { clearQueue } from "./slashCommands/music/clear.js";
 import { nowPlaying } from "./slashCommands/music/nowplaying.js";
 import { pause, resume } from "./slashCommands/music/pauseResume.js";
 import { playWordle } from "./slashCommands/wordle/playWordle.js";
+import { animeSource } from "./contextCommands/animeSource.js";
 
 // List of all commands registered to the bot
 // These commands are registered to Discord when the bot starts
@@ -41,6 +42,7 @@ export const CommandList: CommandInterface[] = [
     movie,
     anime,
     caption,
+    animeSource,
     playSong,
     pSong,
     playNext,

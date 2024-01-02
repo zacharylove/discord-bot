@@ -117,6 +117,13 @@
         "emojiIds": {
             "MyAnimeList": "1189657752792998018",
             "YouTube": "1189659331453526066"
+        },
+        "trace": {
+            "baseURL": "https://api.trace.moe",
+            "endpoints": {
+                "search": "search",
+                "me": "me"
+            }
         }
     },
     "roleplay": {

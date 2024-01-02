@@ -5,7 +5,7 @@ import { ApplicationCommandType, CommandInteraction, PermissionsBitField, ModalB
 import { CommandInterface } from "../../interfaces/Command.js";
 import { decompressFrames, ParsedFrame, parseGIF } from 'gifuct-js';
 import { createCanvas, ImageData, loadImage, registerFont } from 'canvas';
-import { renderFrame } from "../../utils/imageUtils.js";
+import { parseImageURL, renderFrame } from "../../utils/imageUtils.js";
 import {GIFEncoder} from "../../utils/GIFEncoder/GIFEncoder.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -148,45 +148,7 @@ const buildModal = async (): Promise<ModalBuilder> => {
     return modal;
 }
 
-const parseImageURL = async (interaction: CommandInteraction): Promise<string> => {
-    if (!interaction.isMessageContextMenuCommand()) return "";
-    if (!interaction || !interaction.targetMessage) return "";
-    let imageURL: string = "";
-    const hasAttachment: boolean = interaction.targetMessage.attachments.first() != null;
-    const hasEmbed: boolean = interaction.targetMessage.embeds.length > 0;
-    if (hasAttachment) {
-        // Get image URL from first attachment
-        const attachment = interaction.targetMessage.attachments.first();
-        if (!attachment) return "";
-        imageURL = attachment.url;
-    } else if (hasEmbed) {
-        // Get image URL from first embed
-        const embed = interaction.targetMessage.embeds[0];
-        // Obtain image URL from embed
-        if (!embed.image) {
-            // If no image, try to find video and convert to gif
-            if (!embed.video) return "";
-            
-            imageURL = embed.video.url;
-            // For tenor gifs
-            if ( imageURL.includes("tenor.com") ) {
-                imageURL = imageURL.replace("AAAPo", "AAAAC");
-            }
-            imageURL = imageURL.replace(".mp4", ".gif");
-        } else {
-            imageURL = embed.image.url;
-        }
-    } else {
-        const message = interaction.targetMessage.content;
-        // Parse image URL from message
-        const imageRegex = new RegExp(`\\bhttps?:\\/\\/\\S+`);
-        const match = message.match(imageRegex);
-        if (!match) return "";
-        imageURL = match[0];
-    }
 
-    return imageURL;
-}
 
 
 export const caption: CommandInterface = {

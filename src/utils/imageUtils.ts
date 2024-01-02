@@ -1,6 +1,6 @@
 // Utility functions for images
 import { Canvas } from 'canvas';
-import { ImageExtension, User } from 'discord.js';
+import { CommandInteraction, ImageExtension, User } from 'discord.js';
 import { ParsedFrame } from 'gifuct-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,6 +11,55 @@ const validFormats : ImageExtension[] = ["webp", "png", "jpg", "jpeg"];
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 export const imagePath = path.join(__dirname, '..', '..', 'assets', 'img');
+
+/**
+ * Parse image URL from message (for context menu commands)
+ * @param interaction 
+ * @returns 
+ */
+export const parseImageURL = async (interaction: CommandInteraction): Promise<string> => {
+    if (!interaction.isMessageContextMenuCommand()) return "";
+    if (!interaction || !interaction.targetMessage) return "";
+    let imageURL: string = "";
+    const hasAttachment: boolean = interaction.targetMessage.attachments.first() != null;
+    const hasEmbed: boolean = interaction.targetMessage.embeds.length > 0;
+    if (hasAttachment) {
+        // Get image URL from first attachment
+        const attachment = interaction.targetMessage.attachments.first();
+        if (!attachment) return "";
+        imageURL = attachment.url;
+    } else if (hasEmbed) {
+        // Get image URL from first embed
+        const embed = interaction.targetMessage.embeds[0];
+        // Obtain image URL from embed
+        if (!embed.image) {
+            // If no image, try to find video and convert to gif
+            if (!embed.video) {
+                if (embed.url) imageURL = embed.url;
+                else return "";
+            } else {
+            
+                imageURL = embed.video.url;
+                // For tenor gifs
+                if ( imageURL.includes("tenor.com") ) {
+                    imageURL = imageURL.replace("AAAPo", "AAAAC");
+                }
+                imageURL = imageURL.replace(".mp4", ".gif");
+            }
+        } else {
+            imageURL = embed.image.url;
+        }
+    } else {
+        const message = interaction.targetMessage.content;
+        // Parse image URL from message
+        const imageRegex = new RegExp(`\\bhttps?:\\/\\/\\S+`);
+        const match = message.match(imageRegex);
+        if (!match) return "";
+        imageURL = match[0];
+    }
+
+    return imageURL;
+}
 
 /**
  * Forms a map containing all valid image urls
