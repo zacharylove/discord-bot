@@ -1,6 +1,6 @@
 {
-    "version": "1.4.9",
-    "statuses": [ "I do music!", "I fix Twitter embeds!", "I fix TikTok embeds!", "I support confessions!", "I can caption GIFs!", "I keep track of Wordle scores!", "I do starboards!", "Check out /ship!", "<3" ],
+    "version": "1.5.0",
+    "statuses": [ "I do music!", "I fix Twitter embeds!", "I fix Instagram embeds!", "I fix TikTok embeds!", "I support confessions!", "I can caption GIFs!", "I keep track of Wordle scores!", "I do starboards!", "Check out /ship!", "<3" ],
     "starboard": {
         "config": {
             "fetchLimit": 100,

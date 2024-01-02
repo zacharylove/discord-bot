@@ -112,7 +112,9 @@ export const createAnimeEmbed = async (interaction: Message<boolean>, anime: any
     embed.setDescription(description);
     embed.setTitle(title);
     embed.setURL(malURL);
-    embed.setFooter({ text: "Data: MyAnimeList, Jikan", iconURL: "https://cdn.myanimelist.net/img/sp/icon/apple-touch-icon-256.png"})
+    let footerText = "Data: MyAnimeList, Jikan";
+    if (isTrace) footerText += ", Trace.moe"
+    embed.setFooter({ text: footerText, iconURL: "https://cdn.myanimelist.net/img/sp/icon/apple-touch-icon-256.png"})
 
     // Links
     const row: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
