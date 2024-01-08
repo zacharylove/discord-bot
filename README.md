@@ -12,7 +12,9 @@ The features of this bot are divided into two categories:
  - **Features**: "Passive" interactions through scanning messages (no messages are ever logged)
    - Starboard/Hall of Shame (WIP): Collects messages which have received a configurable number of reactions and immortalizes them in their own channel.
    - Wordle Tracking: Parses and maintains a database of wordle results pasted into chat and generates detailed statistics and local/global leaderboards.
-   - Twitter Embed Fix: Automatically fixes embedding of Twitter/X post URLs (until X fixes this)
+   - Embed Fixes: Automatically fixes embedding of Twitter/X, Instagram, and TikTok post URLs
+
+Each command and feature can be configured and toggled on/off on a per-server basis through the "settings" command.
 
 This is a solo project, and I usually work on this project on-and-off, using it as an opportunity to explore and learn about new things such as Typescript, MongoDB, and Docker.
 I add features that I think would be fun or useful between me and my friends; as such, this bot is not designed to be used on a large number of servers. 
