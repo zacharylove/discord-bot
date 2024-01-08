@@ -101,7 +101,7 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     ctx.strokeStyle = '#000000';
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
-    let howRed,howGreen;
+    let howRed,howBlue;
 
     ctx.font = '900 50px sans-serif';
     ctx.fillText(userData.totalPuzzles.toString(), xPos, 345, 100);
@@ -120,13 +120,15 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
 
     // Average Guesses
     xPos += 120 + spacing;
-    // Gets greener the closer to 1 you are, redder the closer to 6 you are
+    // Gets bluer the closer to 2 you are, redder the closer to 5 you are
     const intAvg = Math.round(userData.totalAverage);
-    howRed = (intAvg-1) * (255/5);
-    howGreen = (6-intAvg) * (255/5);
+    howRed = (intAvg-2) * (255/4);
+    howRed = howRed > 255 ? 255 : howRed;
+    howBlue = (6-intAvg) * (255/4);
+    howBlue = howBlue > 255 ? 255 : howBlue;
     // No way someone averages below 1 guess
 
-    ctx.fillStyle = `rgba(${Math.round(howRed)},0,${Math.round(howGreen)},1)`;
+    ctx.fillStyle = `rgba(${Math.round(howRed)},0,${Math.round(howBlue)},1)`;
     ctx.font = '900 50px sans-serif';
     ctx.fillText(userData.totalAverage.toFixed(2), xPos, 345, 100);
     ctx.fillStyle = '#000000';
