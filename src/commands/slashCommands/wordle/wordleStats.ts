@@ -78,7 +78,7 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     ctx.strokeStyle = '#ff0000';
     ctx.fillStyle = '#ff0000';
     const radius = 10;
-    ctx.arc(userData.weightedScore / topWeightedScore * 550+25, 200, radius, 0, 2*Math.PI);
+    ctx.arc((userData.weightedScore / topWeightedScore * 550) + 25, 200, radius, 0, 2*Math.PI);
     ctx.stroke();
     ctx.fill();
     ctx.closePath();
