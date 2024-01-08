@@ -174,11 +174,14 @@ export class wordle {
                 const twoDaysAgo = new Date(new Date().getTime() - (48 * 60 * 60 * 1000));
                 if (userData.lastWordleSubmission >= twoDaysAgo) {
                     userData.wordleStreak++;
+                    if (userData.longestStreak < userData.wordleStreak) userData.longestStreak = userData.wordleStreak
                 } else if (userData.wordleStreak > 0) userData.wordleStreak = 0;
             }
         }
         // Set last submission date to now
         userData.lastWordleSubmission = new Date();
+        // For users that have records from before longest streak was implemented
+        if (!userData.longestStreak) userData.longestStreak = 0;
 
         // Update stats
         if (puzzleInfo.puzzleComplete) userData.numComplete++;

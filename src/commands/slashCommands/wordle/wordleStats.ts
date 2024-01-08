@@ -16,10 +16,8 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     // Fill background
     ctx.fillStyle = "#ffffff";
     ctx.roundRect(0, 0, 600, 260, 20);
-    ctx.roundRect(65, 290, 120, 120, 20);
-    ctx.roundRect(240, 290, 120, 120, 20);
-    ctx.roundRect(415, 290, 120, 120, 20);
     ctx.fill();
+  
 
     // Load user avatar
     // 150x150
@@ -71,47 +69,85 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     ctx.closePath();
 
     // Draw markers
-    ctx.fillText('0', 25, 235);
+    ctx.fillText('0', 25, 240);
     ctx.textAlign = 'right';
-    ctx.fillText(`${topWeightedScore}`, 575, 235);
+    ctx.fillText(`${topWeightedScore}`, 575, 240);
 
     // Draw circle (line length 550)
     ctx.beginPath()
     ctx.strokeStyle = '#ff0000';
     ctx.fillStyle = '#ff0000';
     const radius = 10;
-    ctx.arc(userData.weightedScore / topWeightedScore * 550, 200, radius, 0, 2*Math.PI);
+    ctx.arc(userData.weightedScore / topWeightedScore * 550+25, 200, radius, 0, 2*Math.PI);
     ctx.stroke();
     ctx.fill();
     ctx.closePath();
+
+    let xPos;
+
+    const width = 120;
+    const spacing = width/5;
+    xPos = 120/2 + spacing;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.roundRect(xPos - width/2, 290, width, 120, 20);
+    ctx.roundRect(xPos + 120 + spacing - width/2, 290, width, 120, 20);
+    ctx.roundRect(xPos + 2*(120 + spacing) - width/2, 290, width, 120, 20);
+    ctx.roundRect(xPos + 3*(120 + spacing) - width/2, 290, width, 120, 20);
+    ctx.fill()
+    
 
     // Puzzles Attempted
     ctx.strokeStyle = '#000000';
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
+    let howRed,howGreen;
 
     ctx.font = '900 50px sans-serif';
-    ctx.fillText(userData.totalPuzzles.toString(), 125, 345, 100);
+    ctx.fillText(userData.totalPuzzles.toString(), xPos, 345, 100);
 
     ctx.font = '24px sans-serif';
-    ctx.fillText("Puzzles", 125, 370, 100);
-    ctx.fillText("Attempted", 125, 390, 100);
+    ctx.fillText("Puzzles", xPos, 370, 100);
+    ctx.fillText("Attempted", xPos, 390, 100);
 
     // Puzzles Completed
+    xPos += 120 + spacing;
     ctx.font = '900 50px sans-serif';
-    ctx.fillText(userData.numComplete.toString(), 300, 345, 100);
-    
+    ctx.fillText(userData.numComplete.toString(), xPos, 345, 100);
     ctx.font = '24px sans-serif';
-    ctx.fillText("Puzzles", 300, 370, 100);
-    ctx.fillText("Completed", 300, 390, 100);
+    ctx.fillText("Puzzles", xPos, 370, 100);
+    ctx.fillText("Completed", xPos, 390, 100);
 
     // Average Guesses
+    xPos += 120 + spacing;
+    // Gets greener the closer to 1 you are, redder the closer to 6 you are
+    const intAvg = Math.round(userData.totalAverage);
+    howRed = (intAvg-1) * (255/5);
+    howGreen = (6-intAvg) * (255/5);
+    // No way someone averages below 1 guess
+
+    ctx.fillStyle = `rgba(${Math.round(howRed)},0,${Math.round(howGreen)},1)`;
     ctx.font = '900 50px sans-serif';
-    ctx.fillText(userData.totalAverage.toFixed(2), 475, 345, 100);
-    
+    ctx.fillText(userData.totalAverage.toFixed(2), xPos, 345, 100);
+    ctx.fillStyle = '#000000';
     ctx.font = '24px sans-serif';
-    ctx.fillText("Guess", 475, 370, 100);
-    ctx.fillText("Average", 475, 390, 100);
+    ctx.fillText("Guess", xPos, 370, 100);
+    ctx.fillText("Average", xPos, 390, 100);
+
+    // Longest Streak
+    xPos += 120 + spacing;
+    const longestStreak = userData.longestStreak ? userData.longestStreak : 8;
+    // Gets redder the closer to 14 days you are
+    howRed = 255/14*longestStreak;
+    if (howRed > 255) howRed = 255;
+    ctx.fillStyle = `rgba(${Math.round(howRed)},0,0,1)`;
+    ctx.font = '900 50px sans-serif';
+    ctx.fillText(longestStreak.toString(), xPos, 345, 100);
+    
+    ctx.fillStyle = '#000000';
+    ctx.font = '24px sans-serif';
+    ctx.fillText("Longest", xPos, 370, 100);
+    ctx.fillText("Streak", xPos, 390, 100);
 
     return canvas.toBuffer()
 }

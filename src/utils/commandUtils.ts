@@ -172,7 +172,10 @@ export const broadcastCommandStatus = async (interaction: CommandInteraction | C
             if (permsExist) {
                 const permissions = info.command?.properties.Permissions;
                 errorMessage += `**I'm not allowed to run ${commandName}!** Make sure I have the following permissions:\n- ${permissions?.join("\n- ")}`;
-            } else invalid = true;
+            } else {
+                errorMessage += `**I'm not allowed to run ${commandName}!**`;
+                invalid = true;
+            }
             break;
         case CommandStatus.DisabledInGuild:
             errorMessage += `**Command ${commandName} is disabled in this server!**\n`;
