@@ -136,7 +136,9 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
 
     // Longest Streak
     xPos += 120 + spacing;
-    const longestStreak = userData.longestStreak ? userData.longestStreak : 8;
+    let longestStreak = userData.longestStreak ? userData.longestStreak : 0;
+    // Do a quick sanity check for longest streak
+    if (userData.wordleStreak > longestStreak) longestStreak = userData.wordleStreak;
     // Gets redder the closer to 14 days you are
     howRed = 255/14*longestStreak;
     if (howRed > 255) howRed = 255;
