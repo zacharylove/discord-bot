@@ -18,7 +18,7 @@
     "@discordjs/opus": "^0.9.0",
     "@discordjs/rest": "^2.2.0",
     "@discordjs/voice": "^0.16.1",
-    "axios": "^1.6.3",
+    "axios": "^1.6.5",
     "canvas": "^2.11.2",
     "concurrently": "^8.2.2",
     "discord-api-types": "^0.37.67",
@@ -34,12 +34,12 @@
     "module-alias": "^2.2.3",
     "mongoose": "^8.0.3",
     "p-retry": "^6.2.0",
-    "spotify-uri": "^4.0.0",
+    "spotify-uri": "^4.0.1",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.24",
-    "@types/node": "^20.10.6",
+    "@types/node": "^20.10.7",
     "@types/spotify-web-api-node": "^5.0.11",
     "fluent-ffmpeg": "^2.1.2",
     "spotify-web-api-node": "^5.0.2",
