@@ -10,7 +10,7 @@ import { getAvatarURL } from '../../../utils/userUtils.js';
 
 const buildImage = async (user: User, interaction: CommandInteraction): Promise<Buffer> => {
     // Build 600x600px canvas
-    const canvas = createCanvas(600, 415);
+    const canvas = createCanvas(600, 600);
     const ctx = canvas.getContext('2d');
 
     // Fill background
@@ -84,16 +84,24 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     ctx.closePath();
 
     let xPos;
+    let yStat = 335;
+    let yTitleLine = 360;
+    let ySubtitleLine = 380;
+    const cardHeight = 120;
 
     const width = 120;
+    let textWidth = width - 20;
     const spacing = width/5;
-    xPos = 120/2 + spacing;
+    xPos = width/2 + spacing;
 
     ctx.fillStyle = '#ffffff';
-    ctx.roundRect(xPos - width/2, 290, width, 120, 20);
-    ctx.roundRect(xPos + 120 + spacing - width/2, 290, width, 120, 20);
-    ctx.roundRect(xPos + 2*(120 + spacing) - width/2, 290, width, 120, 20);
-    ctx.roundRect(xPos + 3*(120 + spacing) - width/2, 290, width, 120, 20);
+    ctx.roundRect(xPos - width/2, 280, width, cardHeight, 20);
+    ctx.roundRect(xPos + width + spacing - width/2, 280, width, cardHeight, 20);
+    ctx.roundRect(xPos + 2*(width + spacing) - width/2, 280, width, cardHeight, 20);
+    ctx.roundRect(xPos + 3*(width + spacing) - width/2, 280, width, cardHeight, 20);
+    // Hardest Word
+    ctx.roundRect(xPos - width/2, 280+cardHeight+spacing, width*2+spacing, cardHeight, 20);
+    ctx.roundRect(xPos + 2*(width+spacing) - width/2, 280+cardHeight+spacing, width*2+spacing, cardHeight, 20);
     ctx.fill()
     
 
@@ -103,23 +111,24 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     ctx.textAlign = 'center';
     let howRed,howBlue;
 
+
     ctx.font = '900 50px sans-serif';
-    ctx.fillText(userData.totalPuzzles.toString(), xPos, 345, 100);
+    ctx.fillText(userData.totalPuzzles.toString(), xPos, yStat, textWidth);
 
     ctx.font = '24px sans-serif';
-    ctx.fillText("Puzzles", xPos, 370, 100);
-    ctx.fillText("Attempted", xPos, 390, 100);
+    ctx.fillText("Puzzles", xPos, yTitleLine, textWidth);
+    ctx.fillText("Attempted", xPos, ySubtitleLine, textWidth);
 
     // Puzzles Completed
-    xPos += 120 + spacing;
+    xPos += width + spacing;
     ctx.font = '900 50px sans-serif';
-    ctx.fillText(userData.numComplete.toString(), xPos, 345, 100);
+    ctx.fillText(userData.numComplete.toString(), xPos, yStat, textWidth);
     ctx.font = '24px sans-serif';
-    ctx.fillText("Puzzles", xPos, 370, 100);
-    ctx.fillText("Completed", xPos, 390, 100);
+    ctx.fillText("Puzzles", xPos, yTitleLine, textWidth);
+    ctx.fillText("Completed", xPos, ySubtitleLine, textWidth);
 
     // Average Guesses
-    xPos += 120 + spacing;
+    xPos += width + spacing;
     // Gets bluer the closer to 2 you are, redder the closer to 5 you are
     const intAvg = Math.round(userData.totalAverage);
     howRed = (intAvg-2) * (255/4);
@@ -130,14 +139,14 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
 
     ctx.fillStyle = `rgba(${Math.round(howRed)},0,${Math.round(howBlue)},1)`;
     ctx.font = '900 50px sans-serif';
-    ctx.fillText(userData.totalAverage.toFixed(2), xPos, 345, 100);
+    ctx.fillText(userData.totalAverage.toFixed(2), xPos, yStat, textWidth);
     ctx.fillStyle = '#000000';
     ctx.font = '24px sans-serif';
-    ctx.fillText("Guess", xPos, 370, 100);
-    ctx.fillText("Average", xPos, 390, 100);
+    ctx.fillText("Guess", xPos, yTitleLine, textWidth);
+    ctx.fillText("Average", xPos, ySubtitleLine, textWidth);
 
     // Longest Streak
-    xPos += 120 + spacing;
+    xPos += width + spacing;
     let longestStreak = userData.longestStreak ? userData.longestStreak : 0;
     // Do a quick sanity check for longest streak
     if (userData.wordleStreak > longestStreak) longestStreak = userData.wordleStreak;
@@ -146,12 +155,64 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     if (howRed > 255) howRed = 255;
     ctx.fillStyle = `rgba(${Math.round(howRed)},0,0,1)`;
     ctx.font = '900 50px sans-serif';
-    ctx.fillText(longestStreak.toString(), xPos, 345, 100);
+    ctx.fillText(longestStreak.toString(), xPos, yStat, textWidth);
     
     ctx.fillStyle = '#000000';
     ctx.font = '24px sans-serif';
-    ctx.fillText("Longest", xPos, 370, 100);
-    ctx.fillText("Streak", xPos, 390, 100);
+    ctx.fillText("Longest", xPos, yTitleLine, textWidth);
+    ctx.fillText("Streak", xPos, ySubtitleLine, textWidth);
+
+    // Begin row 2
+    xPos = (2*width+spacing)/2 + spacing;
+    yStat += cardHeight + spacing;
+    yTitleLine += cardHeight + spacing;
+    ySubtitleLine += cardHeight + spacing;
+    // Double card width
+    textWidth *= 2;
+    textWidth += 20;
+
+    // Hardest Word
+    let avg: number;
+    let lowestAvg = 7;
+    let highestAvg = 0;
+    let hardestId = 9999;
+    let easiestId = 9999;
+    let hardestAttempts = 0;
+    let easiestAttempts = 9999;
+    for (const result of userData.results) {
+        avg = 0;
+        result.scores.forEach( score => {
+            avg += score;
+        });
+        avg /= result.scores.length;
+        // If tie, take the higher number of attempts
+        if ((avg < lowestAvg) || (avg == lowestAvg && result.scores.length > easiestAttempts )) {
+            lowestAvg = avg;
+            easiestId = result.puzzleID;
+            easiestAttempts = result.scores.length;
+        } 
+        if ((avg > highestAvg) || (avg == highestAvg && result.scores.length > hardestAttempts )) {
+            highestAvg = avg;
+            hardestId = result.puzzleID;
+            hardestAttempts = result.scores.length;
+        }
+    }
+    ctx.font = '900 50px sans-serif';
+    ctx.fillText(`#${hardestId}`, xPos, yStat, textWidth);
+    ctx.font = '24px sans-serif';
+    ctx.fillText("Hardest Puzzle", xPos, yTitleLine, textWidth);
+    ctx.font = '18px sans-serif';
+    ctx.fillText(`${highestAvg} avg guesses over ${hardestAttempts} attempts`, xPos, ySubtitleLine, textWidth);
+
+    // Easiest Word
+    xPos += (2*width+spacing) + spacing;
+    ctx.font = '900 50px sans-serif';
+    ctx.fillText(`#${easiestId}`, xPos, yStat, textWidth);
+    ctx.font = '24px sans-serif';
+    ctx.fillText("Easiest Puzzle", xPos, yTitleLine, textWidth);
+    ctx.font = '18px sans-serif';
+    ctx.fillText(`${lowestAvg} avg guesses over ${easiestAttempts} attempts`, xPos, ySubtitleLine, textWidth);
+
 
     return canvas.toBuffer()
 }
