@@ -23,6 +23,8 @@ export default class Bot extends Client {
     private wordleWordList: string[];
     private wordleAllowedGuessList: string[];
     private wordleChallengeWordList: string[];
+    private bibleAllWordList: Set<string> = new Set<string>();
+    private bibleUncommonWordList: Set<string> = new Set<string>();
 
     constructor( options: ClientOptions ) {
         super(options);
@@ -45,6 +47,13 @@ export default class Bot extends Client {
         this.wordleWordList = fs.readFileSync(path.resolve(path.join(__dirname, '..', 'assets', 'txt', 'wordleWords.txt')),'utf8').split('\n');
         this.wordleAllowedGuessList = fs.readFileSync(path.resolve(path.join(__dirname, '..', 'assets', 'txt', 'validWordleGuesses.txt')),'utf8').split('\n');
         this.wordleChallengeWordList = fs.readFileSync(path.resolve(path.join(__dirname, '..', 'assets', 'txt', 'challengeWordleWords.txt')),'utf8').split('\n');
+        
+        // Using dictionary for fast lookup
+        const bibleAllWords = fs.readFileSync(path.resolve(path.join(__dirname, '..', 'assets', 'txt', 'bibleAllWords.txt')),'utf8').split('\n');
+        for (const word of bibleAllWords) this.bibleAllWordList.add(word.replace("\r", ""))
+
+        const bibleUncommonWords = fs.readFileSync(path.resolve(path.join(__dirname, '..', 'assets', 'txt', 'bibleUncommonWords.txt')),'utf8').split('\n');
+        for (const word of bibleUncommonWords) this.bibleUncommonWordList.add(word.replace("\r", ""))
     }
 
     private initializeSpotifyAPI = async (): Promise<void> => {
@@ -96,5 +105,11 @@ export default class Bot extends Client {
     }
     public getWordleChallengeWordList = (): string[] => {
         return this.wordleChallengeWordList;
+    }
+    public getBibleAllWordList = ():  Set<string> => {
+        return this.bibleAllWordList;
+    }
+    public getBibleUncommonWordList = ():  Set<string> => {
+        return this.bibleUncommonWordList;
     }
 }
