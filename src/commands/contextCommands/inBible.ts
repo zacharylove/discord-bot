@@ -16,11 +16,17 @@ export const inBible: CommandInterface = {
 
         const originalMessage = interaction.targetMessage.content;
         let message = originalMessage;
+
         // Strip punctuation, numbers, and emojis
         message = message.replace(/:[^:]*:/g, '');
         message = message.replace(/[^\p{L}\s]/gu, '');
 
         message = message.toLowerCase();
+
+        if (message == "" || !message) {
+            await interaction.editReply("There's no text to check here! The Bible isn't a picture book!");
+            return;
+        }
 
         const splitMessage = message.split(" ");
         const bibleAllWordList = BOT.getBibleAllWordList();
@@ -50,10 +56,10 @@ export const inBible: CommandInterface = {
         let uncommonPercentage = (uncommonCounter / splitMessage.length * 100).toFixed(2);
         replyString += ` > <@${interaction.targetMessage.author.id}>:\n`;
         replyString += ` > "${originalMessage}"\n`;
-        replyString += `**${allCounter}/${splitMessage.length}** of these words are in the Bible (${allPercentage}%). `;
-        replyString += `Not counting common words, **${uncommonCounter}/${splitMessage.length}** of these words are in the Bible (${uncommonPercentage}%).\n`
-        replyString += `**Words:** ${notInBible.join(", ")}\n`
-        replyString += `*(Using the [King James Bible](https://www.o-bible.com/download/kjv.txt). "Common words" are defined in a stopword list that contains conjunctions, negations, and modal verbs)*`;
+        replyString += `**${allCounter == 0 ? "NONE" : `${allCounter}/${splitMessage.length}`}** of these words are in the Bible${allCounter != 0 ? ` (${allPercentage}%)` : ""}. `;
+        if (allCounter != 0) replyString += `Not counting common words, **${uncommonCounter == 0 ? "NONE" : `${uncommonCounter}/${splitMessage.length}`}** of these words are in the Bible${uncommonCounter != 0 ? ` (${uncommonPercentage}%)` : ""}.`
+        if (notInBible.length > 0) replyString += `**Words:** ${notInBible.join(", ")}\n`
+        replyString += `\n*(Using the [King James Bible](https://www.o-bible.com/download/kjv.txt).${allCounter != 0 ? ` "Common words" are defined in a stopword list that contains conjunctions, negations, and modal verbs`: ""})*`;
 
         await interaction.editReply(replyString);
     },
