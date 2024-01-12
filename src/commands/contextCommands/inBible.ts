@@ -1,6 +1,7 @@
 import { ApplicationCommandType, CommandInteraction, ContextMenuCommandBuilder } from "discord.js";
 import { CommandInterface } from "../../interfaces/Command";
 import { BOT } from "../../index.js";
+import { truncateString } from "../../utils/utils.js";
 
 
 export const inBible: CommandInterface = {
@@ -20,6 +21,7 @@ export const inBible: CommandInterface = {
         // Strip punctuation, numbers, and emojis
         message = message.replace(/:[^:]*:/g, '');
         message = message.replace(/[^\p{L}\s]/gu, '');
+        message = message.replace("\n", "");
 
         message = message.toLowerCase();
 
@@ -33,20 +35,19 @@ export const inBible: CommandInterface = {
         const bibleUncommonWordList = BOT.getBibleUncommonWordList();
         let allCounter = 0;
         let uncommonCounter = 0;
-        const notInBible = [];
+        const notInBible = new Set();
         let addedToList: boolean;
         for (const word of splitMessage) {
             addedToList = false;
             
-            console.debug(`bibleWordList[${word}] = ${bibleAllWordList.has(word)}`);
             if (bibleUncommonWordList.has(word)) {
                 uncommonCounter++;
-                notInBible.push(word);
+                notInBible.add(word);
                 addedToList = true;
             }
             if (bibleAllWordList.has(word)) {
                 allCounter++;
-                if (!addedToList) notInBible.push(word + "\\*")
+                if (!addedToList) notInBible.add(word + "\\*")
             }
             
         }
@@ -54,14 +55,29 @@ export const inBible: CommandInterface = {
         let replyString = "";
         let allPercentage = (allCounter / splitMessage.length * 100).toFixed(2);
         let uncommonPercentage = (uncommonCounter / splitMessage.length * 100).toFixed(2);
+        let notInBibleArray = Array.from(notInBible).slice(0,20);
+        let isWordListTruncated = notInBibleArray.length < notInBible.size ? true : false;
+        let originalMessageTruncated = truncateString(originalMessage, 1200).replaceAll("\n", "\n > ");
+        let isStringTruncated = originalMessageTruncated.length < originalMessage.length ? true : false;
         replyString += ` > <@${interaction.targetMessage.author.id}>:\n`;
-        replyString += ` > "${originalMessage}"\n`;
+        replyString += ` > "${originalMessageTruncated}"\n`;
         replyString += `**${allCounter == 0 ? "NONE" : `${allCounter}/${splitMessage.length}`}** of these words are in the Bible${allCounter != 0 ? ` (${allPercentage}%)` : ""}. `;
         if (allCounter != 0) replyString += `Not counting common words, **${uncommonCounter == 0 ? "NONE" : `${uncommonCounter}/${splitMessage.length}`}** of these words are in the Bible${uncommonCounter != 0 ? ` (${uncommonPercentage}%)` : ""}.`
-        if (notInBible.length > 0) replyString += `**Words:** ${notInBible.join(", ")}\n`
+        replyString += `\n\n[Original Message](https://discord.com/channels/${interaction.guildId}/${interaction.targetMessage.channelId}/${interaction.targetMessage.id})`;
+        if (notInBible.size > 0) {
+            if (!originalMessageTruncated) {
+                replyString += `\n**Words:** ${notInBibleArray.join(", ")}${isWordListTruncated ? "..." : ""}\n`
+            } else {
+                replyString += `\nThe original message is too long to display the list of words.`;
+            }
+        }
         replyString += `\n*(Using the [King James Bible](https://www.o-bible.com/download/kjv.txt).${allCounter != 0 ? ` "Common words" are defined in a stopword list that contains conjunctions, negations, and modal verbs`: ""})*`;
 
-        await interaction.editReply(replyString);
+        if (replyString.length > 2000) {
+            await interaction.editReply("My reply message is over 2000 characters in length and can't be sent! Contact inco for a fix.")
+        } else {
+            await interaction.editReply(replyString);
+        }
     },
     properties: {
         Name: 'In Bible',
