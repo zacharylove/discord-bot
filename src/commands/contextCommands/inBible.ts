@@ -38,16 +38,18 @@ export const inBible: CommandInterface = {
         const notInBible = new Set();
         let addedToList: boolean;
         for (const word of splitMessage) {
-            addedToList = false;
-            
-            if (bibleUncommonWordList.has(word)) {
-                uncommonCounter++;
-                notInBible.add(word);
-                addedToList = true;
-            }
-            if (bibleAllWordList.has(word)) {
-                allCounter++;
-                if (!addedToList) notInBible.add(word + "\\*")
+            if (word != "") {
+                addedToList = false;
+                
+                if (bibleUncommonWordList.has(word)) {
+                    uncommonCounter++;
+                    notInBible.add(word);
+                    addedToList = true;
+                }
+                if (bibleAllWordList.has(word)) {
+                    allCounter++;
+                    if (!addedToList) notInBible.add(word + "\\*")
+                }
             }
             
         }
