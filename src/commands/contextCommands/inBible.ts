@@ -65,7 +65,7 @@ export const inBible: CommandInterface = {
         if (allCounter != 0) replyString += `Not counting common words, **${uncommonCounter == 0 ? "NONE" : `${uncommonCounter}/${splitMessage.length}`}** of these words are in the Bible${uncommonCounter != 0 ? ` (${uncommonPercentage}%)` : ""}.`
         replyString += `\n\n[Original Message](https://discord.com/channels/${interaction.guildId}/${interaction.targetMessage.channelId}/${interaction.targetMessage.id})`;
         if (notInBible.size > 0) {
-            if (!originalMessageTruncated) {
+            if (!isStringTruncated) {
                 replyString += `\n**Words:** ${notInBibleArray.join(", ")}${isWordListTruncated ? "..." : ""}\n`
             } else {
                 replyString += `\nThe original message is too long to display the list of words.`;
