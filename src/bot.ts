@@ -25,6 +25,7 @@ export default class Bot extends Client {
     private wordleChallengeWordList: string[];
     private bibleAllWordList: Set<string> = new Set<string>();
     private bibleUncommonWordList: Set<string> = new Set<string>();
+    private stopwordList: Set<string> = new Set<string>();
 
     constructor( options: ClientOptions ) {
         super(options);
@@ -54,6 +55,10 @@ export default class Bot extends Client {
 
         const bibleUncommonWords = fs.readFileSync(path.resolve(path.join(__dirname, '..', 'assets', 'txt', 'bibleUncommonWords.txt')),'utf8').split('\n');
         for (const word of bibleUncommonWords) this.bibleUncommonWordList.add(word.replace("\r", ""))
+
+        // Load stopword list (common words)
+        const stopwords = fs.readFileSync(path.resolve(path.join(__dirname, '..', 'assets', 'txt', 'stopwords.txt')),'utf8').split('\n');
+        for (const word of stopwords) this.stopwordList.add(word.replace("\r", ""));
     }
 
     private initializeSpotifyAPI = async (): Promise<void> => {
@@ -111,5 +116,8 @@ export default class Bot extends Client {
     }
     public getBibleUncommonWordList = ():  Set<string> => {
         return this.bibleUncommonWordList;
+    }
+    public getStopwordList = ():  Set<string>  => {
+        return this.stopwordList;
     }
 }

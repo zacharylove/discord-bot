@@ -31,6 +31,14 @@ export const inBible: CommandInterface = {
         }
 
         const splitMessage = message.split(" ");
+
+        // Remove stopwords
+        const stopwords = BOT.getStopwordList();
+        let messageUncommon = [];
+        for (const word in splitMessage) {
+            if (!stopwords.has(splitMessage[word])) messageUncommon.push(word);
+        }
+
         const bibleAllWordList = BOT.getBibleAllWordList();
         const bibleUncommonWordList = BOT.getBibleUncommonWordList();
         let allCounter = 0;
@@ -56,7 +64,7 @@ export const inBible: CommandInterface = {
 
         let replyString = "";
         let allPercentage = (allCounter / splitMessage.length * 100).toFixed(2);
-        let uncommonPercentage = (uncommonCounter / splitMessage.length * 100).toFixed(2);
+        let uncommonPercentage = (uncommonCounter / messageUncommon.length * 100).toFixed(2);
         let notInBibleArray = Array.from(notInBible).slice(0,20);
         let isWordListTruncated = notInBibleArray.length < notInBible.size ? true : false;
         let originalMessageTruncated = truncateString(originalMessage, 1200).replaceAll("\n", "\n > ");
@@ -64,7 +72,7 @@ export const inBible: CommandInterface = {
         replyString += ` > <@${interaction.targetMessage.author.id}>:\n`;
         replyString += ` > "${originalMessageTruncated}"\n`;
         replyString += `**${allCounter == 0 ? "NONE" : `${allCounter}/${splitMessage.length}`}** of these words are in the Bible${allCounter != 0 ? ` (${allPercentage}%)` : ""}. `;
-        if (allCounter != 0) replyString += `Not counting common words, **${uncommonCounter == 0 ? "NONE" : `${uncommonCounter}/${splitMessage.length}`}** of these words are in the Bible${uncommonCounter != 0 ? ` (${uncommonPercentage}%)` : ""}.`
+        if (allCounter != 0 && messageUncommon.length > 0) replyString += `Not counting common words, **${uncommonCounter == 0 ? "NONE" : `${uncommonCounter}/${messageUncommon.length}`}** of these words are in the Bible${uncommonCounter != 0 ? ` (${uncommonPercentage}%)` : ""}.`
         replyString += `\n\n[Original Message](https://discord.com/channels/${interaction.guildId}/${interaction.targetMessage.channelId}/${interaction.targetMessage.id})`;
         if (notInBible.size > 0) {
             if (!isStringTruncated) {
