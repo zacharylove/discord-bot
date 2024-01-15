@@ -226,24 +226,21 @@ export class wordle {
                 // Notify streaks
                 const userData = await getWordleDataByUserID(cleanedMessage.authorID);
                 if (userData.wordleStreak > 0) {
+                    await message.react("🔥");
                     switch (userData.wordleStreak) {
                         case 5:
                             await message.reply("Nice! You're on a 5-day Wordle streak 🔥");
-                            await message.react("🔥");
                             break;
                         case 7:
                             await message.reply("Great work! That's a 7-day Wordle streak 🔥🔥")
-                            await message.react("🔥");
                             break;
                         case 14:
                             await message.reply("Beautiful! A 2-week Wordle streak 🔥🔥🔥")
-                            await message.react("🔥");
                             break;
                         default:
                             // Generic message every week past two weeks
                             if (userData.wordleStreak % 7 == 0) {
                                 await message.reply(`You're on a ${userData.wordleStreak}-day Wordle streak! 🔥🔥🔥`);
-                                await message.react("🔥");
                             }
                             break;
                     }
