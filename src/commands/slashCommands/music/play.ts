@@ -11,54 +11,58 @@ const autocompleteLimit = config.music.autocompleteLimit;
 
 // Autocomplete the 'query' argument with results from Youtube and Spotify
 const autocompleteQuery = async (interaction: AutocompleteInteraction, limit = 10) => {
-    const query = interaction.options.getString('query')?.trim();
-    if (!query || query.length <= 3) {
-        await interaction.respond([]);
-        return;
-    }
-
-    // Ignore direct URLs
     try {
-        new URL(query);
-        await interaction.respond([]);
-        return;
-    } catch {}
+        const query = interaction.options.getString('query')?.trim();
+        if (!query || query.length <= 3) {
+            await interaction.respond([]);
+            return;
+        }
 
-    const youtubeSuggestions = await getYoutubeSuggestionsForQuery(query);
-    const spotifyResponse: [SpotifyApi.TrackObjectFull[], SpotifyApi.AlbumObjectSimplified[]] = await getSpotifySuggestionsForQuery(query);
-    const spotifyTrackSuggestions = spotifyResponse[0];
-    const spotifyAlbumSuggestions = spotifyResponse[1];
+        // Ignore direct URLs
+        try {
+            new URL(query);
+            await interaction.respond([]);
+            return;
+        } catch {}
 
-    const maxSpotifySuggestions = Math.min(limit /2, spotifyTrackSuggestions.length + spotifyAlbumSuggestions.length);
-    const maxSpotifyAlbumSuggestions = Math.min(Math.floor(maxSpotifySuggestions / 2), spotifyAlbumSuggestions.length ?? 0);
-    const maxSpotifyTrackSuggestions = maxSpotifySuggestions - maxSpotifyAlbumSuggestions;
-    const maxYoutubeSuggestions = Math.min(limit - maxSpotifySuggestions, youtubeSuggestions.length);
-    
-    const suggestions: APIApplicationCommandOptionChoice[] = [];
-    suggestions.push(
-        ...youtubeSuggestions
-          .slice(0, maxYoutubeSuggestions)
-          .map(suggestion => ({
-            name: `🎥 ${suggestion.substring(0,85)}`,
-            value: suggestion,
-          }),
-    ));
+        const youtubeSuggestions = await getYoutubeSuggestionsForQuery(query);
+        const spotifyResponse: [SpotifyApi.TrackObjectFull[], SpotifyApi.AlbumObjectSimplified[]] = await getSpotifySuggestionsForQuery(query);
+        const spotifyTrackSuggestions = spotifyResponse[0];
+        const spotifyAlbumSuggestions = spotifyResponse[1];
 
-    suggestions.push(
-        ...spotifyAlbumSuggestions.slice(0, maxSpotifyAlbumSuggestions).map(album => ({
-          name: `💿 ${album.name.substring(0,50)}${album.artists.length > 0 ? ` - ${album.artists[0].name.substring(0,30)}` : ''}`,
-          value: `spotify:album:${album.id}`,
-        })),
-      );
-    
-      suggestions.push(
-        ...spotifyTrackSuggestions.slice(0, maxSpotifyTrackSuggestions).map(track => ({
-          name: `🎵 ${track.name.substring(0,50)}${track.artists.length > 0 ? ` - ${track.artists[0].name.substring(0,30)}` : ''}`,
-          value: `spotify:track:${track.id}`,
-        })),
-      );
+        const maxSpotifySuggestions = Math.min(limit /2, spotifyTrackSuggestions.length + spotifyAlbumSuggestions.length);
+        const maxSpotifyAlbumSuggestions = Math.min(Math.floor(maxSpotifySuggestions / 2), spotifyAlbumSuggestions.length ?? 0);
+        const maxSpotifyTrackSuggestions = maxSpotifySuggestions - maxSpotifyAlbumSuggestions;
+        const maxYoutubeSuggestions = Math.min(limit - maxSpotifySuggestions, youtubeSuggestions.length);
+        
+        const suggestions: APIApplicationCommandOptionChoice[] = [];
+        suggestions.push(
+            ...youtubeSuggestions
+            .slice(0, maxYoutubeSuggestions)
+            .map(suggestion => ({
+                name: `🎥 ${suggestion.substring(0,85)}`,
+                value: suggestion,
+            }),
+        ));
 
-    await interaction.respond(suggestions);
+        suggestions.push(
+            ...spotifyAlbumSuggestions.slice(0, maxSpotifyAlbumSuggestions).map(album => ({
+            name: `💿 ${album.name.substring(0,50)}${album.artists.length > 0 ? ` - ${album.artists[0].name.substring(0,30)}` : ''}`,
+            value: `spotify:album:${album.id}`,
+            })),
+        );
+        
+        suggestions.push(
+            ...spotifyTrackSuggestions.slice(0, maxSpotifyTrackSuggestions).map(track => ({
+            name: `🎵 ${track.name.substring(0,50)}${track.artists.length > 0 ? ` - ${track.artists[0].name.substring(0,30)}` : ''}`,
+            value: `spotify:track:${track.id}`,
+            })),
+        );
+
+        await interaction.respond(suggestions);
+    } catch {
+        console.error("Error in /play autocomplete!");
+    }
 }
 
 export const playSong: CommandInterface = {

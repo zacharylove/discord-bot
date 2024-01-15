@@ -219,7 +219,11 @@ export const broadcastCommandStatus = async (interaction: CommandInteraction | C
     }
 
     // Send message
-    interaction.editReply(errorMessage);
+    try {
+        interaction.editReply(errorMessage);
+    } catch {
+        console.error("Failed to broadcast command status!");
+    }
 }
 
 
