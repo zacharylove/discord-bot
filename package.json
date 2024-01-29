@@ -23,7 +23,7 @@
     "concurrently": "^8.2.2",
     "discord-api-types": "^0.37.67",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.4.1",
     "ffmpeg-static": "^5.2.0",
     "fs-capacitor": "^8.0.0",
     "get-youtube-id": "^1.0.1",
