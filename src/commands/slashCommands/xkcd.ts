@@ -74,7 +74,7 @@ export const xkcd: CommandInterface = {
     properties: {
         Name: "xkcd",
         Aliases: [],
-        Scope: 'guild',
+        Scope: 'global',
         GuildOnly: true,
         Enabled: true,
         DefaultEnabled: true,
