@@ -217,6 +217,44 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     return canvas.toBuffer()
 }
 
+const buildPuzzleStat = async (puzzleNum: number, user: User, interaction: CommandInteraction) => {
+    const userData = await getWordleDataByUserID(user.id);
+    const puzzle = userData.results.find((puzzle) => puzzle.puzzleID == puzzleNum);
+    if (!puzzle) {
+        interaction.editReply("Sorry, I couldn't have results for this puzzle!");
+        return;
+    }
+    // Get most recent results
+    const mostRecentResult = puzzle.results[-1];
+    const totalAttempts = puzzle.results.length;
+    const totalFailures = puzzle.results.length - puzzle.scores.length;
+    const totalSuccesses = puzzle.scores.length;
+
+    // Build canvas
+    const canvas = createCanvas(600, 600);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = "#ffffff";
+    ctx.roundRect(0, 0, 600, 260, 20);
+    ctx.fill();
+
+    // Load user avatar
+    // 150x150
+    let avatarURL = interaction.guild ? await getAvatarURL(user, interaction.guild.id) : await getAvatarURL(user);
+    const userAvatar = await loadImage(avatarURL[1]);
+    //const userAvatar = await loadImage(user.avatarURL()!);
+    ctx.drawImage(userAvatar, 25, 25, 150, 150);
+
+    // Set font
+    ctx.font = '24px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#000000';
+    // title
+    ctx.fillText("Wordle Statistics For", 190, 43, 390);
+    ctx.font = '900 40px sans-serif';
+    // Username user.username
+    ctx.fillText(user.username, 190, 85, 390);
+}
+
 
 export const wordleStats: CommandInterface = {
     data: new SlashCommandBuilder()
@@ -227,9 +265,16 @@ export const wordleStats: CommandInterface = {
                 .setName('user')
                 .setDescription('The user to display Wordle statistics for')
                 .setRequired(false)
-        ),
+        )
+        .addIntegerOption((option) => 
+            option
+                .setName('puzzlenum')
+                .setDescription('Stats for a specific puzzle number')
+                .setRequired(false)
+        )
+        ,
         run: async (interaction) => {
-            
+            if (!interaction.isChatInputCommand()) return;
 
             // Check if wordle features are enabled (only if on server)
             if (interaction.guild && interaction.guild) {
@@ -252,12 +297,20 @@ export const wordleStats: CommandInterface = {
                 }
             }
 
-            const image = await buildImage(user, interaction);
-            await interaction.editReply({
-                content: `Here are the Wordle statistics for ${user.username}`,
-                files: [{attachment: image, name: 'wordleStats.png'}]
-            });
-            
+            const puzzleNum = interaction.options.getInteger('puzzlenum');
+
+            // Regular stat
+            if (!puzzleNum) {
+                const image = await buildImage(user, interaction);
+                await interaction.editReply({
+                    content: `Here are the Wordle statistics for ${user.username}`,
+                    files: [{attachment: image, name: 'wordleStats.png'}]
+                });
+            }
+            // Puzzle-specific stat
+            else {
+
+            }
 
 
         },
