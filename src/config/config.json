@@ -169,6 +169,13 @@
                 "Yoooooo!",
                 "Damn."
             ]
+        },
+        "icanhazdadjokeAPI": {
+            "baseURL": "https://icanhazdadjoke.com",
+            "endpoints": {
+                "joke": "j",
+                "search": "search"
+            }
         }
     },
     "responseMessages": {

@@ -75,7 +75,7 @@ export const xkcd: CommandInterface = {
         Name: "xkcd",
         Aliases: [],
         Scope: 'global',
-        GuildOnly: true,
+        GuildOnly: false,
         Enabled: true,
         DefaultEnabled: true,
         Intents: []

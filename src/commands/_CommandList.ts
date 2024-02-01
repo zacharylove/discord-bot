@@ -26,6 +26,7 @@ import { playWordle } from "./slashCommands/wordle/playWordle.js";
 import { animeSource } from "./contextCommands/animeSource.js";
 import { inBible } from "./contextCommands/inBible.js";
 import { xkcd } from "./slashCommands/xkcd.js";
+import { dadJoke } from "./slashCommands/dadJoke.js";
 
 // List of all commands registered to the bot
 // These commands are registered to Discord when the bot starts
@@ -60,7 +61,8 @@ export const CommandList: CommandInterface[] = [
     resume,
     playWordle,
     inBible,
-    xkcd
+    xkcd,
+    dadJoke
 ];
 
 export default CommandList;
