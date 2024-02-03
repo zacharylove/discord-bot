@@ -14,7 +14,7 @@ import { createInternalData } from "./database/models/internalModel.js";
 let BOT: Bot;
 
 // Cleanup dangling threads on startup
-import { removeAllThreads, getNumThreads, getThreads, removeThread, getInternalData } from "./database/internalData.js";
+import { getNumThreads, getThreads, removeThread, getInternalData } from "./database/internalData.js";
 import { Thread } from "./database/models/internalModel.js";
 const cleanupThreads = async () => {
     // If this is the first time the bot is running, create the internal data

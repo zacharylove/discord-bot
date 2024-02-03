@@ -71,3 +71,28 @@ export const getGlobalWordleStats = async () => {
         numWordleGuesses: numWordleGuesses
     }
 }
+
+/*
+    For internal use only!! Updates all documents, for when we're adding fields or whatever.
+*/
+export const updateAllDocuments = async () => {
+    // Step 1: Run the aggregation pipeline to transform documents
+    // Put your aggregation function here!
+    let transformedDocuments = await wordleModel.aggregate([]);
+  
+    // Step 2: Prepare bulk write operations
+    let bulkOperations: any = [];
+    transformedDocuments.forEach(document => {
+        bulkOperations.push({
+        updateOne: {
+            filter: { _id: document._id },
+            update: { $set: { results: document.results } }
+        }
+        });
+    });
+    
+    // Step 3: Execute bulk write operations
+    wordleModel.bulkWrite(bulkOperations);
+
+    console.debug("Updated!")
+}

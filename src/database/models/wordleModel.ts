@@ -13,6 +13,8 @@ export interface WordleDataInterface extends Document {
         results: string[][];
         // Set of all scores submitted for that puzzle (as an array of numbers)
         scores: number[];
+        // Submission dates (epoch date = submission created before this field was added)
+        submissionDates: Date[];
     }[];
     totalGuesses: number;
     totalPuzzles: number;
@@ -54,6 +56,7 @@ export const createNewWordleData = async (userID: string) => {
             puzzleID: Number,
             results: new Array<String>(),
             scores: new Array<Number>(),
+            submissionDates: new Array<Date>(),
         }),
         totalGuesses: 0,
         totalPuzzles: 0,

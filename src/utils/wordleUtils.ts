@@ -156,15 +156,20 @@ export class wordle {
         // Check if user has a wordle data entry for this puzzle
         const puzzleData = userData.results.find( (result: any) => result.puzzleID == puzzleInfo.puzzleNum );
         if (puzzleData) {
-            puzzleData.results.push(puzzleInfo.emojis);
-            puzzleData.scores.push(puzzleInfo.score);
+            if (puzzleData.results) puzzleData.results.push(puzzleInfo.emojis);
+            else puzzleData.results = [puzzleInfo.emojis]
+            if (puzzleData.scores) puzzleData.scores.push(puzzleInfo.score);
+            else puzzleData.scores = [puzzleInfo.score]
+            if (puzzleData.submissionDates) puzzleData.submissionDates.push(new Date());
+            else puzzleData.submissionDates = [new Date()]
 
             
         } else {
             userData.results.push({
                 puzzleID: puzzleInfo.puzzleNum,
                 results: [puzzleInfo.emojis],
-                scores: [puzzleInfo.score]
+                scores: [puzzleInfo.score],
+                submissionDates: [new Date()]
             });
         }
         // If there has been a submission in the last 48 hours, increment streak
