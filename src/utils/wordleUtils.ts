@@ -3,6 +3,8 @@ import { Message } from "discord.js";
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { getWordleDataByUserID, update as wordleUpdate } from "../database/wordleData.js";
 import { getTradleDataByUserID, update as tradleUpdate } from "../database/tradleData.js";
+import { WordleDataInterface } from "../database/models/wordleModel";
+import { Canvas, CanvasRenderingContext2D, createCanvas } from "canvas";
 
 
 class sharedWordleUtils {
@@ -362,4 +364,176 @@ export const initializeWordleUtil = (): wordle => {
 
 export const initializeTradleUtil = (): tradle => {
     return new tradle();
+}
+
+
+// Calendar to show puzzle results per day
+export const buildResultCalendar = async (canvas: Canvas, ctx: CanvasRenderingContext2D, wordleData: WordleDataInterface, startY: number, startX: number): Promise<any> => {
+
+    // Fill background
+    ctx.fillStyle = "#ffffff";
+    ctx.roundRect(startX, startY, 600, 400, 20);
+    ctx.fill();
+
+    // Get current date
+    const currentDate = new Date();
+    const month = currentDate.toLocaleString('default', { month: 'long' });
+    const day = currentDate.getDate();
+    const year = currentDate.getFullYear();
+
+    var firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    var dayOfWeekFirstDayOfMonth = firstDayOfMonth.getDay();
+    var lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    var lengthOfMonth = lastDayOfMonth.getDate();
+
+    // Collect results within the current month
+    // Create array (length of month) of -1, where values != -1 are scores for that day
+    const resultArray = new Array(lengthOfMonth).fill(-1);
+
+    // Number of days since epoch
+    const fullDaysSinceEpoch = Math.floor(new Date().getTime()/8.64e7);
+    // Date of the first wordle puzzle in days since epoch
+    const epochDateOfFirstWordle = 18797;
+    // First day of month in days since epoch
+    const firstDayOfMonthEpoch = Math.floor(firstDayOfMonth.getTime()/8.64e7);
+    // So, any wordle result with a number >= this is within the month
+    const firstDayOfMonthWordleResult = firstDayOfMonthEpoch - epochDateOfFirstWordle;
+
+    let changed:boolean;
+    for (const result of wordleData.results) {
+        changed = false;
+        let matchID = result.puzzleID && result.puzzleID > firstDayOfMonthWordleResult;
+        
+        if (result.submissionDates && result.submissionDates.length > 0) {
+            let lastSubmissionDate = result.submissionDates.pop();
+            let matchSubmissionDate = lastSubmissionDate && lastSubmissionDate <= firstDayOfMonth; 
+            if (matchSubmissionDate && result.scores.length > 0) {
+                resultArray[result.puzzleID - firstDayOfMonthWordleResult-1] = result.scores.pop()
+                changed = true;
+            }
+        }
+        if (!changed) {
+            if (( matchID ) && result.scores.length > 0) {
+                resultArray[result.puzzleID - firstDayOfMonthWordleResult-1] = result.scores.pop()
+                changed = true;
+            }
+        }
+        
+        
+
+        
+    }
+
+    // Set alignments
+    const centerpoint = startX + (canvas.width - startX)/2
+    const margin = 50;
+    const padding = ((canvas.width - startX) - 2*margin) / 6;
+
+    let x = startX;
+    let y = startY + 35;
+
+    // Center text
+    ctx.fillStyle = "#000000"
+    ctx.textAlign = "center";
+    ctx.font = '24px sans-serif';
+    ctx.fillText('Submissions for', centerpoint, y)
+    y += 30
+    ctx.font = 'bold 36px sans-serif'
+    ctx.fillText(`${month} ${year}`, centerpoint, y);
+
+    // Draw days of week
+    ctx.fillStyle = "#5e5e5e";
+    const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"]
+    y += margin;
+    x = startX + margin;
+    ctx.font = 'bold 24 sans-serif'
+    for (const day of daysOfWeek) {
+        ctx.fillText(day, x, y)
+        x += padding;
+    }
+
+    
+    
+    const startPointY =  startY + y + margin;
+    const startPointX = startX + margin
+    y = startPointY;
+    x = startPointX;
+    let currentCol = 0;
+    // TODO: Draw connector between consecutive days
+    /*
+    for (let i = 1; i < lengthOfMonth-1; i++) {
+        prevDay = resultArray[i-1];
+        curDay = resultArray[i];
+        nextDay = resultArray[i+1];
+        // Start of streak
+        if (prevDay == -1 && curDay != -1 && nextDay != -1) {
+            startX = x;
+            streakWidth += padding;
+        }
+        // End of streak
+        if (prevDay != -1 && curDay != -1 && nextDay == -1) {
+            streakWidth += padding;
+            ctx.beginPath();
+            ctx.rect(startX, y, streakWidth, 50);
+            ctx.fill();
+            startX = 0
+        }
+        // Continuing streak
+        if (prevDay != -1 && curDay != -1 && nextDay != -1) {
+            streakWidth += padding
+        }
+
+
+        x += padding;
+    }
+    */
+
+    // Draw days of month
+    ctx.font = '36px sans-serif'
+    y = startPointY;
+    x = startPointX;
+    currentCol = 0;
+    // Get first day of month (0 = sunday, 6 = saturday)
+    for (let i = 0; i < dayOfWeekFirstDayOfMonth; i++) {
+        currentCol++;
+        x += padding;
+    }
+    let circleRadius = 25;
+    let currentScore = -1;
+    for (let i = 0; i < lengthOfMonth; i++) {
+        currentScore = resultArray[i];
+        if (currentScore != -1) {
+            if (i == day-1) ctx.fillStyle = "#62d962";
+            else ctx.fillStyle = '#90EE90';
+            ctx.beginPath();
+            ctx.arc(x, y-circleRadius/2, circleRadius, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        // Current day
+        if (i == day-1) {
+            ctx.fillStyle = '#add8e6';
+            ctx.beginPath();
+            ctx.arc(x, y-circleRadius/2, circleRadius-3, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        // Number for day
+        ctx.fillStyle = '#000000'
+        ctx.fillText((i+1).toString(), x, y);
+        if (currentCol == 6) {
+            x = startPointX;
+            y += margin;
+            currentCol = 0;
+        } else {
+            currentCol++;
+            x += padding;
+        }
+    }
+
+
+
+
+
+    return [canvas, ctx];
 }

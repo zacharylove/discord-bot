@@ -6,12 +6,13 @@ import { areWordleFeaturesEnabled } from '../../../database/guildData.js';
 import { CommandStatus, broadcastCommandStatus } from '../../../utils/commandUtils.js';
 import { createCanvas, loadImage } from 'canvas';
 import { getAvatarURL } from '../../../utils/userUtils.js';
+import { buildResultCalendar } from '../../../utils/wordleUtils.js';
 
 
 const buildImage = async (user: User, interaction: CommandInteraction): Promise<Buffer> => {
-    // Build 600x600px canvas
-    const canvas = createCanvas(600, 600);
-    const ctx = canvas.getContext('2d');
+    // Build 1200x400 canvas
+    let canvas = createCanvas(1225, 420);
+    let ctx = canvas.getContext('2d');
 
     // Fill background
     ctx.fillStyle = "#ffffff";
@@ -100,10 +101,15 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     ctx.roundRect(xPos + 2*(width + spacing) - width/2, 280, width, cardHeight, 20);
     ctx.roundRect(xPos + 3*(width + spacing) - width/2, 280, width, cardHeight, 20);
     // Hardest Word
-    ctx.roundRect(xPos - width/2, 280+cardHeight+spacing, width*2+spacing, cardHeight, 20);
-    ctx.roundRect(xPos + 2*(width+spacing) - width/2, 280+cardHeight+spacing, width*2+spacing, cardHeight, 20);
+    //ctx.roundRect(xPos - width/2, 280+cardHeight+spacing, width*2+spacing, cardHeight, 20);
+    //ctx.roundRect(xPos + 2*(width+spacing) - width/2, 280+cardHeight+spacing, width*2+spacing, cardHeight, 20);
     ctx.fill()
-    
+
+    // Add streak calendar
+
+    const canvasInfo = await buildResultCalendar(canvas, ctx, userData, 0, 625);
+    canvas = canvasInfo[0]
+    ctx = canvasInfo[1]
 
     // Puzzles Attempted
     ctx.strokeStyle = '#000000';
@@ -162,6 +168,11 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     ctx.fillText("Longest", xPos, yTitleLine, textWidth);
     ctx.fillText("Streak", xPos, ySubtitleLine, textWidth);
 
+    // I removed all the puzzle ids from the db by accident, oops
+    // So this won't work for older results... and it was kind of useless anyways since it seems NYT doesn't plan on reusing puzzle ids
+    // So it's removed!
+
+    /*
     // Begin row 2
     xPos = (2*width+spacing)/2 + spacing;
     yStat += cardHeight + spacing;
@@ -171,6 +182,8 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     textWidth *= 2;
     textWidth += 20;
 
+    
+    
     // Hardest Word
     let avg: number;
     let lowestAvg = 7;
@@ -212,7 +225,7 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     ctx.fillText("Easiest Puzzle", xPos, yTitleLine, textWidth);
     ctx.font = '18px sans-serif';
     ctx.fillText(`${lowestAvg} avg guesses over ${easiestAttempts} attempts`, xPos, ySubtitleLine, textWidth);
-
+    */
 
     return canvas.toBuffer()
 }

@@ -53,7 +53,7 @@ export const createNewWordleData = async (userID: string) => {
         _id: new Types.ObjectId(),
         userID: userID,
         results: new Array({
-            puzzleID: Number,
+            puzzleID: -1,
             results: new Array<String>(),
             scores: new Array<Number>(),
             submissionDates: new Array<Date>(),
