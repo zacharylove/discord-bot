@@ -78,29 +78,26 @@ export const youtubeAPI: RequestInterface = {
             case "search":
                 requestURL += `/${youtubeConfig.endpoints.search}`;
                 requestURL += `?q=${info.query.replace(" ", "+")}`;
-                requestURL += `&key=${process.env.YOUTUBE_API_KEY}`;
                 break;
             case "playlist":
                 requestURL += `/${youtubeConfig.endpoints.playlist}`;
-                requestURL += `?key=${process.env.YOUTUBE_API_KEY}`;
-                requestURL += `&id=${info.query}`
+                requestURL += `?id=${info.query}`
                 break;
             case "playlistItems":
                 requestURL += `/${youtubeConfig.endpoints.playlistItems}`;
-                requestURL += `?key=${process.env.YOUTUBE_API_KEY}`;
-                requestURL += `&playlistId=${info.query}`
+                requestURL += `?playlistId=${info.query}`
                 break;
             case "id":
                 requestURL += `/${youtubeConfig.endpoints.id}`;
                 requestURL += `?id=${info.query}`;
-                requestURL += `&key=${process.env.YOUTUBE_API_KEY}`;
                 break;
             default:
                 error = true;
                 break;
         }
+        requestURL += `&key=${process.env.GOOGLE_API_KEY}`;
 
-        if (!process.env.YOUTUBE_API_KEY) error = true;
+        if (!process.env.GOOGLE_API_KEY) error = true;
         if (error) throw new Error("Invalid API request info");
         if (info.part) {
             requestURL += `&part=${info.part.replace(" ", "")}`;

@@ -10,6 +10,7 @@ import { getYoutubeVideoByURL } from "../api/youtubeAPI.js";
 import { toggleMusicCommands, toggleWordlecommands } from "../commands/_CommandList.js";
 import { getAnime } from "../api/jikanAPI.js";
 import { anime } from "../commands/slashCommands/anime.js";
+import { findHardcoverBook } from "../api/googleBooksAPI.js";
 
 export const validateEnv = async () => {
     let validationOutput: string = "Validating environment variables...";
@@ -76,7 +77,7 @@ export const validateEnv = async () => {
         validationOutput += "\n  ✅ Jikan API token is valid!";
     }
 
-    if(!process.env.YOUTUBE_API_KEY) {
+    if(!process.env.GOOGLE_API_KEY) {
         validationOutput += "\n  ❌ No Youtube API key found, disabling music";
         toggleMusicCommands(false);
         valid = false;
@@ -84,9 +85,22 @@ export const validateEnv = async () => {
         let result;
         try {
             result = getYoutubeVideoByURL("https://www.youtube.com/watch?v=9ySxxVOHW7A");
-            validationOutput += "\n  ✅ Youtube API key is valid!";
+            validationOutput += "\n  ✅ Google API key is valid!";
         } catch (e) {
-            validationOutput += "\n  ❌ Youtube API key is invalid!";
+            validationOutput += "\n  ❌ Google API key is invalid!";
+            valid = false;
+        }
+    }
+
+    if(!process.env.HARDCOVER_API_KEY) {
+        validationOutput += "\n  ❌ No Hardcover API key found";
+    } else {
+        let result;
+        try {
+            result = findHardcoverBook("Harry Potter and the Deathly Hallows");
+            validationOutput += "\n  ✅ Hardcover API key is valid!";
+        } catch (e) {
+            validationOutput += "\n  ❌ Hardcover API key is invalid!";
             valid = false;
         }
     }

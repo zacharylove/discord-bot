@@ -62,9 +62,11 @@ If any of these variables are not provided, the bot will start normally and disa
  - `OWNER_ID` - The user ID of a Discord user. This user will be able to use all bot commands/features, even if they do not have the required permissions. Additionally, this user can use owner-only commands.
  - `TICK_INTERVAL` - Time (in ms) between each tick event for the bot. Currently unused.
  - `MOVIEDB_ACCESS_TOKEN` - An access token for [The Movie DB](https://www.themoviedb.org) API. Used for info commands.
- - `YOUTUBE_API_KEY` - An access key for the [YouTube API](https://developers.google.com/youtube/v3). Required for music bot functionality.
+ - `GOOGLE_API_KEY` - An access key for the [YouTube API](https://developers.google.com/). Required for music bot functionality and book commands.
+    - APIs used are YouTube and Google Books.
  - `SPOTIFY_CLIENT_ID` - A client ID for the [Spotify Web API](https://developer.spotify.com/documentation/web-api). Required for music bot functionality.
  - `SPOTIFY_CLIENT_SECRET` - A client secret for the [Spotify Web API](https://developer.spotify.com/documentation/web-api). Required for music bot functionality.
+  - `HARDCOVER_API_KEY` - An access key for the [Hardcover API](https://hardcover.app/account/api). Used for book commands, but if not present then the Google Books API will be used as a fallback.
 
 
 ## Local Setup

@@ -126,6 +126,23 @@
             }
         }
     },
+    "book": {
+        "googleBooksAPI": {
+            "baseURL": "https://www.googleapis.com/books",
+            "version": "1",
+            "endpoints": {
+                "books": "volumes"
+            }
+        },
+        "hardcoverAPI": {
+            "baseURL": "https://hardcover-production.hasura.app",
+            "version": "1",
+            "endpoints": {
+                "graphql": "graphql"
+            }
+        }
+    },
+
     "roleplay": {
         "shipMessages": {
             "reallybad": [
