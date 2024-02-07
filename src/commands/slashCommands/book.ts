@@ -112,6 +112,7 @@ const createEmbed = async (interaction: Message<boolean>, book: BookResponse): P
         inline: true
     });
 
+    embed.setFooter({ text: "Data: Hardcover, Google Books", iconURL: "https://storage.googleapis.com/hardcover/images/logos/hardcover-logo.jpeg"});
     const response = await interaction.edit({ embeds: [embed]});
     return response;
 }
