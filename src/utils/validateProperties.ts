@@ -78,7 +78,7 @@ export const validateEnv = async () => {
     }
 
     if(!process.env.GOOGLE_API_KEY) {
-        validationOutput += "\n  ❌ No Youtube API key found, disabling music";
+        validationOutput += "\n  ❌ No Google API key found, disabling music";
         toggleMusicCommands(false);
         valid = false;
     } else {

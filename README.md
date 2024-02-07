@@ -23,7 +23,7 @@ I made this repository public on 11/21/2023 to show to some friends, but keep in
 ## Stack
 This bot uses Node.js with Typescript, packaged in a Docker container.
  - **API:** Mostly uses `discord.js` to communicate with the Discord API, and `axios` for parts of the API that have not yet been implemented into discord.js
-   - Makes use of [TMDb](https://www.themoviedb.org), [YouTube](https://developers.google.com/youtube/v3), [IGDb](https://api-docs.igdb.com), [Jikan](https://jikan.moe/), and [Spotify](https://developer.spotify.com/documentation/web-api) APIs
+   - Makes use of [TMDb](https://www.themoviedb.org), [YouTube](https://developers.google.com/youtube/v3), [IGDb](https://api-docs.igdb.com), [Jikan](https://jikan.moe/), [Hardcover](https://hardcover.app/), and [Spotify](https://developer.spotify.com/documentation/web-api) APIs
  - **Database:** MongoDB, through the `mongoose` package
  - **Image Processing:** `canvas` is used for image processing and creation, and `gifuct-js` is used for GIF handling and creation.
 
