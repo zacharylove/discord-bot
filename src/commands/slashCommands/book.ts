@@ -1,10 +1,11 @@
 import { CommandInterface } from "../../interfaces/Command.js";
 // @ts-ignore
 import { default as config } from "../../config/config.json" assert { type: "json" };
-import { ButtonStyle, EmbedBuilder, Message, SlashCommandBuilder, User } from "discord.js";
+import { ButtonBuilder, ButtonStyle, ComponentType, EmbedBuilder, Message, SlashCommandBuilder, User } from "discord.js";
 import { CommandStatus, broadcastCommandStatus } from "../../utils/commandUtils.js";
 import { BookResponse, findHardcoverBook, searchBooksByTitle } from "../../api/googleBooksAPI.js";
-import { toTitleCase } from "../../utils/utils.js";
+import { sleep, toTitleCase, truncateString } from "../../utils/utils.js";
+import { ActionRowBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
 
 const createEmbed = async (interaction: Message<boolean>, book: BookResponse): Promise<Message<boolean>> => {
     const embed =  new EmbedBuilder();
@@ -113,8 +114,117 @@ const createEmbed = async (interaction: Message<boolean>, book: BookResponse): P
     });
 
     embed.setFooter({ text: "Data: Hardcover, Google Books", iconURL: "https://storage.googleapis.com/hardcover/images/logos/hardcover-logo.jpeg"});
-    const response = await interaction.edit({ embeds: [embed]});
+    const response = await interaction.edit({ content: `Here's what I found:`, embeds: [embed], components: []});
     return response;
+}
+
+const selectResult = async (interaction: Message<boolean>, books: BookResponse[][], results: number, query: string, page: number ) => {
+    let resultMessage = `Found ${results} results for "${query}". Respond with the number corresponding to your desired book, or say "cancel" to cancel search.\n`;
+    let counter = 1 + page*3;
+    for (const book of books[page]) {
+        // Truncate description to first sentence
+        resultMessage += `### ${counter}. ${book.title}`;
+        if (book.authors && book.authors.length > 0) resultMessage += ` - ${book.authors[0]}`
+        resultMessage += `${book.publisher || book.publishDate ? `\n*${book.publisher ? book.publisher : ""}${book.publisher && book.publishDate ? " • " : ""}${book.publishDate ? "Published " + book.publishDate : ""}*` : ""}`
+        if (book.description != "") resultMessage += `\n> ${truncateString(book.description, 200)}`
+        resultMessage += "\n";
+        counter++;
+        
+    }
+
+    // Create next/prev button
+    if (books.length > 1) {
+        const row: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+        const pageNumButton = new ButtonBuilder()
+            .setStyle(ButtonStyle.Secondary)
+            .setCustomId('pageNum')
+            .setLabel(`Page ${page+1}/${books.length}`)
+            .setDisabled(true);
+        row.addComponents(pageNumButton);
+        // Only create previous button if we are not on the first page
+        if (page != 0) {
+            const prevButton = new ButtonBuilder()
+                .setStyle(ButtonStyle.Primary)
+                .setCustomId('prev');
+            if (config.book.emojiIds.prev) {
+                prevButton.setEmoji({
+                    name: "backward",
+                    id: config.book.emojiIds.prev
+                })
+            } else { prevButton.setLabel("Prev"); }
+            row.addComponents(prevButton);
+        }
+        if (page != books.length - 1) {
+            const nextButton = new ButtonBuilder()
+                .setStyle(ButtonStyle.Primary)
+                .setCustomId('next');
+            if (config.book.emojiIds.next) {
+                nextButton.setEmoji({
+                    name: "next",
+                    id: config.book.emojiIds.next
+                })
+            } else { nextButton.setLabel("Next"); }
+            row.addComponents(nextButton);
+        }
+        return await interaction.edit({content: resultMessage, components: [row]});
+    }
+
+    return await interaction.edit({content: resultMessage, components: []});
+}
+
+const sendResultsAndCollectResponses = async (interaction: Message<boolean>,  books: BookResponse[][], results: number, query: string, author: User, currentPage: number) => {
+    const response: Message<boolean> = await selectResult(interaction, books, results, query, currentPage);
+    // Only collect button responses if there are more than 1 pages
+    if (books.length > 1) {
+        const buttonCollectorFilter = (i: { user: { id: string; }; }) => i.user.id === author.id;
+        const messageCollectorFilter = (m: Message<boolean>) => m.author.id === author.id;
+        // Collect button responses
+        try {
+            const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: buttonCollectorFilter, time: 60000});
+
+            buttonCollector.on('collect', async buttonResponse => {
+                if (buttonResponse.user == author) {
+                    switch (buttonResponse.customId) {
+                        case 'next': 
+                            currentPage++;
+                            await buttonResponse.deferUpdate();
+                            sleep(200).then( async () => { await sendResultsAndCollectResponses(response, books, results, query, author, currentPage); } );
+                            break;
+                        case 'prev':
+                            currentPage--;
+                            await buttonResponse.deferUpdate();
+                            sleep(200).then( async () => { await sendResultsAndCollectResponses(response, books, results, query, author, currentPage); } );
+                            break;
+                    }
+                }
+            });  
+
+            const selectionCollector = response.channel.createMessageCollector({ filter: messageCollectorFilter, time: 60000});
+
+            selectionCollector.on('collect', async messageResponse => {
+                if (messageResponse.author == author) {
+                    // 3 per page
+                    const collectedMessage = messageResponse.content;
+                    if (collectedMessage == "cancel") {
+                        try { await messageResponse.delete(); } catch (e) {}
+                        await response.delete();
+                        return;
+                    }
+                    if(!Number.isNaN(Number(collectedMessage)) && Number(collectedMessage) > 0) {
+                        const receivedNumber = Number(collectedMessage);
+                        if (receivedNumber > 3*currentPage && receivedNumber <= 3*(currentPage+1)) {
+                            let selection = (receivedNumber - 3*currentPage) - 1;
+                            try { await messageResponse.delete(); } catch (e) {}
+                            await createEmbed(response, books[currentPage][selection]);
+                        }
+                    }
+                }
+            })
+        } catch (e) {
+            console.debug(`Error: ${e}`);
+        }
+    }
+
 }
 
 
@@ -140,6 +250,21 @@ export const book: CommandInterface = {
             return;
         } 
         const results: BookResponse[] = await searchBooksByTitle(query);
+        let numResults = results.length;
+        // Split into "pages" of up to 3 books
+        const splitResults: BookResponse[][] = [];
+        let temp = [];
+        for (let i = 0; i < results.length; i++) {
+            if (!results[i].title) {
+                numResults--;
+                continue;
+            }
+            temp.push(results[i]);
+            if ((i+1) % 3 == 0) {
+                splitResults.push(temp);
+                temp = [];
+            }
+        }
         if (results.length == 0) {
             await interaction.editReply('No results found!');
             return;
@@ -147,7 +272,8 @@ export const book: CommandInterface = {
             console.debug(`Found ${results.length} results`)
             const message: Message<boolean> = await interaction.editReply("Finding your book...");
 
-            await createEmbed(message, results[0]);
+            await sendResultsAndCollectResponses(message, splitResults, numResults, query, interaction.user, 0);
+
             return;
         }
     },

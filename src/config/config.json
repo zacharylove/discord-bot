@@ -140,6 +140,10 @@
             "endpoints": {
                 "graphql": "graphql"
             }
+        },
+        "emojiIds": {
+            "prev": "1189716001370148894",
+            "next": "1189716002708140232"
         }
     },
 
