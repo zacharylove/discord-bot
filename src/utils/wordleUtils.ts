@@ -245,9 +245,11 @@ export class wordle {
                             await message.reply("Beautiful! A 2-week Wordle streak 🔥🔥🔥")
                             break;
                         default:
-                            // Generic message every week past two weeks
                             if (userData.wordleStreak % 7 == 0) {
-                                await message.reply(`You're on a ${userData.wordleStreak}-day Wordle streak! 🔥🔥🔥`);
+                                // Month
+                                if ((userData.wordleStreak / 7) % 4 == 0) await message.reply(`Wow! A ${(userData.wordleStreak / 7)/4} month Wordle streak! 🔥🔥🔥`);
+                                // Week
+                                else await message.reply(`You're on a ${userData.wordleStreak / 7} week Wordle streak! 🔥🔥🔥`);
                             }
                             break;
                     }

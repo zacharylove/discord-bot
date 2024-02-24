@@ -187,12 +187,10 @@ const sendResultsAndCollectResponses = async (interaction: Message<boolean>,  bo
                     switch (buttonResponse.customId) {
                         case 'next': 
                             currentPage++;
-                            await buttonResponse.deferUpdate();
                             sleep(200).then( async () => { await sendResultsAndCollectResponses(response, books, results, query, author, currentPage); } );
                             break;
                         case 'prev':
                             currentPage--;
-                            await buttonResponse.deferUpdate();
                             sleep(200).then( async () => { await sendResultsAndCollectResponses(response, books, results, query, author, currentPage); } );
                             break;
                     }
