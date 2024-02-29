@@ -23,6 +23,7 @@ export interface GuildDataInterface extends Document {
     channels: {
         confessionChannelId: string;
         starboardChannelId: string;
+        qotdChannelId: string;
     },
     starboard: {
         emoji: string;
@@ -36,6 +37,11 @@ export interface GuildDataInterface extends Document {
     counters: {
         numConfessions: number;
         numStarboardPosts: number;
+        numQotdPosts: number;
+    },
+    qotd: {
+        qotdWhitelist: boolean,
+        whitelistedRoleIds: string[],
     }
 }
 
@@ -86,6 +92,7 @@ export const GuildData = new Schema({
     channels: {
         confessionChannelId: String,
         starboardChannelId: String,
+        qotdChannelId: String,
     },
     // Starboard settings
     starboard: {
@@ -103,6 +110,11 @@ export const GuildData = new Schema({
     counters: {
         numConfessions: Number,
         numStarboardPosts: Number,
+        numQotdPosts: Number,
+    },
+    qotd: {
+        qotdWhitelist: Boolean,
+        whitelistedRoleIds: new Array(),
     }
 });
 
@@ -133,6 +145,7 @@ export const createNewGuildData = async (guildID: string) => {
         channels: {
             confessionChannelId: "",
             starboardChannelId: "",
+            qotdChannelId: "",
         },
         starboard: {
             emoji: starboardConfig.defaultEmoji,
@@ -157,6 +170,11 @@ export const createNewGuildData = async (guildID: string) => {
         counters: {
             numConfessions: 1,
             numStarboardPosts: 1,
+            numQotdPosts: 1,
+        },
+        qotd: {
+            qotdWhitelist: false,
+            whitelistedRoleIds: new Array(),
         }
     });
 }
