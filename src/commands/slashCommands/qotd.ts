@@ -82,8 +82,12 @@ const createNewQotd = async (interaction: CommandInteraction) => {
     // Set color to random
     embed.setColor(Math.floor(Math.random()*16777215));
 
+    // Create ping
+    let message = "";
+    if (guildData.qotd.qotdRole != null && guildData.qotd.qotdRole != "") message = `<@&${guildData.qotd.qotdRole}>`;
+
     await interaction.editReply(`QOTD received!`);
-    const qotdMessage = await interaction.channel.send({embeds: [embed]});
+    const qotdMessage = await interaction.channel.send({content: message, embeds: [embed]});
     
 
     // Try to open thread
@@ -192,13 +196,15 @@ const setupQOTD = async (interaction: CommandInteraction) => {
     }
     let isWhitelist = interaction.options.getBoolean('whitelist');
     if (isWhitelist == null) isWhitelist = false;
+    const qotdRole = interaction.options.getRole('qotdrole');
 
     const guildData = await getGuildDataByGuildID(interaction.guildId);
 
     guildData.channels.qotdChannelId = channel.id;
     guildData.qotd.qotdWhitelist = isWhitelist;
+    if (qotdRole) guildData.qotd.qotdRole = qotdRole.id;
 
-    await interaction.editReply(`${confirmationMessage()} the QOTD channel is now ${channel.name} and ${isWhitelist ? `only specific roles can post new QOTDs. Use \`\/qotd addrole\` to add a whitelisted role!` : `anyone can post new QOTDs!`}`);
+    await interaction.editReply(`${confirmationMessage()} the QOTD channel is now ${channel.name} ${qotdRole? `, the role ${qotdRole.name} gets pinged, ` : `` }and ${isWhitelist ? `only specific roles can post new QOTDs. Use \`\/qotd addrole\` to add a whitelisted role!` : `anyone can post new QOTDs!`}`);
     await update(guildData);
 }
 
@@ -233,6 +239,12 @@ export const qotd: CommandInterface = {
                         .setDescription('The channel where new QOTDs are posted')
                         .setRequired(true)    
                 )    
+                .addRoleOption((option) => 
+                    option
+                        .setName("qotdrole")
+                        .setDescription("(pingable) role to ping when a new qotd is posted")
+                        .setRequired(false)    
+                    )
                 .addBooleanOption((option) =>
                     option
                         .setName('whitelist')

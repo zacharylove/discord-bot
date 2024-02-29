@@ -42,6 +42,7 @@ export interface GuildDataInterface extends Document {
     qotd: {
         qotdWhitelist: boolean,
         whitelistedRoleIds: string[],
+        qotdRole: string,
     }
 }
 
@@ -115,6 +116,7 @@ export const GuildData = new Schema({
     qotd: {
         qotdWhitelist: Boolean,
         whitelistedRoleIds: new Array(),
+        qotdRole: String,
     }
 });
 
@@ -175,6 +177,7 @@ export const createNewGuildData = async (guildID: string) => {
         qotd: {
             qotdWhitelist: false,
             whitelistedRoleIds: new Array(),
+            qotdRole: ""
         }
     });
 }
