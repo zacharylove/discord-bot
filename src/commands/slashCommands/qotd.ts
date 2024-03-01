@@ -327,7 +327,7 @@ export const qotd: CommandInterface = {
     },
     properties: {
         Name: 'QOTD',
-        Scope: 'guild',
+        Scope: 'global',
         GuildOnly: true,
         DefaultEnabled: true,
         Enabled: true,
