@@ -6,6 +6,20 @@ import { getGuildDataByGuildID, update } from "../../database/guildData.js";
 import { confirmationMessage } from "../../utils/utils.js";
 import { addThread } from "../../database/internalData.js";
 
+const disableQotd = async (interaction: CommandInteraction) => {
+    if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
+        await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {command: qotd, reason: "Invalid interaction!"});
+        return;
+    }
+    const guildData = await getGuildDataByGuildID(interaction.guildId);
+    guildData.qotd.qotdRole = "";
+    guildData.qotd.qotdWhitelist = false;
+    guildData.qotd.whitelistedRoleIds = [];
+    await update(guildData);
+    await interaction.editReply(`${confirmationMessage()} disabled QOTD for this server.`);
+    return;
+}
+
 const createNewQotd = async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
         await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {command: qotd, reason: "Invalid interaction!"});
@@ -116,7 +130,7 @@ const createNewQotd = async (interaction: CommandInteraction) => {
 
 
     // Increment numQOTD
-    guildData.counters.numQotdPosts++;
+    guildData.counters.numQotdPosts = qotdNumber + 1;
     await update(guildData);
 }
 
@@ -274,6 +288,11 @@ export const qotd: CommandInterface = {
                         .setRequired(true)
                 )
         )
+        .addSubcommand((subcommand) => 
+            subcommand
+                .setName('disable')
+                .setDescription('Disables QOTD')
+        )
     ,
     run: async (interaction) => {
         // Disable context menu
@@ -298,6 +317,9 @@ export const qotd: CommandInterface = {
                 break;
             case 'removerole':
                 await addRemoveRole(interaction, false);
+                break;
+            case 'disable':
+                await disableQotd(interaction);
                 break;
         }
         return;
