@@ -15,6 +15,7 @@ const disableQotd = async (interaction: CommandInteraction) => {
     guildData.qotd.qotdRole = "";
     guildData.qotd.qotdWhitelist = false;
     guildData.qotd.whitelistedRoleIds = [];
+    guildData.channels.qotdChannelId = "";
     await update(guildData);
     await interaction.editReply(`${confirmationMessage()} disabled QOTD for this server.`);
     return;
@@ -326,7 +327,7 @@ export const qotd: CommandInterface = {
     },
     properties: {
         Name: 'QOTD',
-        Scope: 'global',
+        Scope: 'guild',
         GuildOnly: true,
         DefaultEnabled: true,
         Enabled: true,
