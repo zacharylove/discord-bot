@@ -64,7 +64,7 @@ const createNewQotd = async (interaction: CommandInteraction) => {
 
     await interaction.awaitModalSubmit({
         // Timeout after a minute of not receiving any valid Modals
-        time: 60000,
+        time: 300000,
         // Make sure we only accept Modals from the User who sent the original Interaction we're responding to
         filter: i => {
             // All interactions must be deferred, even ones that do not match filter
