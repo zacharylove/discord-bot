@@ -26,6 +26,15 @@
             "wordlestats"
         ]
     },
+    "connections": {
+        "config": {
+            "groups": 4,
+            "groupA": "🟨",
+            "groupB": "🟩",
+            "groupC": "🟦",
+            "groupD": "🟪"
+        }
+    },
 
     "tradle": {
         "config": {

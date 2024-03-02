@@ -19,6 +19,7 @@ export interface UserInterface extends Document {
     // ID for WordleData
     wordleDataID: ObjectId;
     tradleDataID: ObjectId;
+    connectionsDataID: ObjectId;
 }
 
 export const User = new Schema({
@@ -28,6 +29,7 @@ export const User = new Schema({
     numStarboardMessages: Number,
     wordleDataID: Types.ObjectId,
     tradleDataID: Types.ObjectId,
+    connectionsDataID: Types.ObjectId,
 });
 
 const userModel = model<UserInterface>('User', User);
@@ -45,6 +47,7 @@ export const createNewUser = async (discordId: string) => {
         numStarboardMessages: 0,
         wordleDataID: null,
         tradleDataID: null,
+        connectionsDataID: null,
     })
     return newUser;
 }

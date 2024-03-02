@@ -53,10 +53,11 @@ export const onMessage : EventInterface = {
         
         
     
-        // Check if message is a wordle result
+        // Check if message is a game result
         if (await areWordleFeaturesEnabled(Message.guildId)) {
             BOT.getWordleUtil().parseMessage(Message);
             BOT.getTradleUtil().parseMessage(Message);
+            BOT.getConnectionsUtil().parseMessage(Message);
         }
 
         // Check if message contains a valid URL
