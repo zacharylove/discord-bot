@@ -50,5 +50,6 @@ export const getNumThreads = async (debug?: string): Promise<number> => {
     // Get number of threads with localDev = debug
     let isDebug = debug ? debug : "false";
     const internalData = await getInternalData();
-    return internalData!.openedThreads.filter(thread => thread.localDev === isDebug).length;
+    // Ignore qotd threads
+    return internalData!.openedThreads.filter(thread => thread.localDev === isDebug && thread.type != "qotd").length;
 }

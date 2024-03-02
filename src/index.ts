@@ -27,10 +27,16 @@ const cleanupThreads = async () => {
     const numThreads = await getNumThreads(process.env.DEBUG_MODE);
     let numErrors = 0;
     let numSuccess = 0;
+    let numIgnored = 0;
     if ( numThreads > 0) {
         threadMessage += `${numThreads} threads found. Cleaning... `;
         const threads: Thread[] = await getThreads(process.env.DEBUG_MODE);
         for (const thread of threads) {
+            // Ignore qotd threads
+            if (thread.type == "qotd") {
+                numIgnored++;
+                continue;
+            }
             const channel = await BOT.channels.fetch(thread.channelID);
             if (channel) {
                 const fetchedChannel = await channel.fetch();
@@ -47,7 +53,7 @@ const cleanupThreads = async () => {
                 }
             }
         }
-        threadMessage += `${numSuccess} deleted, ${numErrors} errors.`;
+        threadMessage += `${numSuccess} deleted, ${numErrors} errors. ${numIgnored} threads ignored.`;
         threadMessage += ` Cleanup complete.${numErrors > 0 ? `${await getNumThreads(process.env.DEBUG_MODE)} threads remaining..` : ''}`;
     } else {
         threadMessage += " No threads found.";
