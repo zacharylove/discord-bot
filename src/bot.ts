@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { connections, initializeConnectionsUtil } from "./utils/connectionsUtils.js";
 
 /**
  * Custom client class that extends the default discord.js Client class
@@ -16,6 +17,7 @@ import { dirname } from 'path';
 export default class Bot extends Client {
     private wordleUtil: wordle;
     private tradleUtil: tradle;
+    private connectionsUtil: connections;
     private musicQueuerManager: guildQueueManager;
     private musicQueuer: Queuer;
     private spotifyAPI: SpotifyWebApi;
@@ -31,6 +33,7 @@ export default class Bot extends Client {
         super(options);
         this.wordleUtil = initializeWordleUtil();
         this.tradleUtil = initializeTradleUtil();
+        this.connectionsUtil = initializeConnectionsUtil();
         this.musicQueuerManager = new guildQueueManager();
         this.musicQueuer = new Queuer(this.musicQueuerManager);
 
@@ -92,6 +95,9 @@ export default class Bot extends Client {
     }
     public getTradleUtil = (): tradle => {
         return this.tradleUtil;
+    }
+    public getConnectionsUtil = (): connections => {
+        return this.connectionsUtil;
     }
     public getMusicQueuerManager = (): guildQueueManager => {
         return this.musicQueuerManager;
