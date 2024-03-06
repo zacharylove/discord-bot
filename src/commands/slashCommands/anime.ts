@@ -234,6 +234,15 @@ const sendEmbedAndCollectResponse = async (interaction: Message<boolean>, anime:
 
 }
 
+// Shows paginated selection message with 3 anime per page
+const selectResult = async (interaction: Message<boolean>, anime: any[], results: number, query: string, page: number) => {
+    let resultMessage = `Found ${results} results for "${query}". Respond with the number corresponding to your desired anime, or say "cancel" to cancel search.\n`;
+    let counter = 1 + page*3;
+    for (const show of anime[page]) {
+        
+    }
+}
+
 export const anime: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('anime')
@@ -258,8 +267,19 @@ export const anime: CommandInterface = {
         const results = await getAnime(query);
         if (!results) await interaction.editReply(`Jikan API error occurred!`);
         else {
+            // Split results into "pages" of up to 3 shows
+            const splitResults: any[][] = [];
+            let temp = [];
+            for (let i = 0; i < results.data; i++) {
+                temp.push(results[i]);
+                if ((i+1)%3 == 0) {
+                    splitResults.push(temp);
+                    temp = [];
+                }
+            }
             console.debug(`Found ${results.pagination.items.total} results`);
             const message: Message<boolean> = await interaction.editReply("Finding your anime...");
+            await selectResult(message, splitResults, results.data.length, query, 0);
 
             await sendEmbedAndCollectResponse(message, results.data[0], results, query, interaction.user);
            

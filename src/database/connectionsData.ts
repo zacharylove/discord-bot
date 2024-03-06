@@ -32,3 +32,16 @@ export const getConnectionsDataByID = async (id: string): Promise<ConnectionsDat
     return data;
     
 }
+
+export const getRanking = async ()  => {
+    return connectionsModel.aggregate([
+        { "$sort": {"name": 1, "weightedScore": -1} },
+        { "$group": {
+            "_id": "$name",
+            "items": { "$push": "$$ROOT" }
+        }},
+        { "$unwind": { "path": "$items", "includeArrayIndex": "items.rank" } },
+        { "$replaceRoot": { "newRoot": "$items" } },
+        { "$sort": { "weightedScore": -1, "name": 1 } },
+    ]);
+}

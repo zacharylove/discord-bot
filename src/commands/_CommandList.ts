@@ -29,6 +29,7 @@ import { xkcd } from "./slashCommands/xkcd.js";
 import { dadJoke } from "./slashCommands/dadJoke.js";
 import { book } from "./slashCommands/book.js";
 import { qotd } from "./slashCommands/qotd.js";
+import { connectionsStats } from "./slashCommands/connections/connectionsStats.js";
 
 // List of all commands registered to the bot
 // These commands are registered to Discord when the bot starts
@@ -66,7 +67,8 @@ export const CommandList: CommandInterface[] = [
     xkcd,
     dadJoke,
     book,
-    qotd
+    qotd,
+    connectionsStats
 ];
 
 export default CommandList;
