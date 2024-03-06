@@ -272,17 +272,11 @@ const buildPuzzleStat = async (puzzleNum: number, user: User, interaction: Comma
 export const wordleStats: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('wordlestats')
-        .setDescription("Displays Wordle statistics for the given user (or the calling user, if no target is specified)")
+        .setDescription("Displays Wordle statistics for a user")
         .addUserOption((option) =>
             option
                 .setName('user')
                 .setDescription('The user to display Wordle statistics for')
-                .setRequired(false)
-        )
-        .addIntegerOption((option) => 
-            option
-                .setName('puzzlenum')
-                .setDescription('Stats for a specific puzzle number')
                 .setRequired(false)
         )
         ,
