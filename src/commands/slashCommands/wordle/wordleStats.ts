@@ -310,7 +310,7 @@ export const wordleStats: CommandInterface = {
             if (!puzzleNum) {
                 const image = await buildImage(user, interaction);
                 await interaction.editReply({
-                    content: `Here are the <[Wordle](https://www.nytimes.com/games/wordle/index.html)> statistics for ${user.username}`,
+                    content: `Here are the [Wordle](<https://www.nytimes.com/games/wordle/index.html>) statistics for ${user.username}`,
                     files: [{attachment: image, name: 'wordleStats.png'}]
                 });
             }

@@ -255,7 +255,7 @@ export const connectionsStats: CommandInterface = {
         }
         const image = await buildImage(user, interaction);
         await interaction.editReply({
-            content: `Here are the <[Connections](https://www.nytimes.com/games/connections)> statistics for ${user.username}`,
+            content: `Here are the [Connections](<https://www.nytimes.com/games/connections>) statistics for ${user.username}`,
             files: [{attachment: image, name: 'connectionsStats.png'}]
         });
 
