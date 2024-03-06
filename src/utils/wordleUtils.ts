@@ -372,11 +372,6 @@ export const initializeTradleUtil = (): tradle => {
 // Calendar to show puzzle results per day
 export const buildResultCalendar = async (canvas: Canvas, ctx: CanvasRenderingContext2D, wordleData: WordleDataInterface, startY: number, startX: number): Promise<any> => {
 
-    // Fill background
-    ctx.fillStyle = "#ffffff";
-    ctx.roundRect(startX, startY, 600, 400, 20);
-    ctx.fill();
-
     // Get current date
     const currentDate = new Date();
     const month = currentDate.toLocaleString('default', { month: 'long' });
@@ -387,6 +382,16 @@ export const buildResultCalendar = async (canvas: Canvas, ctx: CanvasRenderingCo
     var dayOfWeekFirstDayOfMonth = firstDayOfMonth.getDay();
     var lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     var lengthOfMonth = lastDayOfMonth.getDate();
+
+    // Fill background
+    ctx.fillStyle = "#ffffff";
+    let height = lengthOfMonth == 31 ? 430 : 400;
+    ctx.roundRect(startX, startY, 600, height, 20);
+    ctx.fill();
+
+    
+
+    
 
     // Collect results within the current month
     // Create array (length of month) of -1, where values != -1 are scores for that day

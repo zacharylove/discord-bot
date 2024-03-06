@@ -11,7 +11,7 @@ import { buildResultCalendar } from '../../../utils/wordleUtils.js';
 
 const buildImage = async (user: User, interaction: CommandInteraction): Promise<Buffer> => {
     // Build 1200x400 canvas
-    let canvas = createCanvas(1225, 420);
+    let canvas = createCanvas(1225, 430);
     let ctx = canvas.getContext('2d');
 
     // Fill background
