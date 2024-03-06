@@ -72,7 +72,7 @@ const buildImage = async (user: User, interaction: CommandInteraction): Promise<
     // Draw circle (line length 550)
     ctx.beginPath()
     ctx.strokeStyle = '#ff0000';
-    ctx.fillStyle = '#ff0000';
+    ctx.fillStyle = '#ffffff';
     const radius = 10;
     ctx.arc((userData.weightedScore / topWeightedScore * 550) + 25, 200, radius, 0, 2*Math.PI);
     ctx.stroke();
