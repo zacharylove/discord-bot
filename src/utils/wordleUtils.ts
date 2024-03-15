@@ -123,12 +123,12 @@ export class wordle {
      * 
      * @param message Message to be cleaned
      */
-    cleanMessage = (message: Message) => {
+    cleanMessage = (message: string, authorID: string) => {
         let output = {} as puzzleInfo;
-        output.authorID = message.author.id;
+        output.authorID = authorID;
 
         // Split message into lines
-        const messageLines = message.content.split("\n");
+        const messageLines = message.split("\n");
         // Status
         const status = messageLines[0].split(" ");
         const puzzleNum = parseInt(status[1]);
@@ -213,7 +213,15 @@ export class wordle {
      */
     parseMessage = async (message: Message) => {
         if (!message || !message.content || message.content == "" ) return "";
-        const messageContent = message.content;
+        let messageContent = message.content;
+        // Remove commas
+        messageContent = messageContent.replaceAll(",", "");
+        // Remove 🎉
+        let specialEvent = false;
+        if (messageContent.includes("🎉")) {
+            specialEvent = true;
+            messageContent = messageContent.replaceAll("🎉 ", "");
+        }
         // Whether message matches wordle pattern
         const patternMatch = messageContent.match("Wordle [0-9]+ [X|0-9]/6");
         // Whether the number of lines in message is correct
@@ -225,9 +233,10 @@ export class wordle {
         if (patternMatch && numLinesMatch) {
             console.debug(`Pattern match: ${patternMatch}, numLinesMatch: ${numLinesMatch}`);
             console.debug("Message matches wordle pattern.");
-            const cleanedMessage = this.cleanMessage(message);
+            const cleanedMessage = this.cleanMessage(messageContent, message.author.id);
             if ( sharedWordleUtils.checkWordleResult(cleanedMessage, this.info ) ) {
                 await message.react("✅");
+                if (specialEvent) await message.react("🎉");
                 await this.storeWordleResult(cleanedMessage);
 
                 // Notify streaks
