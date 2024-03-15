@@ -43,6 +43,24 @@ export const onMessage : EventInterface = {
                     BOT.destroy();
                     process.exit(0);
                 }
+                // Check whether it's a "reply" command
+                // reply (channel) (message id) (message)
+                if (Message.content.startsWith('reply')) {
+                    const splitMsg = Message.content.split(' ');
+                    if (splitMsg.length > 3) {
+                        const channelId: string = splitMsg[1];
+                        const messageId: string = splitMsg[2];
+                        const message: string = splitMsg.slice(3).join(' ');
+                        const channel = await BOT.channels.cache.get(channelId);
+                        if (channel && channel.isTextBased()) {
+                            const srcMessage = await (<TextChannel> channel).messages.fetch(messageId);
+                            if (srcMessage) {
+                                await srcMessage.reply(message);
+                            }
+                            console.log('Replying to message message ' + messageId + ' in channel ' + channelId + ': ' + message);
+                        }
+                    }
+                }
             }
         }
 

@@ -241,28 +241,46 @@ export class wordle {
 
                 // Notify streaks
                 const userData = await getWordleDataByUserID(cleanedMessage.authorID);
+                let replyMessage = "";
+                let inOne = false;
+                if (cleanedMessage.score == 1) {
+                    replyMessage += "Holy shit";
+                    await message.react("😮");
+                    inOne = true;
+                }
                 if (userData.wordleStreak > 0) {
                     await message.react("🔥");
                     switch (userData.wordleStreak) {
                         case 5:
-                            await message.reply("Nice! You're on a 5-day Wordle streak 🔥");
+                            replyMessage += inOne ? "\nAlso, y" : "Nice! Y";
+                            replyMessage += "ou're on a 5-day Wordle streak 🔥";
                             break;
                         case 7:
-                            await message.reply("Great work! That's a 7-day Wordle streak 🔥🔥")
+                            replyMessage += inOne ? ", and that's also " : "Great work! That's ";
+                            replyMessage += "a 7-day Wordle streak 🔥🔥";
                             break;
                         case 14:
-                            await message.reply("Beautiful! A 2-week Wordle streak 🔥🔥🔥")
+                            replyMessage += inOne ? "\nAlso that's a " : "Beautiful! A ";
+                            replyMessage += "2-week Wordle streak 🔥🔥🔥";
                             break;
                         default:
                             if (userData.wordleStreak % 7 == 0) {
                                 // Month
-                                if ((userData.wordleStreak / 7) % 4 == 0) await message.reply(`Wow! A ${(userData.wordleStreak / 7)/4} month Wordle streak! 🔥🔥🔥`);
+                                if ((userData.wordleStreak / 7) % 4 == 0) {
+                                    replyMessage += inOne ? "\nAlso you're on a " : "Wow! A ";
+                                    replyMessage += `${(userData.wordleStreak / 7)/4} month Wordle streak! 🔥🔥🔥`;
+                                }
                                 // Week
-                                else await message.reply(`You're on a ${userData.wordleStreak / 7} week Wordle streak! 🔥🔥🔥`);
+                                else {
+                                    replyMessage += inOne ? "\nOh yeah, and that's a " : "You're on a ";
+                                    replyMessage += `${userData.wordleStreak / 7} week Wordle streak! 🔥🔥🔥`;
+                                }
                             }
                             break;
                     }
                 }
+
+                if (replyMessage != "") await message.reply(replyMessage);
             } else {
                 await message.react("❎");
             }
