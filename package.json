@@ -44,7 +44,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "spotify-web-api-node": "^5.0.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.4"
   },
   "_moduleAliases": {
     "@modules": "prod/modules",
