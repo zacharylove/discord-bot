@@ -23,6 +23,7 @@ export interface WordleDataInterface extends Document {
     weightedScore: number;
     wordleStreak: number;
     lastWordleSubmission: Date;
+    lastWordleNumber: number;
     longestStreak: number;
 }
 
@@ -37,6 +38,7 @@ export const WordleData = new Schema({
     weightedScore: Number,
     wordleStreak: Number,
     lastWordleSubmission: Date,
+    lastWordleNumber: Number,
     longestStreak: Number,
 });
 
@@ -66,6 +68,7 @@ export const createNewWordleData = async (userID: string) => {
         wordleStreak: 0,
         longestStreak: 0,
         lastWordleSubmission: new Date(0),
+        lastWordleNumber: -1,
     });
 
     // Set user's db entry to point to this new wordle data

@@ -174,19 +174,39 @@ export class wordle {
                 submissionDates: [new Date()]
             });
         }
-        // If there has been a submission in the last 48 hours, increment streak
-        if (userData.lastWordleSubmission) {
-            if (!userData.wordleStreak) userData.wordleStreak = 1
+        // If the last submission's puzzle number = today's puzzle number - 1
+        if (userData.lastWordleNumber) {
+            // Initialize streak
+            if (!userData.wordleStreak) userData.wordleStreak = 1;
+            // Increment streak
+            else if (userData.lastWordleNumber == puzzleInfo.puzzleNum - 1) {
+                userData.wordleStreak++;
+                if (userData.longestStreak < userData.wordleStreak) userData.longestStreak = userData.wordleStreak
+            } 
+            // Reset streak
             else {
-                const twoDaysAgo = new Date(new Date().getTime() - (48 * 60 * 60 * 1000));
-                if (userData.lastWordleSubmission >= twoDaysAgo) {
-                    userData.wordleStreak++;
-                    if (userData.longestStreak < userData.wordleStreak) userData.longestStreak = userData.wordleStreak
-                } else if (userData.wordleStreak > 0) userData.wordleStreak = 0;
+                userData.wordleStreak = 1;
+            }
+        } 
+        // If there is no lastWordleNumber (i.e, for users that are transitioning over from the timestamp-based streak), use timestamp to calculate whether streak continues
+        // This should only occur once per user.
+        else {
+            if (userData.lastWordleSubmission) {
+                if (!userData.wordleStreak) userData.wordleStreak = 1
+                else {
+                    const twoDaysAgo = new Date(new Date().getTime() - (48 * 60 * 60 * 1000));
+                    if (userData.lastWordleSubmission >= twoDaysAgo) {
+                        userData.wordleStreak++;
+                        if (userData.longestStreak < userData.wordleStreak) userData.longestStreak = userData.wordleStreak
+                    } else if (userData.wordleStreak > 0) userData.wordleStreak = 0;
+                }
             }
         }
+        // Set the last submission puzzle number to today's puzzle
+        userData.lastWordleNumber = puzzleInfo.puzzleNum;
         // Set last submission date to now
         userData.lastWordleSubmission = new Date();
+        
         // For users that have records from before longest streak was implemented
         if (!userData.longestStreak) userData.longestStreak = 0;
 
