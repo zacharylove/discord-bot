@@ -10,6 +10,8 @@ import { CommandStatus, broadcastCommandStatus } from "../commandUtils.js";
 import { playSong } from "../../commands/slashCommands/music/play.js";
 // @ts-ignore
 import { default as config } from "../../config/config.json" assert { type: "json" };
+import ytdl from "ytdl-core";
+import { parseSoundCloudURL } from "../../api/soundCloudAPI.js";
 // Queuer parses input queries and calls the corresponding player object
 export class Queuer {
 
@@ -75,6 +77,13 @@ export class Queuer {
                 }
                 newSongs.push(...convertedSongs);
             } 
+
+            // === SoundCloud ===
+            // Soundcloud has no API but is supported by youtube-dl, so we rely on metadata from there
+            else if ( url.host === 'soundcloud.com' || url.host === 'www.soundcloud.com' ) {
+                const songs = await parseSoundCloudURL(query, interaction);
+                newSongs.push(songs);
+            }
             
             // === Http livestream (fallback) ===
             else {
@@ -324,7 +333,11 @@ export class Queuer {
             });
           });
     }
+
 }
+
+
+
 
 // Manager for all guild queues
 export class guildQueueManager {

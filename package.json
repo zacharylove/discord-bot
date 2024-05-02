@@ -34,6 +34,7 @@
     "module-alias": "^2.2.3",
     "mongoose": "^8.2.0",
     "p-retry": "^6.2.0",
+    "play-dl": "^1.9.7",
     "spotify-uri": "^4.0.1",
     "ytdl-core": "^4.11.5"
   },

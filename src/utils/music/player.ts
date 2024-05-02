@@ -13,6 +13,7 @@ Requirements:
 */
 
 import { Message, Snowflake, VoiceChannel } from "discord.js";
+import * as playdl from 'play-dl';
 
 import {   
     AudioPlayer,
@@ -52,6 +53,7 @@ export interface QueuedPlaylist {
 export enum MediaSource {
     Youtube,
     HLS,
+    SoundCloud,
 }
 export interface SongMetadata {
     title: string;
@@ -294,18 +296,29 @@ export default class Player {
                 to = currentSong.length + currentSong.offset;
             }
 
-            const stream = await this.getStream(currentSong, {seek: positionSeconds, to});
+
             this.audioPlayer = createAudioPlayer({
                 behaviors: {
-                // Needs to be somewhat high for livestreams
-                maxMissedFrames: 50,
+                    // Needs to be somewhat high for livestreams
+                    maxMissedFrames: 50,
                 },
             });
-            this.voiceConnection.subscribe(this.audioPlayer);
-            const resource = createAudioResource(stream, {
-                inputType: StreamType.WebmOpus,
-            });
 
+            let stream, resource;
+            if (currentSong.source == MediaSource.SoundCloud) {
+                stream = await playdl.stream(currentSong.url);
+                resource = createAudioResource(stream.stream, {
+                    inputType: stream.type,
+                });
+
+            } else {
+                stream = await this.getStream(currentSong, {seek: positionSeconds, to});
+                resource = createAudioResource(stream, {
+                    inputType: StreamType.WebmOpus,
+                });
+            }
+            
+            this.voiceConnection.subscribe(this.audioPlayer);
             this.audioPlayer.play(resource);
 
             this.attachVCListeners();
@@ -413,17 +426,29 @@ export default class Player {
           to = currentSong.length + currentSong.offset;
         }
     
-        const stream = await this.getStream(currentSong, {seek: realPositionSeconds, to});
         this.audioPlayer = createAudioPlayer({
-          behaviors: {
-            // Needs to be somewhat high for livestreams
-            maxMissedFrames: 50,
-          },
+            behaviors: {
+                // Needs to be somewhat high for livestreams
+                maxMissedFrames: 50,
+            },
         });
+
+        let stream, resource;
+        if (currentSong.source == MediaSource.SoundCloud) {
+            stream = await playdl.stream(currentSong.url);
+            resource = createAudioResource(stream.stream, {
+                inputType: stream.type,
+            });
+
+        } else {
+            stream = await this.getStream(currentSong, {seek: positionSeconds, to});
+            resource = createAudioResource(stream, {
+                inputType: StreamType.WebmOpus,
+            });
+        }
+        
         this.voiceConnection.subscribe(this.audioPlayer);
-        this.audioPlayer.play(createAudioResource(stream, {
-          inputType: StreamType.WebmOpus,
-        }));
+        this.audioPlayer.play(resource);
         this.attachVCListeners();
         this.startTrackingPosition(positionSeconds);
     
@@ -546,6 +571,10 @@ export default class Player {
             url: ffmpegInput,
             ffmpegInputOptions,
         });
+        
+
+
+        
     }
 
 

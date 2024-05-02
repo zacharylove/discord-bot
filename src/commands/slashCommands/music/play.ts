@@ -6,11 +6,12 @@ import { getYoutubeSuggestionsForQuery } from "../../../api/youtubeAPI.js";
 import { getSpotifySuggestionsForQuery } from "../../../api/spotifyAPI.js";
 // @ts-ignore
 import { default as config } from "../../../config/config.json" assert { type: "json" };
+import { getSoundCloudSuggestionsForQuery } from "../../../api/soundCloudAPI.js";
 
 const autocompleteLimit = config.music.autocompleteLimit;
 
 // Autocomplete the 'query' argument with results from Youtube and Spotify
-const autocompleteQuery = async (interaction: AutocompleteInteraction, limit = 10) => {
+const autocompleteQuery = async (interaction: AutocompleteInteraction, limit = 9) => {
     try {
         const query = interaction.options.getString('query')?.trim();
         if (!query || query.length <= 3) {
@@ -27,13 +28,18 @@ const autocompleteQuery = async (interaction: AutocompleteInteraction, limit = 1
 
         const youtubeSuggestions = await getYoutubeSuggestionsForQuery(query);
         const spotifyResponse: [SpotifyApi.TrackObjectFull[], SpotifyApi.AlbumObjectSimplified[]] = await getSpotifySuggestionsForQuery(query);
+        
+        const soundCloudSuggestions = await getSoundCloudSuggestionsForQuery(query);
         const spotifyTrackSuggestions = spotifyResponse[0];
         const spotifyAlbumSuggestions = spotifyResponse[1];
 
-        const maxSpotifySuggestions = Math.min(limit /2, spotifyTrackSuggestions.length + spotifyAlbumSuggestions.length);
+        const maxSpotifySuggestions = Math.min(limit / 3, spotifyTrackSuggestions.length + spotifyAlbumSuggestions.length);
         const maxSpotifyAlbumSuggestions = Math.min(Math.floor(maxSpotifySuggestions / 2), spotifyAlbumSuggestions.length ?? 0);
         const maxSpotifyTrackSuggestions = maxSpotifySuggestions - maxSpotifyAlbumSuggestions;
-        const maxYoutubeSuggestions = Math.min(limit - maxSpotifySuggestions, youtubeSuggestions.length);
+        
+        const maxYoutubeSuggestions = Math.min((limit - maxSpotifySuggestions) / 2, youtubeSuggestions.length);
+
+        const maxSoundCloudSuggestions = Math.min(limit - maxYoutubeSuggestions - maxSpotifySuggestions, soundCloudSuggestions.length)
         
         const suggestions: APIApplicationCommandOptionChoice[] = [];
         suggestions.push(
@@ -59,9 +65,16 @@ const autocompleteQuery = async (interaction: AutocompleteInteraction, limit = 1
             })),
         );
 
+        suggestions.push(
+            ...soundCloudSuggestions.slice(0, maxSoundCloudSuggestions).map(track => ({
+                name: `☁️ ${track.name.substring(0,50)}${track.publisher != null ? ` - ${track.publisher.artist}` : track.user.name != undefined ?` - ${track.user.name}` : ''}`,
+                value: track.permalink
+            }))
+        )
+
         await interaction.respond(suggestions);
-    } catch {
-        console.error("Error in /play autocomplete!");
+    } catch (e) {
+        console.error(`Error in /play autocomplete: ${e}`);
     }
 }
 
