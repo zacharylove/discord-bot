@@ -1,6 +1,7 @@
 // Validates environment variables to ensure they are not undefined
 
-import { GatewayIntentBits, Partials } from "discord.js";
+import { Partials } from "discord.js";
+import { GatewayIntentBits } from "discord-api-types/v10";
 import { IntentOptions } from "../config/IntentOptions.js";
 import { toTitleCase } from "./utils.js";
 import { EventProperties } from "../interfaces/Event.js";

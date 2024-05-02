@@ -1,5 +1,5 @@
 // On bot startup
-import { Routes } from "discord-api-types/v9";
+import { Routes } from "discord-api-types/v10";
 import { REST } from "@discordjs/rest";
 import { CommandList } from "../commands/_CommandList.js";
 import { onTick } from "../events/onTick.js";

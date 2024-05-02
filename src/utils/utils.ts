@@ -1,6 +1,6 @@
 // General-purpose utility functions
 
-import { GatewayIntentBits } from "discord.js";
+import { GatewayIntentBits } from "discord-api-types/v10";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 

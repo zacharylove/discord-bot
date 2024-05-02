@@ -1,5 +1,5 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder } from "@discordjs/builders";
-import { GatewayIntentBits } from "discord-api-types/v9";
+import { GatewayIntentBits } from "discord-api-types/v10";
 import { AutocompleteInteraction, CommandInteraction, PermissionsBitField } from "discord.js";
 
 export enum Feature {

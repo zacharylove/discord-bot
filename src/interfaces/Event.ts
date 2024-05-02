@@ -1,7 +1,7 @@
 // Interface for all events
 
-import { GatewayIntentBits, Partials } from "discord.js";
-
+import { Partials } from "discord.js";
+import { GatewayIntentBits } from "discord-api-types/v10";
 export interface EventProperties {
     // Name of event
     Name: string;

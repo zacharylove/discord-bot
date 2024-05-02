@@ -1,6 +1,6 @@
 // Specifies options argument for Bot object, which includes parameters like intent
-import { GatewayIntentBits, Partials } from "discord.js";
-
+import { Partials } from "discord.js";
+import { GatewayIntentBits } from "discord-api-types/v10";
 export const IntentOptions: GatewayIntentBits[] = [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.MessageContent,

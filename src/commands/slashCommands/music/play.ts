@@ -1,7 +1,7 @@
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
 import { APIApplicationCommandOptionChoice, AutocompleteInteraction, ChatInputCommandInteraction, CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BOT } from "../../../index.js";
-import { GatewayIntentBits } from "discord-api-types/v9";
+import { GatewayIntentBits } from "discord-api-types/v10";
 import { getYoutubeSuggestionsForQuery } from "../../../api/youtubeAPI.js";
 import { getSpotifySuggestionsForQuery } from "../../../api/spotifyAPI.js";
 // @ts-ignore
