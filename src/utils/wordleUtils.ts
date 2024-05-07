@@ -182,9 +182,9 @@ export class wordle {
             else if (userData.lastWordleNumber == puzzleInfo.puzzleNum - 1) {
                 userData.wordleStreak++;
                 if (userData.longestStreak < userData.wordleStreak) userData.longestStreak = userData.wordleStreak
-            } 
-            // Reset streak
-            else {
+            }
+            // Reset streak if not resubmitted puzzle
+            else if (userData.lastWordleNumber != puzzleInfo.puzzleNum) {{
                 userData.wordleStreak = 1;
             }
         } 
