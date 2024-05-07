@@ -64,7 +64,7 @@ export class connections {
                 streakIncremented = true;
                 if (userData.longestStreak < userData.streak) userData.longestStreak = userData.streak;
             }
-        } else if (userData.streak > 0) userData.streak = 0;
+        } else if (userData.streak > 0 && userData.lastPuzzleSubmitted != puzzleInfo.puzzleNum) userData.streak = 0;
 
         // Update stats
         if (puzzleInfo.perfect) userData.perfectPuzzles = userData.perfectPuzzles ? userData.perfectPuzzles + 1 : 1;
