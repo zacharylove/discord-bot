@@ -2,7 +2,7 @@
 // Make sure bot has the correct scope and permissions!
 
 import Bot from "../bot";
-import { areWordleFeaturesEnabled, isInstagramEmbedFixEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled } from "../database/guildData.js";
+import { areWordleFeaturesEnabled, getGuildDataByGuildID, isInstagramEmbedFixEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled } from "../database/guildData.js";
 import { Message, GatewayIntentBits, TextChannel, DMChannel } from "discord.js";
 import { EventInterface } from "../interfaces/Event.js";
 import { parseManyURLs, validURL } from "../utils/utils.js";
@@ -70,9 +70,9 @@ export const onMessage : EventInterface = {
         }
         
         
-    
+        const guildData = await getGuildDataByGuildID(Message.guildId);
         // Check if message is a game result
-        if (await areWordleFeaturesEnabled(Message.guildId)) {
+        if (await areWordleFeaturesEnabled(guildData)) {
             BOT.getWordleUtil().parseMessage(Message);
             BOT.getTradleUtil().parseMessage(Message);
             BOT.getConnectionsUtil().parseMessage(Message);
@@ -81,9 +81,9 @@ export const onMessage : EventInterface = {
         // Check if message contains a valid URL
         const messageURLS: string[] = parseManyURLs(Message.content);
         if (messageURLS.length > 0) {
-            if (await isTwitterEmbedFixEnabled(Message.guildId)) await twitterEmbedFix(Message, messageURLS);
-            if (await isTikTokEmbedFixEnabled(Message.guildId)) await tikTokEmbedFix(Message, messageURLS);
-            if (await isInstagramEmbedFixEnabled(Message.guildId)) await instagramEmbedFix(Message, messageURLS);
+            if (await isTwitterEmbedFixEnabled(guildData)) await twitterEmbedFix(Message, messageURLS);
+            if (await isTikTokEmbedFixEnabled(guildData)) await tikTokEmbedFix(Message, messageURLS);
+            if (await isInstagramEmbedFixEnabled(guildData)) await instagramEmbedFix(Message, messageURLS);
         }
 
         

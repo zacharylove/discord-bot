@@ -138,40 +138,41 @@ const checkPermission = async ( interaction: CommandInteraction ): Promise<boole
 
 const enableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
     if ( !interaction.guild || !interaction.guildId ) { return embed; }
+    const guildData = await getGuildDataByGuildID(interaction.guild.id);
 
     switch (featureName) {
         case "wordle":
             // Check if feature is already enabled
-            if (await areWordleFeaturesEnabled(interaction.guildId)) {
+            if (await areWordleFeaturesEnabled(guildData)) {
                 embed.setDescription("Wordle features are already enabled.");
             } else {
-                embed.setDescription(await enableWordleFeatures(interaction.guildId));
+                embed.setDescription(await enableWordleFeatures(guildData));
             }
             break;
 
         case "starboard":
             // Check if feature is already enabled
-            if (await isStarboardEnabled(interaction.guildId)) {
+            if (await isStarboardEnabled(guildData)) {
                 embed.setDescription("Starboard feature is already enabled.");
             } else {
-                embed.setDescription(await enableStarboardFeature(interaction.guildId));
+                embed.setDescription(await enableStarboardFeature(guildData));
             }
             break;
 
         case "twitterembedfix":
             // Check if feature is already enabled
-            if (await isTwitterEmbedFixEnabled(interaction.guildId)) {
+            if (await isTwitterEmbedFixEnabled(guildData)) {
                 embed.setDescription("Twitter Embed Fix feature is already enabled.");
             } else {
-                embed.setDescription(await toggleTwitterEmbedFix(interaction.guildId, true));
+                embed.setDescription(await toggleTwitterEmbedFix(guildData, true));
             }
             break;
         case "tiktokembedfix":
             // Check if feature is already enabled
-            if (await isTikTokEmbedFixEnabled(interaction.guildId)) {
+            if (await isTikTokEmbedFixEnabled(guildData)) {
                 embed.setDescription("TikTok Embed Fix feature is already enabled.");
             } else {
-                embed.setDescription(await toggleTikTokEmbedFix(interaction.guildId, true));
+                embed.setDescription(await toggleTikTokEmbedFix(guildData, true));
             }
             break;
 
@@ -186,36 +187,37 @@ const enableFeature = async ( interaction: CommandInteraction, featureName: stri
 
 const disableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
     if ( !interaction.guild || !interaction.guildId ) { return embed; }
+    const guildData = await getGuildDataByGuildID(interaction.guild.id);
 
     switch (featureName) {
         case "wordle":
             // Check if feature is already disabled
-            if (!await areWordleFeaturesEnabled(interaction.guildId)) {
+            if (!await areWordleFeaturesEnabled(guildData)) {
                 embed.setDescription("Wordle features are already disabled.");
-            } else embed.setDescription(await disableWordleFeatures(interaction.guildId));
+            } else embed.setDescription(await disableWordleFeatures(guildData));
             break;
         case "starboard":
             // Check if feature is already disabled
-            if (!await isStarboardEnabled(interaction.guildId)) {
+            if (!await isStarboardEnabled(guildData)) {
                 embed.setDescription("Starboard feature is already disabled.");
             }
-            else embed.setDescription(await disableStarboardFeature(interaction.guildId));
+            else embed.setDescription(await disableStarboardFeature(guildData));
             break;
 
         case "twitterembedfix":
             // Check if feature is already enabled
-            if (!await isTwitterEmbedFixEnabled(interaction.guildId)) {
+            if (!await isTwitterEmbedFixEnabled(guildData)) {
                 embed.setDescription("Twitter Embed Fix feature is already disabled.");
             } else {
-                embed.setDescription(await toggleTwitterEmbedFix(interaction.guildId, false));
+                embed.setDescription(await toggleTwitterEmbedFix(guildData, false));
             }
             break;
         case "tiktokembedfix":
             // Check if feature is already enabled
-            if (!await isTikTokEmbedFixEnabled(interaction.guildId)) {
+            if (!await isTikTokEmbedFixEnabled(guildData)) {
                 embed.setDescription("TikTok Embed Fix feature is already disabled.");
             } else {
-                embed.setDescription(await toggleTikTokEmbedFix(interaction.guildId, false));
+                embed.setDescription(await toggleTikTokEmbedFix(guildData, false));
             }
             break;
         default:

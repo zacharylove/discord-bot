@@ -35,10 +35,9 @@ export const getGuildDataByGuildID = async (guildID: string): Promise<GuildDataI
  * @param guildID 
  * @returns status message
  */
-export const enableWordleFeatures = async (guildID: string): Promise<string> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const enableWordleFeatures = async (guildData: GuildDataInterface): Promise<string> => {
     // If already enabled
-    if ( await areWordleFeaturesEnabled(guildID) ) { return "Wordle features are already enabled."; }
+    if ( await areWordleFeaturesEnabled(guildData) ) { return "Wordle features are already enabled."; }
     // If intent is not available
     if (!validateEventPermissions(onMessage.properties)) { return "Wordle features require the Message Content intent to scan messages. Please enable it in your server and try again.";}
     // Enable result scanning
@@ -61,8 +60,7 @@ export const enableWordleFeatures = async (guildID: string): Promise<string> => 
  * @param guildID 
  * @returns status message
  */
-export const disableWordleFeatures = async (guildID: string): Promise<string> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const disableWordleFeatures = async (guildData: GuildDataInterface): Promise<string> => {
     // If already disabled
     if ( !guildData.messageScanning.wordleResultScanning ) { return "Wordle features are already disabled."; }
     // Disable result scanning
@@ -77,8 +75,7 @@ export const disableWordleFeatures = async (guildID: string): Promise<string> =>
     return "Wordle features have been disabled.";
 }
 
-export const areWordleFeaturesEnabled = async (guildID: string): Promise<boolean> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const areWordleFeaturesEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     return guildData.messageScanning.wordleResultScanning && guildData.commands.enabledCommands.includes( wordleStats.data.name );
 }
 
@@ -88,12 +85,11 @@ export const areWordleFeaturesEnabled = async (guildID: string): Promise<boolean
  * @param guildID 
  * @returns 
  */
-export const enableStarboardFeature = async (guildID: string): Promise<string> => {
+export const enableStarboardFeature = async (guildData: GuildDataInterface): Promise<string> => {
     var toReturn = "";
 
-    const guildData = await getGuildDataByGuildID(guildID);
     // If already enabled
-    if ( await isStarboardEnabled(guildID) ) { return "Starboard is already enabled, dummy!"; }
+    if ( await isStarboardEnabled(guildData) ) { return "Starboard is already enabled, dummy!"; }
     if (!validateEventPermissions(onMessageReactionAdd.properties)) { return "Starboard requires the GuildMessageReactions intent to scan messages. Please enable it in your server and try again.";}
      // Enable reaction scanning
      guildData.messageScanning.starboardScanning = true;
@@ -114,10 +110,9 @@ export const enableStarboardFeature = async (guildID: string): Promise<string> =
  * @param guildID 
  * @returns 
  */
-export const disableStarboardFeature = async (guildID: string): Promise<string> => {
+export const disableStarboardFeature = async (guildData: GuildDataInterface): Promise<string> => {
     var toReturn = "";
 
-    const guildData = await getGuildDataByGuildID(guildID);
     // If already disabled
     if ( !guildData.messageScanning.starboardScanning ) { return "Starboard is already disabled."; }
     // Disable result scanning
@@ -142,16 +137,14 @@ export const setStarboardThreshold = async (guildID: string, threshold: number):
     return "Starboard threshold has been set to " + threshold;
 }
 
-export const setStarboardEmojis = async (guildID: string, starEmoji?: string, successEmoji?: string): Promise<string> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const setStarboardEmojis = async (guildData: GuildDataInterface, starEmoji?: string, successEmoji?: string): Promise<string> => {
     if (starEmoji) guildData.starboard.emoji = starEmoji;
     if (successEmoji) guildData.starboard.successEmoji = successEmoji;
     await update(guildData);
     return "Starboard emojis have been set to " + guildData.starboard.emoji + " and " + guildData.starboard.successEmoji;
 }
 
-export const isStarboardEnabled = async (guildID: string): Promise<boolean> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const isStarboardEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     return guildData.messageScanning.starboardScanning;
 }
 
@@ -170,8 +163,7 @@ export const setStarboardDefaults = async (guildID: string) => {
     if (numDefaulted > 0) console.debug(`${numDefaulted} starboard defaults have been set`);
 }
 
-export const removeStoredStarboardPost = async (guildID: string, post: StarboardPost) => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const removeStoredStarboardPost = async (guildData: GuildDataInterface, post: StarboardPost) => {
     const indexToRemove = guildData.starboard.posts.indexOf(post);
     if (indexToRemove != -1) guildData.starboard.posts.splice(indexToRemove, 1);
     // Remove from leaderboard if it exists
@@ -180,8 +172,7 @@ export const removeStoredStarboardPost = async (guildID: string, post: Starboard
 }
 
 // Twitter Embed Fix
-export const isTwitterEmbedFixEnabled = async (guildID: string): Promise<boolean> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const isTwitterEmbedFixEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     // If not configured, default to true
     if (guildData.messageScanning.twitterEmbedFix == undefined) {
         guildData.messageScanning.twitterEmbedFix = true;
@@ -191,11 +182,10 @@ export const isTwitterEmbedFixEnabled = async (guildID: string): Promise<boolean
     return guildData.messageScanning.twitterEmbedFix;
 }
 
-export const toggleTwitterEmbedFix =  async (guildID: string, enableDisable: boolean): Promise<string> => {
+export const toggleTwitterEmbedFix =  async (guildData: GuildDataInterface, enableDisable: boolean): Promise<string> => {
     var toReturn = "";
 
-    const guildData = await getGuildDataByGuildID(guildID);
-    const isEnabled = await isTwitterEmbedFixEnabled(guildID);
+    const isEnabled = await isTwitterEmbedFixEnabled(guildData);
     // If already enabled
     if ( enableDisable && isEnabled || !enableDisable && !isEnabled ) { return `Twitter Embed Fix is already ${enableDisable ? "enabled" : "disabled"}, dummy!`; }
      guildData.messageScanning.twitterEmbedFix = enableDisable;
@@ -206,8 +196,7 @@ export const toggleTwitterEmbedFix =  async (guildID: string, enableDisable: boo
 }
 
 // Tiktok Embed Fix
-export const isTikTokEmbedFixEnabled = async (guildID: string): Promise<boolean> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const isTikTokEmbedFixEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     // If not configured, default to true
     if (guildData.messageScanning.tiktokEmbedFix == undefined) {
         guildData.messageScanning.tiktokEmbedFix = true;
@@ -217,11 +206,10 @@ export const isTikTokEmbedFixEnabled = async (guildID: string): Promise<boolean>
     return guildData.messageScanning.tiktokEmbedFix;
 }
 
-export const toggleTikTokEmbedFix =  async (guildID: string, enableDisable: boolean): Promise<string> => {
+export const toggleTikTokEmbedFix =  async (guildData: GuildDataInterface, enableDisable: boolean): Promise<string> => {
     var toReturn = "";
 
-    const guildData = await getGuildDataByGuildID(guildID);
-    const isEnabled = await isTikTokEmbedFixEnabled(guildID);
+    const isEnabled = await isTikTokEmbedFixEnabled(guildData);
     // If already enabled
     if ( enableDisable && isEnabled || !enableDisable && !isEnabled ) { return `TikTok Embed Fix is already ${enableDisable ? "enabled" : "disabled"}, dummy!`; }
      guildData.messageScanning.tiktokEmbedFix = enableDisable;
@@ -232,8 +220,7 @@ export const toggleTikTokEmbedFix =  async (guildID: string, enableDisable: bool
 }
 
 // Instagram Embed Fix
-export const isInstagramEmbedFixEnabled = async (guildID: string): Promise<boolean> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const isInstagramEmbedFixEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     // If not configured, default to true
     if (guildData.messageScanning.instagramEmbedFix == undefined) {
         guildData.messageScanning.instagramEmbedFix = true;
@@ -243,11 +230,10 @@ export const isInstagramEmbedFixEnabled = async (guildID: string): Promise<boole
     return guildData.messageScanning.instagramEmbedFix;
 }
 
-export const toggleInstagramEmbedFix =  async (guildID: string, enableDisable: boolean): Promise<string> => {
+export const toggleInstagramEmbedFix =  async (guildData: GuildDataInterface, enableDisable: boolean): Promise<string> => {
     var toReturn = "";
 
-    const guildData = await getGuildDataByGuildID(guildID);
-    const isEnabled = await isInstagramEmbedFixEnabled(guildID);
+    const isEnabled = await isInstagramEmbedFixEnabled(guildData);
     // If already enabled
     if ( enableDisable && isEnabled || !enableDisable && !isEnabled ) { return `Instagram Embed Fix is already ${enableDisable ? "enabled" : "disabled"}, dummy!`; }
      guildData.messageScanning.instagramEmbedFix = enableDisable;

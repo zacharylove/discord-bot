@@ -2,7 +2,7 @@ import { CommandInterface, Feature } from '../../../interfaces/Command.js';
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import { getRanking, getWordleDataByUserID } from '../../../database/wordleData.js';
 import { APIEmbedField, CommandInteraction, User } from 'discord.js';
-import { areWordleFeaturesEnabled } from '../../../database/guildData.js';
+import { areWordleFeaturesEnabled, getGuildDataByGuildID } from '../../../database/guildData.js';
 import { CommandStatus, broadcastCommandStatus } from '../../../utils/commandUtils.js';
 import { createCanvas, loadImage } from 'canvas';
 import { getAvatarURL } from '../../../utils/userUtils.js';
@@ -285,7 +285,8 @@ export const wordleStats: CommandInterface = {
 
             // Check if wordle features are enabled (only if on server)
             if (interaction.guild && interaction.guild) {
-                if (await areWordleFeaturesEnabled(interaction.guild.id) == false) {
+                const guildData = await getGuildDataByGuildID(interaction.guild.id);
+                if (await areWordleFeaturesEnabled(guildData) == false) {
                     await broadcastCommandStatus(interaction, CommandStatus.DisabledInGuild, {command: wordleStats});
                     return;
                 }
