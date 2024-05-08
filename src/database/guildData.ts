@@ -342,3 +342,8 @@ export const getGlobalGuildCounterStats = async () => {
 // Music Bot Functions
 // ====================
 
+
+
+// ====================
+// Custom Responses
+// ====================

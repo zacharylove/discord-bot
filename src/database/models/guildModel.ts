@@ -43,7 +43,16 @@ export interface GuildDataInterface extends Document {
         qotdWhitelist: boolean,
         whitelistedRoleIds: string[],
         qotdRole: string,
-    }
+    },
+    customResponses: {
+        name: string;
+        enabled: boolean;
+        trigger: string;
+        response: string;
+        channelId: string | null;
+        allowPing: boolean;
+        fullMessage: boolean;
+    }[]
 }
 
 export interface StarboardPost {
@@ -117,7 +126,8 @@ export const GuildData = new Schema({
         qotdWhitelist: Boolean,
         whitelistedRoleIds: new Array(),
         qotdRole: String,
-    }
+    },
+    customResponses: new Array()
 });
 
 /**
@@ -178,7 +188,8 @@ export const createNewGuildData = async (guildID: string) => {
             qotdWhitelist: false,
             whitelistedRoleIds: new Array(),
             qotdRole: ""
-        }
+        },
+        customResponses: new Array(),
     });
 }
 

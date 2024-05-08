@@ -9,6 +9,7 @@ import { parseManyURLs, validURL } from "../utils/utils.js";
 import { twitterEmbedFix } from "./responses/twitterEmbedFix.js";
 import { tikTokEmbedFix } from "./responses/tiktokEmbedFix.js";
 import { instagramEmbedFix } from "./responses/instagramEmbedFix.js";
+import { parseMessageForResponse } from "../commands/slashCommands/response.js";
 
 const sayCommand = async (Message: Message) => {
 
@@ -85,6 +86,9 @@ export const onMessage : EventInterface = {
             if (await isTikTokEmbedFixEnabled(guildData)) await tikTokEmbedFix(Message, messageURLS);
             if (await isInstagramEmbedFixEnabled(guildData)) await instagramEmbedFix(Message, messageURLS);
         }
+        
+        // Check if message matches a response for the server
+        await parseMessageForResponse(Message, guildData);
 
         
     },

@@ -79,7 +79,7 @@ export class Queuer {
             } 
 
             // === SoundCloud ===
-            // Soundcloud has no API but is supported by youtube-dl, so we rely on metadata from there
+            // Soundcloud has no API, but we can use the play-dl package to fetch songs using a client id.
             else if ( url.host === 'soundcloud.com' || url.host === 'www.soundcloud.com' ) {
                 const songs = await parseSoundCloudURL(query, interaction);
                 newSongs.push(songs);
