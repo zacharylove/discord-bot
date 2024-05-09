@@ -8,9 +8,7 @@ import { hasPermissions } from "../../utils/userUtils.js";
 
 // Regex patterns
 const variablePattern = /{([^}]*)}/g;
-const orPattern = /.*\|.*/g;
 const customPattern = /\s*\d*\s*/g;
-const wildcardPattern = /\s*\*\s*/g;
 
 const createHelpMessage = async (interaction: CommandInteraction) => {
     const embed = new EmbedBuilder()
@@ -27,17 +25,18 @@ const createHelpMessage = async (interaction: CommandInteraction) => {
     description += "- **Channel (optional)**: Whether to only look for messages in a specific channel (default: no).\n"; 
     description += "- **Allow Pings (optional)**: Whether the bot can ping members in the response (default: no).\n";
 
+
+    description += "Regular expressions (RegEx) is supported in trigger messages! Refer to this [RegEx cheatsheet](https://www.rexegg.com/regex-quickstart.html) to see a list of expressions you can use!\n";
+    description += "In addition to RegEx, you can define up to 5 variables in the trigger message that can be referred to in the response:\n"
+    description += '- The format of variables is `{number}`, so with trigger message of "I\'m {1}" and a response message of "Hi {1}, I\'m dad", the message "I\'m hungry" will produce the response "Hi hungry, I\'m dad".\n';
+
     description += "\n**Notes:**\n";
-    description += "- You cannot use any variables in the response message except user-created ones like {1}.\n";
-    description += "- You cannot use variables inside of variables (for now)\n";
+    description += "- You cannot use any regular expressions in the response message except user-created variables like {1}.\n";
+    description += "- There are some limitations placed on regular expressions to avoid DoS attacks. Don't take advantage of this feature please.\n";
+    description += "- You can define a maximum of 10 responses per server.\n"
 
     embed.setDescription(description);
 
-
-    let variables = "**NOTE:** Variables are currently not implemented.\n"
-    variables += '- `{*}` = Any number of any characters\n';
-    variables += '- `{word | message}` = Any specific words, in this case, "word" or "message\n"';
-    variables += '- `{1}` = A custom variable, which you can refer to in the response. You can use any number in this variable.'
 
 
     let examples = '/response add `"hardly"` `"{*}er"` `"I hardly know her!"` `Part of message\n`';
@@ -46,14 +45,30 @@ const createHelpMessage = async (interaction: CommandInteraction) => {
     examples += '/response add `"ping"` `"ping"` `"pong!"` `Full message`\n';
     examples += '/response add `"eating"` `"{I\'m eating | I ate | I am eating}{1}"` `"Yum! I hope {1} was delicious!"` `Full message`\n';
 
-    embed.addFields({name: 'Variables', value: variables});
     embed.addFields({name: 'Examples', value: examples});
 
     await interaction.editReply({embeds: [embed]});
     return;
 }
 
-const validateMessages = async (interaction: CommandInteraction, trigger: string, response: string): Promise<boolean> => {
+function validateRegex(pattern: string) {
+    var parts = pattern.split('/'),
+        regex = pattern,
+        options = "";
+    if (parts.length > 1) {
+        regex = parts[1];
+        options = parts[2];
+    }
+    try {
+        new RegExp(regex, options);
+        return true;
+    }
+    catch(e) {
+        return false;
+    }
+}
+
+const validateMessages = async (interaction: CommandInteraction, trigger: string, response: string): Promise<{valid: boolean, isRegex: boolean, regexTrigger: string}> => {
     // Trigger: Validate whether brackets are correct (no nesting/orphaned brackets)
     let openingBracketFound = false;
     let valid = true;
@@ -75,12 +90,11 @@ const validateMessages = async (interaction: CommandInteraction, trigger: string
         }
     }
     if (!valid) {
-        await interaction.editReply(`There is a syntax error in your trigger message. Try again!`);
-        return false;
+        await interaction.editReply(`There is a syntax error for the variable(s) in your trigger message. Try again!`);
+        return {valid: false, isRegex: false, regexTrigger: ""};
     }
 
     // Response: validate whether brackets are correct
-    // Trigger: Validate whether brackets are correct (no nesting/orphaned brackets)
     openingBracketFound = false;
     valid = true;
     if (response.includes('}') || response.includes('{')) {
@@ -103,8 +117,8 @@ const validateMessages = async (interaction: CommandInteraction, trigger: string
         }
     }
     if (!valid) {
-        await interaction.editReply(`There is a syntax error in your response message. Try again!`);
-        return false;
+        await interaction.editReply(`There is a syntax error for the variable(s) in your response message. Try again!`);
+        return {valid: false, isRegex: false, regexTrigger: ""};
     }
 
     // Parse variables from trigger message
@@ -118,30 +132,57 @@ const validateMessages = async (interaction: CommandInteraction, trigger: string
     valid = true;
     let invalidVariable = "";
     for (var v of variables) {
-        // If or variable
-        if (orPattern.exec(v) !== null) continue;
         // If custom variable
         if (customPattern.exec(v) !== null) continue;
-        // If wildcard variable
-        if (wildcardPattern.exec(v) !== null) continue;
         // If none of these, invalid.
         valid = false;
         invalidVariable = v;
         break;
     }
     if (!valid) {
-        await interaction.editReply(`Invalid variable {${invalidVariable}}. Use /response help to see a list of variables you can use.`);
-        return false;
+        await interaction.editReply(`Invalid variable {${invalidVariable}}. You can only use numbers for variables, such as {5}.`);
+        return {valid: false, isRegex: false, regexTrigger: ""};
+    }
+    let isRegex: boolean = false;
+    // Replace custom variables with regex (thanks aeiou)
+    let regex = new RegExp('\\\\{(\\d+)\\\\}', 'g');
+    let trigger_regex = trigger.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&');
+    const trigger_copy = trigger_regex;
+    match = regex.exec(trigger_copy);
+    let seen: string[] = [];
+    while (match) {
+        if (seen.includes(match[0])) {
+            trigger_regex = trigger_regex.replace(match[0], `\\${match[1]}`);
+        }
+        else {
+            seen.push(match[0]);
+            trigger_regex = trigger_regex.replace(match[0], `(.+)`);
+            isRegex = true;
+        }
+        match = regex.exec(trigger_copy);
+    }
+    trigger = trigger_regex;
+
+    // Validate regex (if exists)
+    
+    // Look for / at beginning and end of message
+    if (trigger.charAt(0) == "/" && trigger.charAt(trigger.length - 1) == "/") {
+        if (!validateRegex(trigger)) {
+            await interaction.editReply(`Invalid regular expression! If you weren't trying to use RegEx, please remove the / character at the beginning or end of your message.`);
+            return {valid: false, isRegex: false, regexTrigger: ""};
+        }
+        isRegex = true;
     }
 
     // If all checks pass, return true.
-    return true;
+    return {valid: true, isRegex: isRegex, regexTrigger: trigger};
 }
 
 const createReaction = async (interaction: ChatInputCommandInteraction) => {
     let name = interaction.options.getString('name');
     let trigger = interaction.options.getString('trigger');
     let response = interaction.options.getString('response');
+    let isReply = interaction.options.getBoolean('reply') ? interaction.options.getBoolean('reply') : true;
     let channelWhitelist = interaction.options.getChannel('channel');
     let allowping = interaction.options.getBoolean('allowping') ? interaction.options.getBoolean('allowping') : false;
     let fullmessage = interaction.options.getString('fullmessage') ? interaction.options.getString('fullmessage') : "full";
@@ -160,9 +201,17 @@ const createReaction = async (interaction: ChatInputCommandInteraction) => {
         await interaction.editReply(`A response named ${name} already exists for this server!`);
         return;
     }
+    else if (guildData.customResponses.length >= 10) {
+        await interaction.editReply(`You've reached the maximum number of custom responses for this server (10). Please delete an existing response if you want to add a new one.`);
+        return;
+    }
 
     // Validate trigger and response messages
-    if (!await validateMessages(interaction, trigger, response)) return;
+    const {valid, isRegex, regexTrigger} = await validateMessages(interaction, trigger, response);
+    if (!valid) return;
+    trigger = regexTrigger;
+
+
 
     // Save response to database
     const num = guildData.customResponses.push({
@@ -170,6 +219,8 @@ const createReaction = async (interaction: ChatInputCommandInteraction) => {
         enabled: true,
         trigger: trigger,
         response: response,
+        regex: isRegex,
+        reply: isReply ? isReply : true,
         channelId: channelWhitelist ? channelWhitelist.id : null,
         allowPing: allowping ? allowping : false,
         fullMessage: fullmessage ? fullmessage == 'full' ? true : false : true
@@ -277,6 +328,12 @@ export const response: CommandInterface = {
                         .setDescription('Allow bot to ping members/roles')
                         .setRequired(false)
                 )
+                .addBooleanOption((option) =>
+                    option
+                        .setName('reply')
+                        .setDescription('Reply to trigger message')
+                        .setRequired(false)
+                )
                 .addStringOption((option) => 
                     option
                         .setName('fullmessage')
@@ -366,18 +423,46 @@ export const parseMessageForResponse = async (message: Message, guildData: Guild
     if (!guildData.customResponses || guildData.customResponses.length == 0) return;
     // Check all responses
     for (const pattern of guildData.customResponses) {
-       // TODO: VARIABLE SUPPORT!!
 
-       // Check channel id
-       if (pattern.channelId != null && message.channelId != pattern.channelId) return;
-       
-       if (pattern.trigger == message.content) {
-            // Prevent pings
-            if( !pattern.allowPing ) {
-                pattern.response = pattern.response.replaceAll("@", "");
+        // Check channel id
+        if (pattern.channelId != null && message.channelId != pattern.channelId) return;
+        
+        let response = "";
+        if (pattern.regex) {
+            try {
+                // Stolen from aeiou- prevent catastrophic backtracking
+                if (pattern.trigger.includes('(.+) (.+)') || pattern.trigger.includes('(.+)(.+)')) continue;
+
+                const re = new RegExp(pattern.trigger, "i");
+                const match = message.content.match(re);
+                if (match) {
+                    response = pattern.response;
+                    for (let i = 0; i < match.length; i++) {
+                        response = response.replaceAll(`{${i + 1}}`, match[i + 1]);
+                    }
+                    if (pattern.reply) {
+                        await message.reply(response);
+                    } else {
+                        await message.channel.send(response);
+                    }
+                }
+            } catch (e) {
+                console.error(`Response ${pattern.name} is defined as regex but regex string is invalid: ${e}`);
             }
-            await message.reply(pattern.response);
-       }
+        }
+
+        if (pattern.trigger == message.content) {
+                response = pattern.response;
+                // Prevent pings
+                if( !pattern.allowPing ) {
+                    response = response.replaceAll("@", "");
+                }
+                if (pattern.reply) {
+                    await message.reply(response);
+                } else {
+                    await message.channel.send(response);
+                }
+        }
     
     }
 }

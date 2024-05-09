@@ -49,6 +49,8 @@ export interface GuildDataInterface extends Document {
         enabled: boolean;
         trigger: string;
         response: string;
+        regex: boolean;
+        reply: boolean;
         channelId: string | null;
         allowPing: boolean;
         fullMessage: boolean;
