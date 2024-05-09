@@ -137,7 +137,8 @@ export const setStarboardThreshold = async (guildID: string, threshold: number):
     return "Starboard threshold has been set to " + threshold;
 }
 
-export const setStarboardEmojis = async (guildData: GuildDataInterface, starEmoji?: string, successEmoji?: string): Promise<string> => {
+export const setStarboardEmojis = async (guildID: string, starEmoji?: string, successEmoji?: string): Promise<string> => {
+    const guildData = await getGuildDataByGuildID(guildID);
     if (starEmoji) guildData.starboard.emoji = starEmoji;
     if (successEmoji) guildData.starboard.successEmoji = successEmoji;
     await update(guildData);
