@@ -8,6 +8,13 @@ import { truncateString } from "../utils/utils.js";
 import { getUserData } from "../database/userData.js";
 
 
+export const parseCustomEmoji = (reaction: MessageReaction): string => {
+    let reactionEmoji = reaction.emoji.toString();
+    if (reaction.emoji.name) reactionEmoji = reactionEmoji.replace("_", reaction.emoji.name);
+
+    return reactionEmoji;
+}
+
  /**
      * Retrieves the starboard channel for the guild (if any)
      * @param guildData 
@@ -90,7 +97,10 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
             }
 
             //console.debug(`Checking if reaction matches starboard emoji: ${reaction.emoji.name} == ${guildData.starboard.emoji}`);
-            if (guildData.starboard.emoji == reaction.emoji.name) {
+            // parse emoji
+            let reactionEmoji = parseCustomEmoji(reaction);
+
+            if (guildData.starboard.emoji == reactionEmoji) {
                 console.debug("Reaction matches starboard emoji");
                 // If starboard post exists
                 const starChannel: TextChannel | null = await getStarChannel(guildData);
@@ -134,7 +144,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                     } 
                     // Edit if above threshold
                     else {
-                        starboardMessage.edit(`${reaction.emoji} ${reactionCount} - <#${reaction.message.channelId}>`);
+                        starboardMessage.edit(`${parseCustomEmoji(reaction)} ${reactionCount} - <#${reaction.message.channelId}>`);
                     }
 
                 } 
@@ -153,7 +163,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                     }
 
                     let footer = "";
-                    let messageContent = `${guildData.starboard.emoji} ${reaction.count}`;
+                    let messageContent = `${parseCustomEmoji(reaction)} ${reaction.count}`;
                     let author = "";
 
                     const displayName = (await reaction.message.guild.members.fetch(reaction.message.author.id)).displayName;
