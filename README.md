@@ -8,11 +8,17 @@ The features of this bot are divided into two categories:
      - Another example is the "confession" command, which allows users to make anonymous posts in a designated channel
    - Utility: Provides relevant and unique functionalities that (hopefully) have minimal feature overlap with other more popular bots
      - Examples: Movie, anime, etc.
-     - The music commands (WIP) stream quality-focused music (currently only from YouTube and Spotify) with plenty of customization.
+     - The music commands stream quality-focused music in voice channels, supporting YouTube, Spotify, and Soundcloud, with plenty of customization.
+   - Context Commands: Reaction-focused utilities for driving conversation
+     - Find Anime Source: Uses the Trace.moe API to identify source anime shows/movies (with timestamps!) from images and GIFs in a message.
+     - Caption Image/GIF: Uses the canvas and gifunct-js packages to apply top and bottom captions to a posted image or GIF.
+     - Are These Words In The Bible?: Determines what percentage of words in a message exist in the King James Bible.
  - **Features**: "Passive" interactions through scanning messages (no messages are ever logged)
-   - Starboard/Hall of Shame (WIP): Collects messages which have received a configurable number of reactions and immortalizes them in their own channel.
-   - Wordle Tracking: Parses and maintains a database of wordle results pasted into chat and generates detailed statistics and local/global leaderboards.
+   - Starboard/Hall of Shame: Collects messages which have received a configurable number of reactions and immortalizes them in their own channel.
+   - NYT Wordle/Connections Tracking: Parses and maintains a database of NYT game results pasted into chat and generates detailed statistics and local/global leaderboards.
    - Embed Fixes: Automatically fixes embedding of Twitter/X, Instagram, and TikTok post URLs
+   - Custom Responses: Responds to specific messages or regex patterns with user-defined replies
+   - Question Of The Day (QOTD): Posts user-created conversation prompts to a designated channel and opens a thread for discussion.
 
 Each command and feature can be configured and toggled on/off on a per-server basis through the "settings" command.
 
@@ -23,9 +29,10 @@ I made this repository public on 11/21/2023 to show to some friends, but keep in
 ## Stack
 This bot uses Node.js with Typescript, packaged in a Docker container.
  - **API:** Mostly uses `discord.js` to communicate with the Discord API, and `axios` for parts of the API that have not yet been implemented into discord.js
-   - Makes use of [TMDb](https://www.themoviedb.org), [YouTube](https://developers.google.com/youtube/v3), [IGDb](https://api-docs.igdb.com), [Jikan](https://jikan.moe/), [Hardcover](https://hardcover.app/), and [Spotify](https://developer.spotify.com/documentation/web-api) APIs
+   - Makes use of [TMDb](https://www.themoviedb.org), [YouTube](https://developers.google.com/youtube/v3), [IGDb](https://api-docs.igdb.com), [Jikan](https://jikan.moe/), [Hardcover](https://hardcover.app/), [Spotify](https://developer.spotify.com/documentation/web-api), and [Trace.moe](https://trace.moe/) APIs.
  - **Database:** MongoDB, through the `mongoose` package
  - **Image Processing:** `canvas` is used for image processing and creation, and `gifuct-js` is used for GIF handling and creation.
+ - **Music:** [ytdl-core](https://www.npmjs.com/package/ytdl-core) is used in conjunction with the YouTube and Spotify APIs for downloading YouTube videos and generic streams. [play-dl](https://www.npmjs.com/package/play-dl) is used for parsing and downloading SoundCloud tracks.
 
 ## Configuration
 Most general bot configuration happens in the `/src/config/config.json` file. Server and user-specific configuration is stored, updated, and retrieved from a MongoDB database, and can be modified through the bot using the `/settings` command.
@@ -43,3 +50,4 @@ I am using Github Actions to compile and publish a Docker container on every com
 
 ## Attribution
 The music functionality is inspired by (and in most cases directly ripped from) [codetheweb/muse](https://github.com/codetheweb/muse)
+Thank you to the developer of the [aeiou bot](https://github.com/aeioubot/aeiouy) for assisting with the custom responses feature!
