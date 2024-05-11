@@ -1,7 +1,7 @@
 // View a list of guild-specific settings and enable/disable commands and features.
 import { CommandInterface } from "../../interfaces/Command.js";
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../database/guildData.js";
+import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isCustomResponseEnabled, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleCustomResponse, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../database/guildData.js";
 import { GuildDataInterface } from "../../database/models/guildModel.js";
 import { commandNotImplemented, getCommandListAsString } from "../../utils/commandUtils.js";
 import { CommandInteraction, PermissionsBitField } from "discord.js";
@@ -176,6 +176,14 @@ const enableFeature = async ( interaction: CommandInteraction, featureName: stri
             }
             break;
 
+        case "customresponse":
+            if (await isCustomResponseEnabled(guildData)) {
+                embed.setDescription("Custom Response feature is already enabled");
+            } else {
+                embed.setDescription(await toggleCustomResponse(guildData, true));
+            }
+            break;
+
         default:
             embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
             break;
@@ -218,6 +226,14 @@ const disableFeature = async ( interaction: CommandInteraction, featureName: str
                 embed.setDescription("TikTok Embed Fix feature is already disabled.");
             } else {
                 embed.setDescription(await toggleTikTokEmbedFix(guildData, false));
+            }
+            break;
+
+        case "customresponse":
+            if (await isCustomResponseEnabled(guildData)) {
+                embed.setDescription("Custom Response feature is already disabled");
+            } else {
+                embed.setDescription(await toggleCustomResponse(guildData, false));
             }
             break;
         default:
@@ -296,7 +312,8 @@ export const guildSettings: CommandInterface = {
                                     { name: 'Wordle', value: 'wordle' },
                                     { name: 'Starboard', value: 'starboard' },
                                     { name: 'TwitterEmbedFix', value: 'twitterembedfix' },
-                                    { name: 'TikTokEmbedFix', value: 'tiktokembedfix'}
+                                    { name: 'TikTokEmbedFix', value: 'tiktokembedfix'},
+                                    { name: 'CustomResponses', value: 'customresponse'}
                                 )
                         )
                 )
@@ -314,7 +331,8 @@ export const guildSettings: CommandInterface = {
                                     { name: 'Wordle', value: 'wordle' },
                                     { name: 'Starboard', value: 'starboard' },
                                     { name: 'TwitterEmbedFix', value: 'twitterembedfix' },
-                                    { name: 'TikTokEmbedFix', value: 'tiktokembedfix'}
+                                    { name: 'TikTokEmbedFix', value: 'tiktokembedfix'},
+                                    { name: 'CustomResponses', value: 'customresponse'}
                                 )
                         )
                 )

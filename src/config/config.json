@@ -155,6 +155,10 @@
             "next": "1189716002708140232"
         }
     },
+    "response": {
+        "allowRegex": true,
+        "maxGuildResponses": 10
+    },
 
     "roleplay": {
         "shipMessages": {
