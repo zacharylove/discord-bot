@@ -3,6 +3,7 @@
 import { GatewayIntentBits } from "discord-api-types/v10";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
+import { Guild, PermissionResolvable, TextChannel } from "discord.js";
 
 export const toTitleCase = (text: string): string => {
     return text.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -147,4 +148,22 @@ export const denialMessage = (): string => {
 export const invalidMessage = (): string => {
     const messages = config.responseMessages.invalid;
     return messages[Math.floor(Math.random() * messages.length)];
+}
+
+export const checkBotGuildPermission = async (guild: Guild, checkAdmin: boolean = false, ...permission: PermissionResolvable[] ) => {
+    if (guild.members.me == null) {
+        console.error(`Error in guild permission check: Guild ${guild.id} does not have bot in member list!`);
+        return false;
+    }
+    if (permission.some(p => !guild.members.me!.permissions.has(p, checkAdmin))) return false;
+    return true;
+}
+
+export const checkBotChannelPermission = async (guild: Guild, channelId: string, checkAdmin: boolean = false, ...permission: PermissionResolvable[]) => {
+    if (guild.members.me == null) {
+        console.error(`Error in channel permission check: Guild ${guild.id} does not have bot in member list!`);
+        return false;
+    }
+    if (permission.some(p => !guild.members.me!.permissionsIn(channelId).has(p, checkAdmin))) return false;
+    return true;
 }
