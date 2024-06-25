@@ -1,10 +1,10 @@
-import { EmbedBuilder, Message, MessageReaction, TextChannel, User } from "discord.js";
+import { EmbedBuilder, Message, MessageReaction, PermissionsBitField, TextChannel, User } from "discord.js";
 import { BOT } from "../index.js";
 import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "../database/models/guildModel.js";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { getGuildDataByGuildID, isStarboardEnabled, removeStoredStarboardPost, setStarboardDefaults, update } from "../database/guildData.js";
-import { truncateString } from "../utils/utils.js";
+import { checkBotGuildPermission, truncateString } from "../utils/utils.js";
 import { getUserData } from "../database/userData.js";
 
 
@@ -278,6 +278,11 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                     embed.addFields(
                         { name: "Original", value: `[Jump!](${reaction.message.url})`, inline: true },
                     )
+
+                    if (!await checkBotGuildPermission(reaction.message.guild, false, PermissionsBitField.Flags.SendMessages)) {
+                        console.error(`Error in parseStarReact: No permission to send messages in channel ${starChannel.id}!`);
+                        return;
+                    }
 
                     starboardMessage = await starChannel.send({ content: messageContent, embeds: [embed] });
                     guildData.starboard.posts.push({

@@ -4,7 +4,7 @@ import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel a
 import { hasPermissions } from "../../utils/userUtils.js";
 import { EmbedBuilder } from "@discordjs/builders";
 import { BOT } from "../../index.js";
-import { confirmationMessage, truncateString } from "../../utils/utils.js";
+import { checkBotChannelPermission, checkBotGuildPermission, confirmationMessage, truncateString } from "../../utils/utils.js";
 import { StarboardLeaderboard, StarboardPost } from "../../database/models/guildModel.js";
 import { commandNotImplemented } from "../../utils/commandUtils.js";
 
@@ -16,6 +16,14 @@ const setStarboardChannel = async (interaction: any): Promise<string> => {
 
     const channel: Channel = interaction.options.getChannel('channel');
     var toReturn: string = "";
+    // Run checks
+    if (!await checkBotGuildPermission(interaction.guild, false, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.AddReactions)) {
+        return 'I do not have permission to post messages or add reactions in this guild!';
+    }
+    if (!await checkBotChannelPermission(interaction.guild, channel.id, false, PermissionsBitField.Flags.SendMessages)) {
+        return 'I do not have permission to post messages to this channel!';
+    }
+
     if (!channel.isTextBased()) {
         toReturn = 'The starboard channel must be a valid text channel';
     } else {

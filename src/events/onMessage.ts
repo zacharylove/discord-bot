@@ -2,7 +2,7 @@
 // Make sure bot has the correct scope and permissions!
 
 import Bot from "../bot";
-import { areWordleFeaturesEnabled, getGuildDataByGuildID, isInstagramEmbedFixEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled } from "../database/guildData.js";
+import { areWordleFeaturesEnabled, getGuildDataByGuildID, isCustomResponseEnabled, isInstagramEmbedFixEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled } from "../database/guildData.js";
 import { Message, GatewayIntentBits, TextChannel, DMChannel } from "discord.js";
 import { EventInterface } from "../interfaces/Event.js";
 import { parseManyURLs, validURL } from "../utils/utils.js";
@@ -88,7 +88,9 @@ export const onMessage : EventInterface = {
         }
         
         // Check if message matches a response for the server
-        await parseMessageForResponse(Message, guildData);
+        if (await isCustomResponseEnabled(guildData)) {
+            await parseMessageForResponse(Message, guildData);
+        }
 
         
     },

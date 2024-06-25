@@ -244,6 +244,30 @@ export const toggleInstagramEmbedFix =  async (guildData: GuildDataInterface, en
      return toReturn;
 }
 
+// Custom Responses
+export const isCustomResponseEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
+    // If not configured, default to true
+    if (guildData.messageScanning.customResponse == undefined) {
+        guildData.messageScanning.customResponse = true;
+        await update(guildData);
+    }
+    
+    return guildData.messageScanning.customResponse;
+}
+
+export const toggleCustomResponse =  async (guildData: GuildDataInterface, enableDisable: boolean): Promise<string> => {
+    var toReturn = "";
+
+    const isEnabled = await isCustomResponseEnabled(guildData);
+    // If already enabled
+    if ( enableDisable && isEnabled || !enableDisable && !isEnabled ) { return `Custom Responses are already ${enableDisable ? "enabled" : "disabled"}, dummy!`; }
+     guildData.messageScanning.customResponse = enableDisable;
+     await update(guildData);
+
+     toReturn += `Custom Responses feature has been ${enableDisable ? "enabled! I will now respond to messages with custom responses." : "disabled." }`;
+     return toReturn;
+}
+
 
 /**
  * Attempts to add a command to the list of enabled commands for the given guild

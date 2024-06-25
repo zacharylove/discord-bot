@@ -1,10 +1,12 @@
 import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInterface } from "../../interfaces/Command.js";
 import { ChatInputCommandInteraction, CommandInteraction, Message, PermissionsBitField } from "discord.js";
-import { getGuildDataByGuildID } from "../../database/guildData.js";
+import { getGuildDataByGuildID, isCustomResponseEnabled } from "../../database/guildData.js";
 import { confirmationMessage } from "../../utils/utils.js";
 import { GuildDataInterface } from "../../database/models/guildModel.js";
 import { hasPermissions } from "../../utils/userUtils.js";
+// @ts-ignore
+import { default as config } from "../../config/config.json" assert { type: "json" };
 
 // Regex patterns
 const variablePattern = /{([^}]*)}/g;
@@ -25,15 +27,20 @@ const createHelpMessage = async (interaction: CommandInteraction) => {
     description += "- **Channel (optional)**: Whether to only look for messages in a specific channel (default: no).\n"; 
     description += "- **Allow Pings (optional)**: Whether the bot can ping members in the response (default: no).\n";
 
-
-    description += "Regular expressions (RegEx) is supported in trigger messages! Refer to this [RegEx cheatsheet](https://www.rexegg.com/regex-quickstart.html) to see a list of expressions you can use!\n";
-    description += "In addition to RegEx, you can define up to 5 variables in the trigger message that can be referred to in the response:\n"
+    if (config.response.allowRegex) {
+        description += "Regular expressions (RegEx) is supported in trigger messages! Refer to this [RegEx cheatsheet](https://www.rexegg.com/regex-quickstart.html) to see a list of expressions you can use!\n";
+        description += "In addition to RegEx, you can define up to 5 variables in the trigger message that can be referred to in the response:\n"
+    } else {
+        description += "You can define up to 5 variables in the trigger message that can be referred to in the response:\n"
+    }
     description += '- The format of variables is `{number}`, so with trigger message of "I\'m {1}" and a response message of "Hi {1}, I\'m dad", the message "I\'m hungry" will produce the response "Hi hungry, I\'m dad".\n';
 
     description += "\n**Notes:**\n";
-    description += "- You cannot use any regular expressions in the response message except user-created variables like {1}.\n";
-    description += "- There are some limitations placed on regular expressions to avoid DoS attacks. Don't take advantage of this feature please.\n";
-    description += "- You can define a maximum of 10 responses per server.\n"
+    if (config.response.allowRegex) {
+        description += "- You cannot use any regular expressions in the response message except user-created variables like {1}.\n";
+        description += "- There are some limitations placed on regular expressions to avoid DoS attacks. Don't take advantage of this feature please.\n";
+    }
+    description += `- You can define a maximum of ${config.response.maxGuildResponses} responses per server.\n`
 
     embed.setDescription(description);
 
@@ -192,6 +199,10 @@ const createReaction = async (interaction: ChatInputCommandInteraction) => {
     }
 
     let guildData = await getGuildDataByGuildID(interaction.guildId);
+    if (!await isCustomResponseEnabled(guildData)) {
+        await interaction.editReply("Custom Responses are disabled for this server! Use `/settings feature enable CustomResponses` to enable.")
+        return;
+    }
     if (!guildData.customResponses) {
         console.debug(`No customResponses array exists for guild ${interaction.guildId}, creating...`);
         guildData.customResponses = new Array();
@@ -201,7 +212,7 @@ const createReaction = async (interaction: ChatInputCommandInteraction) => {
         await interaction.editReply(`A response named ${name} already exists for this server!`);
         return;
     }
-    else if (guildData.customResponses.length >= 10) {
+    else if (guildData.customResponses.length >= config.response.maxGuildResponses) {
         await interaction.editReply(`You've reached the maximum number of custom responses for this server (10). Please delete an existing response if you want to add a new one.`);
         return;
     }
@@ -243,6 +254,10 @@ const deleteReaction = async (interaction: ChatInputCommandInteraction) => {
         return;
     }
     let guildData = await getGuildDataByGuildID(interaction.guildId);
+    if (!await isCustomResponseEnabled(guildData)) {
+        await interaction.editReply("Custom Responses are disabled for this server! Use `/settings feature enable CustomResponses` to enable.")
+        return;
+    }
     if (!guildData.customResponses) {
         console.debug(`No customResponses array exists for guild ${interaction.guildId}, creating...`);
         guildData.customResponses = new Array();

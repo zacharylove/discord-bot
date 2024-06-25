@@ -19,6 +19,7 @@ export interface GuildDataInterface extends Document {
         twitterEmbedFix: boolean;
         tiktokEmbedFix: boolean;
         instagramEmbedFix: boolean;
+        customResponse: boolean;
     },
     channels: {
         confessionChannelId: string;
@@ -98,6 +99,7 @@ export const GuildData = new Schema({
         starboardScanning: Boolean,
         twitterEnbedFix: Boolean,
         instagramEmbedFix: Boolean,
+        customResponse: Boolean,
     },
 
     // Channels for features
@@ -154,7 +156,8 @@ export const createNewGuildData = async (guildID: string) => {
             // Twitter embed fix is enabled by default (until they get their act together)
             twitterEmbedFix: true,
             tiktokEmbedFix: true,
-            instagramEmbedFix: true
+            instagramEmbedFix: true,
+            customResponse: true,
         },
         channels: {
             confessionChannelId: "",

@@ -22,7 +22,12 @@ export const onMessageReactionAdd: EventInterface = {
         }
 
         // Starboard
-        parseStarReact(reaction, user, true);
+        try {
+            await parseStarReact(reaction, user, true);
+        } catch (e) {
+            console.error(`Error in parseStarReact: ${e}`);
+            return;
+        }
 
     },
     properties: {
@@ -58,7 +63,12 @@ export const onMessageReactionRemove: EventInterface = {
         }
 
         // Starboard
-        parseStarReact(reaction, user, false);
+        try {
+            await parseStarReact(reaction, user, false);
+        } catch (e) {
+            console.error(`Error in parseStarReact: ${e}`);
+            return;
+        }
 
     },
     properties: {

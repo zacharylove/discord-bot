@@ -1,6 +1,18 @@
 {
-    "version": "1.5.0",
-    "statuses": [ "I do music!", "I fix Twitter embeds!", "I fix Instagram embeds!", "I fix TikTok embeds!", "I support confessions!", "I can caption GIFs!", "I keep track of Wordle scores!", "I do starboards!", "Check out /ship!", "<3" ],
+    "version": "1.5.3",
+    "statuses": [ 
+        "I do music!", 
+        "I fix Twitter embeds!", 
+        "I fix Instagram embeds!", 
+        "I fix TikTok embeds!", 
+        "I support confessions!", 
+        "I can caption GIFs!", 
+        "I keep track of Wordle scores!", 
+        "I do starboards!", 
+        "Check out /ship!", 
+        "I support custom message responses!",
+        "<3" 
+    ],
     "logFile": "error.log",
     "starboard": {
         "config": {
@@ -155,6 +167,10 @@
             "prev": "1189716001370148894",
             "next": "1189716002708140232"
         }
+    },
+    "response": {
+        "allowRegex": true,
+        "maxGuildResponses": 10
     },
 
     "roleplay": {
