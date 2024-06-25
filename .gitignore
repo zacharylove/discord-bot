@@ -4,3 +4,4 @@
 .DS_Store
 src/api/TODO.txt
 logs/*
+!logs/.gitkeep
