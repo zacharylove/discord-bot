@@ -6,6 +6,7 @@ import { GuildDataInterface } from "../../database/models/guildModel.js";
 import { commandNotImplemented, getCommandListAsString } from "../../utils/commandUtils.js";
 import { CommandInteraction, PermissionsBitField } from "discord.js";
 import { hasPermissions } from "../../utils/userUtils.js";
+import CommandList from "../_CommandList.js";
 
 // TODO: clean up enabled/disabled features.... lots of repeated code rn
 
@@ -286,12 +287,6 @@ export const guildSettings: CommandInterface = {
                                 .setRequired(true)
                         )
                 )
-                // List commands
-                .addSubcommand((subcommand) =>
-                    subcommand
-                        .setName('list')
-                        .setDescription('List all commands for this server')
-                )
         )
         // Features
         .addSubcommandGroup((group) =>
@@ -335,12 +330,6 @@ export const guildSettings: CommandInterface = {
                                     { name: 'CustomResponses', value: 'customresponse'}
                                 )
                         )
-                )
-                // List features
-                .addSubcommand((subcommand) =>
-                    subcommand
-                        .setName('list')
-                        .setDescription('List all features for this server')
                 )
         )
 
@@ -390,10 +379,6 @@ export const guildSettings: CommandInterface = {
                         if (!checkPermission(interaction)) return;
                         commandNotImplemented(interaction, 'disableCommand');
                         return;
-                    case 'list':
-                        // List all commands
-                        commandNotImplemented(interaction, 'listCommands');
-                        return;
                 }
                 break;
             
@@ -409,10 +394,6 @@ export const guildSettings: CommandInterface = {
                         if (!checkPermission(interaction)) return;
                         embedToSend = await disableFeature(interaction, interaction.options.getString('feature', true), embedToSend);
                         break;
-                    case 'list':
-                        // List all features
-                        commandNotImplemented(interaction, 'listFeatures');
-                        return;
                 }
                 break;
 
