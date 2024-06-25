@@ -3,6 +3,7 @@
 import { GatewayIntentBits } from "discord-api-types/v10";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
+import { appendFile } from "fs";
 
 export const toTitleCase = (text: string): string => {
     return text.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -147,4 +148,23 @@ export const denialMessage = (): string => {
 export const invalidMessage = (): string => {
     const messages = config.responseMessages.invalid;
     return messages[Math.floor(Math.random() * messages.length)];
+}
+
+export const getCurrentDateTimeString = (): string => {
+    const date = new Date();
+    return date.getFullYear() + '-' +
+        (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
+        date.getDate().toString().padStart(2, '0') + ':' +
+        date.getHours().toString().padStart(2, '0') + ':' +
+        date.getMinutes().toString().padStart(2, '0') + ':' +
+        date.getSeconds().toString().padStart(2, '0');
+}
+
+export const logErrorToFile = (err: any, type: string) => {
+    console.error(`[!] Found ${type}, writing to log...`);
+    let errorMessage = `[${getCurrentDateTimeString()}] Found ${type}:\n${err.stack}\n----------\n`;
+    appendFile(`./logs/${config.logFile ? config.logFile : 'error.log'}`, errorMessage, (error) => {
+        if (error) console.log(`[!] Error appending error message to file: ${error}`);
+        else console.log(`Successfully appended error message to file.`)
+    })
 }

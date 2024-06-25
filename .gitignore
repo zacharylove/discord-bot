@@ -3,3 +3,4 @@
 .env
 .DS_Store
 src/api/TODO.txt
+logs/*

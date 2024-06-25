@@ -103,4 +103,15 @@ const registerEvents = async (BOT: Bot) => {
    
 })();
 
+
+import { logErrorToFile } from "./utils/utils.js";
+
+// Log crashes to file
+process.on('uncaughtException', function (err: any) {
+    logErrorToFile(err, 'uncaughtException');
+});
+process.on('unhandledRejection', function (err: any) {
+    logErrorToFile(err, 'unhandledRejection');
+});
+
 export { BOT }
