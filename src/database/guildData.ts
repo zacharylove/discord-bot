@@ -176,7 +176,7 @@ export const removeStoredStarboardPost = async (guildData: GuildDataInterface, p
 export const isTwitterEmbedFixEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     // If not configured, default to true
     if (guildData.messageScanning.twitterEmbedFix == undefined) {
-        guildData.messageScanning.twitterEmbedFix = true;
+        guildData.messageScanning.twitterEmbedFix = false;
         await update(guildData);
     }
     

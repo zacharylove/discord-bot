@@ -97,7 +97,7 @@ export const GuildData = new Schema({
     messageScanning: {
         wordleResultScanning: Boolean,
         starboardScanning: Boolean,
-        twitterEnbedFix: Boolean,
+        twitterEmbedFix: Boolean,
         instagramEmbedFix: Boolean,
         customResponse: Boolean,
     },
@@ -153,10 +153,10 @@ export const createNewGuildData = async (guildID: string) => {
             // Wordle scanning is disabled by default
             wordleResultScanning: false,
             starboardScanning: false,
-            // Twitter embed fix is enabled by default (until they get their act together)
-            twitterEmbedFix: true,
+            // Disabled twitter/insta embed fix by default
+            twitterEmbedFix: false,
             tiktokEmbedFix: true,
-            instagramEmbedFix: true,
+            instagramEmbedFix: false,
             customResponse: true,
         },
         channels: {
