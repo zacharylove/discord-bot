@@ -4,7 +4,9 @@ import { GatewayIntentBits } from "discord-api-types/v10";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { appendFile } from "fs";
-import { Guild, PermissionResolvable, TextChannel } from "discord.js";
+import { Guild, Message, PermissionResolvable, TextChannel } from "discord.js";
+import { CommandList } from "../commands/_CommandList.js";
+import { CommandInterface } from "../interfaces/Command";
 
 export const toTitleCase = (text: string): string => {
     return text.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -187,4 +189,12 @@ export const checkBotChannelPermission = async (guild: Guild, channelId: string,
     }
     if (permission.some(p => !guild.members.me!.permissionsIn(channelId).has(p, checkAdmin))) return false;
     return true;
+}
+
+export const getCommandByName = (name: string): CommandInterface | null => {
+    for (const Command of CommandList) {
+        // If command matches and is not globally disabled
+        if (name === Command.data.name) return Command;
+    }
+    return null;
 }

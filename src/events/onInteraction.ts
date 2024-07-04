@@ -4,14 +4,9 @@ import { EventInterface } from '../interfaces/Event.js';
 import { CommandStatus, broadcastCommandStatus, isCommandDisabled, isCommandEnabled } from '../utils/commandUtils.js';
 import { hasPermissions } from '../utils/userUtils.js';
 import { CommandInterface } from '../interfaces/Command.js';
+import { getCommandByName } from '../utils/utils.js';
 
-const getCommandByName = (name: string): CommandInterface | null => {
-    for (const Command of CommandList) {
-        // If command matches and is not globally disabled
-        if (name === Command.data.name) return Command;
-    }
-    return null;
-}
+
 
 // Handles onInteraction event
 export const onInteraction : EventInterface = {

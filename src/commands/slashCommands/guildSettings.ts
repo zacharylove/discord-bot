@@ -1,12 +1,13 @@
 // View a list of guild-specific settings and enable/disable commands and features.
 import { CommandInterface } from "../../interfaces/Command.js";
-import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isCustomResponseEnabled, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleCustomResponse, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../database/guildData.js";
+import { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
+import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isCustomResponseEnabled, isInstagramEmbedFixEnabled, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleCustomResponse, toggleInstagramEmbedFix, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../database/guildData.js";
 import { GuildDataInterface } from "../../database/models/guildModel.js";
 import { commandNotImplemented, getCommandListAsString } from "../../utils/commandUtils.js";
-import { CommandInteraction, PermissionsBitField } from "discord.js";
+import { ButtonStyle, CommandInteraction, ComponentType, Message, PermissionsBitField, User } from "discord.js";
 import { hasPermissions } from "../../utils/userUtils.js";
 import CommandList from "../_CommandList.js";
+import { getCommandByName, sleep } from "../../utils/utils.js";
 
 // TODO: clean up enabled/disabled features.... lots of repeated code rn
 
@@ -14,236 +15,382 @@ import CommandList from "../_CommandList.js";
 // Required permission to enable/disable
 const requiredPermissions = PermissionsBitField.Flags.ManageGuild;
 
-// Settings command
-// If no arguments are provided, display a list of all guild-specific settings
+// Prevents multiple edits occurring at once.
+let ongoingEdit: boolean = false;
 
-const displaySettingsOverview = async (interaction: CommandInteraction, embed: EmbedBuilder): Promise<EmbedBuilder> => {
-    // shut up typescript
-    if ( !interaction.guild ) { return embed; }
-
-    let description: string = "";
-    description += "Using the settings command and subcommands, you can edit server-specific settings and turn features and commands on/off.\n";
-    description += "Features are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.\n";
-    description += "Some commands/features are enabled by default, and some are disabled by default.\n";
-    description += "In order to enable a command or feature, you must have the `Manage Server` permission.\n";
+const sendEmbedAndCollectResponses = async (
+    interaction: Message<boolean>, 
+    embed: EmbedBuilder, 
+    guildData: GuildDataInterface, 
+    author: User, 
+    type: string,
+    enabledCommandList: string[],
+    disabledCommandList: string[]
+) => {
+    // Create navigation buttons
+    const row: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
     
+    
+    if (type != 'home') {
+        const homeButton = new ButtonBuilder()
+            .setLabel("Home")
+            .setStyle(ButtonStyle.Primary)
+            .setCustomId('home');
+        row.addComponents(homeButton);
+    }
+    if (type != 'feature') {
+        const featureButton = new ButtonBuilder()
+            .setLabel("Features")
+            .setStyle(ButtonStyle.Primary)
+            .setCustomId('features');
+        row.addComponents(featureButton);
+    }
 
-    embed.addFields({name: 'Enable/disable a command', value: "`/settings command <enable/disable> <command name>`"});
-    embed.addFields({name: 'Enable/disable a feature', value: "`/settings feature <enable/disable> <feature name>`"});
-    embed.addFields({name: 'List all commands', value: "`/settings command list`"});
-    embed.addFields({name: 'List all features', value: "`/settings feature list`"});
-    embed.addFields({name: 'List all commands and features', value: "`/settings list`"});
+    if (type != 'command') {
+        const commandButton = new ButtonBuilder()
+            .setLabel("Commands")
+            .setStyle(ButtonStyle.Primary)
+            .setCustomId('commands');
+        row.addComponents(commandButton);
+    }
+    // Only show enable/disable buttons if user has the MANAGE_GUILD permission
+    if (type != 'home' && hasPermissions(requiredPermissions, interaction.guild!, author)) {
+        const enableButton = new ButtonBuilder()
+            .setLabel("Enable " + type)
+            .setStyle(ButtonStyle.Success)
+            .setCustomId('enable');
+        row.addComponents(enableButton);
+
+        const disableButton = new ButtonBuilder()
+            .setLabel("Disable " + type)
+            .setStyle(ButtonStyle.Danger)
+            .setCustomId('disable');
+        row.addComponents(disableButton);
+    }
+
+    const doneButton = new ButtonBuilder()
+        .setLabel("Done")
+        .setStyle(ButtonStyle.Secondary)
+        .setCustomId('done');
+    row.addComponents(doneButton);
+
+
+    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: [row]});
+    const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === author.id;
+    const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: collectorFilter, time: 60000});
+    
+    buttonCollector.on('collect', async buttonResponse => {
+        // I love 'Unknown interaction' errors!!!!!
+        try { await buttonResponse.deferUpdate(); } catch (e) {}
+        if (buttonResponse.user == author) {
+            switch (buttonResponse.customId) {
+                case "home":
+                    sleep(200).then( async () => {
+                        await sendEmbedAndCollectResponses(
+                            response,
+                            await createServerSettingsEmbed(response),
+                            guildData,
+                            author,
+                            'home',
+                            enabledCommandList,
+                            disabledCommandList
+                        );
+                    });
+                    break;
+
+                case "features":
+                    sleep(200).then( async () => {
+                        await sendEmbedAndCollectResponses(
+                            response,
+                            await createServerFeatureEmbed(guildData, response),
+                            guildData,
+                            author,
+                            'feature',
+                            enabledCommandList,
+                            disabledCommandList
+                        );
+                    } );
+                    break;
+
+                case "commands":
+                    response = await response.edit("Fetching command list, please wait...");                
+                    sleep(200).then( async () => {
+                        await sendEmbedAndCollectResponses(
+                            response,
+                            await createServerCommandEmbed(guildData, response, enabledCommandList, disabledCommandList),
+                            guildData,
+                            author,
+                            'command',
+                            enabledCommandList,
+                            disabledCommandList
+                        );
+                    } );
+                    break;
+
+                case "enable":
+                    if (type == 'feature' && !ongoingEdit) {
+                        ongoingEdit = true;   
+                        await enableDisableFeature(response, guildData, author, true);
+
+                    }
+                    else if (type == 'command' && !ongoingEdit) {
+                        ongoingEdit = true;
+                        await enableDisableCommand(response, guildData, enabledCommandList, disabledCommandList, author, true);
+                    }
+                    break;
+                case "disable":
+                    if (type == 'feature' && !ongoingEdit) {
+                        ongoingEdit = true;
+                        await enableDisableFeature(response, guildData, author, false);
+                    }
+                    else if (type == 'command' && !ongoingEdit) {
+                        ongoingEdit = true;
+                        await enableDisableCommand(response, guildData, enabledCommandList, disabledCommandList, author, false);
+                    }
+                    break;
+                case "done":
+                    await response.delete();
+                    break;
+
+            }
+        }
+    });
+
+    buttonCollector.on('end', async endResponse => { return; });
+}
+
+const enableDisableFeature = async (message: Message<boolean>, guildData: GuildDataInterface, author: User, enable: boolean) => {
+    const reply = await message.reply(`Please enter the number corresponding to the feature you want to ${enable ? 'enable' : 'disable'}, or type 'cancel' to cancel.`);
+    
+    const messageCollectorFilter = (m: Message<boolean>) => m.author.id === author.id;
+    const selectionCollector = reply.channel.createMessageCollector({filter: messageCollectorFilter, time: 60000});
+    selectionCollector.on('collect', async messageResponse => {
+        if (messageResponse.author == author) {
+            const collectedMessage = messageResponse.content;
+            if (collectedMessage == "cancel") {
+                try { await messageResponse.delete(); } catch (e) {}
+                await reply.delete();
+            }
+            else if(!Number.isNaN(Number(collectedMessage)) && Number(collectedMessage) > 0) {
+                const receivedNumber = Number(collectedMessage);
+                // Hardcoding features for now.
+                switch (receivedNumber) {
+                    // Wordle
+                    case 1:
+                        if (await areWordleFeaturesEnabled(guildData)) {
+                            if (enable) await reply.edit({content: 'The Wordle feature is already enabled.'});
+                            else await reply.edit({content: await disableWordleFeatures(guildData)});
+                        } else {
+                            if (!enable) await reply.edit({content: 'The Wordle feature is already disabled.'});
+                            else await reply.edit({content: await enableWordleFeatures(guildData)});        
+                        } 
+                        break;
+                    // Starboard
+                    case 2:
+                        if (await isStarboardEnabled(guildData)) {
+                            if (enable) await reply.edit({content: 'The Starboard feature is already enabled.'});
+                            else await reply.edit({content: await disableStarboardFeature(guildData)});
+                        } else {
+                            if (!enable) await reply.edit({content: 'The Starboard feature is already disabled.'});
+                            else await reply.edit({content: await enableStarboardFeature(guildData)});        
+                        } 
+                        break;
+                    // Twitter
+                    case 3:
+                        if (await isTwitterEmbedFixEnabled(guildData)) {
+                            if (enable) await reply.edit({content: 'The Twitter Embed Fix feature is already enabled.'});
+                            else await reply.edit({content: await toggleTwitterEmbedFix(guildData, false)});
+                        } else {
+                            if (!enable) await reply.edit({content: 'The Twitter Embed Fix feature is already disabled.'});
+                            else await reply.edit({content: await toggleTwitterEmbedFix(guildData, true)});        
+                        } 
+                        break;
+                    // Tiktok
+                    case 4:
+                        if (await isTikTokEmbedFixEnabled(guildData)) {
+                            if (enable) await reply.edit({content: 'The TikTok Embed Fix feature is already enabled.'});
+                            else await reply.edit({content: await toggleTikTokEmbedFix(guildData, false)});
+                        } else {
+                            if (!enable) await reply.edit({content: 'The TikTok Embed Fix feature is already disabled.'});
+                            else await reply.edit({content: await toggleTikTokEmbedFix(guildData, true)});        
+                        } 
+                        break;
+                    
+                    // Instagram
+                    case 5:
+                        if (await isInstagramEmbedFixEnabled(guildData)) {
+                            if (enable) await reply.edit({content: 'The Instagram Embed Fix feature is already enabled.'});
+                            else await reply.edit({content: await toggleInstagramEmbedFix(guildData, false)});
+                        } else {
+                            if (!enable) await reply.edit({content: 'The Instagram Embed Fix feature is already disabled.'});
+                            else await reply.edit({content: await toggleInstagramEmbedFix(guildData, true)});        
+                        } 
+                    
+                    // Custom Responses
+                    case 6:
+                        if (await isCustomResponseEnabled(guildData)) {
+                            if (enable) await reply.edit({content: 'The Custom Response feature is already enabled.'});
+                            else await reply.edit({content: await toggleCustomResponse(guildData, false)});
+                        } else {
+                            if (!enable) await reply.edit({content: 'The Custom Response feature is already disabled.'});
+                            else await reply.edit({content: await toggleCustomResponse(guildData, true)});        
+                        } 
+                        break;
+                    default:
+                        await reply.edit({content: 'Invalid number. Try again.'})
+                        break;
+                }
+                try { await messageResponse.delete(); } catch (e) { }
+            }
+            ongoingEdit = false;
+            return;
+        }
+    });
+}
+
+const enableDisableCommand = async (message: Message<boolean>, guildData: GuildDataInterface, enabledCommandList: string[], disabledCommandList: string[], author: User, enable: boolean) => {
+    // Not implemented yet.
+    // TODO: Enable when command enabling/disabling is implemented
+    await message.reply({content: 'Sorry, per-command server settings have not yet been implemented.'});
+    return;
+    
+    
+    const reply = await message.reply(`Please enter the number corresponding to the command you want to ${enable ? 'enable' : 'disable'}, or type 'cancel' to cancel.`);
+
+    const messageCollectorFilter = (m: Message<boolean>) => m.author.id === author.id;
+    const selectionCollector = reply.channel.createMessageCollector({filter: messageCollectorFilter, time: 60000});
+    selectionCollector.on('collect', async messageResponse => {
+        if (messageResponse.author == author) {
+            const collectedMessage = messageResponse.content;
+            if (collectedMessage == "cancel") {
+                try { await messageResponse.delete(); } catch (e) {}
+                await reply.delete();
+            }
+            else if(!Number.isNaN(Number(collectedMessage)) && Number(collectedMessage) > 0) {
+                const receivedNumber = Number(collectedMessage);
+                if (receivedNumber > enabledCommandList.length) {
+                    await reply.edit({content: "Invalid number. Try again."});
+                } else {
+                    let command: string | undefined = '';
+                    // Enable
+                    if (enable) {
+                        command = enabledCommandList.at(receivedNumber - 1);
+                        if (!command) return;
+                        const commandInterface = getCommandByName(command);
+
+                    } else {
+                        command = disabledCommandList.at(receivedNumber - 1);
+                        if (!command) return;
+                        const commandInterface = getCommandByName(command);
+                    }
+                    try { await messageResponse.delete(); } catch (e) {}
+                }
+            }
+            ongoingEdit = false;
+            return;
+        }
+    });
+}
+
+const createServerCommandEmbed = async (guildData: GuildDataInterface, message: Message<boolean>, enabledCommandList: string[], disabledCommandList: string[]) => {
+    const embed: EmbedBuilder = new EmbedBuilder()
+        .setTitle("💬 Command Configuration for " + message.guild?.name)
+        .setDescription("Use the buttons below to enable/disable commands for this server.");
+    let enabledCommandsString: string = '';
+    let disabledCommandsString: string = '';
+    
+    let counter = 1;
+    if (enabledCommandList.length > 0) {
+        for (const command of enabledCommandList) {
+            enabledCommandsString += `${counter}. ${command}\n`;
+        }
+    } else {
+        enabledCommandsString = 'None';
+    }
+
+    if (disabledCommandList.length > 0) {
+        counter = 1;
+        for (const command of disabledCommandList) {
+            disabledCommandsString += `${counter}. ${command}\n`;
+        }
+    } else {
+        disabledCommandsString = 'None';
+    }
+
+    embed.addFields(
+        {name: 'Enabled Commands', value: enabledCommandsString, inline: true},
+        {name: 'Disabled Commands', value: disabledCommandsString, inline: true}
+    );
 
     return embed;
 }
 
-
-/**
- * Sends a list of available/enabled/disabled commands and feature settings for the guild
- * @param interaction 
- */
-const displaySettingsList = async (interaction: CommandInteraction, embed: EmbedBuilder): Promise<EmbedBuilder>  => {
-    // shut up typescript
-    if ( !interaction.guild || !interaction.guildId ) { return embed; }
-
-    // List all settings
-    const guildData: GuildDataInterface = await getGuildDataByGuildID(interaction.guildId);
-
-    let description: string = "Configuration for " + interaction.guild.name;
-    description += "Here, you can enable and disable commands and features for this server. \n"
-    description += "For more information, use `/settings help`.\n"
-
-    // Now remember:
-    // - Globally disabled commands are disabled everywhere
-    // - Globally enabled commands are enabled UNLESS they are specifically disabled
-    // 
-
-    // This loops twice, but who cares- there's not gonna be THAT many commands
-    const enabledCommandList: string[] = await getEnabledCommandListAsString(interaction.guildId);
-    const disabledCommandList: string[] = await getDisabledCommandListAsString(interaction.guildId);
-    const availableCommandList: string[] = await getCommandListAsString();
-
-
-    let enabledCommandsString: string = 'None';
-    let disabledCommandsString: string = 'None';
-    let availableCommandsString: string = 'None';
-    let contentScanningString: string = '';
-
-    if ( availableCommandList.length > 0 ) {
-        availableCommandsString = " - " + availableCommandList.join('\n- ');
-    }
-    embed.addFields({name: 'Available Commands', value: availableCommandsString, inline: true});
-
-    if ( enabledCommandList.length > 0 ) {
-        enabledCommandsString = " - " + enabledCommandList.join('\n- ');
-    }
-    embed.addFields({name: 'Enabled', value: enabledCommandsString, inline: true});
-    if ( disabledCommandList.length > 0 ) {
-        disabledCommandsString = " - " + disabledCommandList.join('\n- ');
-    }
-    embed.addFields({name: 'Disabled', value: disabledCommandsString, inline: true});
+const createServerFeatureEmbed = async (guildData: GuildDataInterface, message: Message<boolean>) => {
+    const embed = new EmbedBuilder().setTitle("🧰 Feature Configuration for " + message.guild?.name);
+    let contentScanningString: string = "Use the buttons below to enable/disable features for this server.\n\n";
     
-    // ======
-    // Features
-    
-    // Wordle
-    contentScanningString += "Wordle Results Scanning: ";
+    contentScanningString += "1. Wordle Results Scanning: ";
     if ( guildData.messageScanning.wordleResultScanning ) {
-        contentScanningString += "Enabled\n";
-    } else { contentScanningString += "Disabled\n"; }
+        contentScanningString += "**Enabled**\n";
+    } else { contentScanningString += "**Disabled**\n"; }
+    contentScanningString += " - Scans messages for pasted NYT Wordle/Connections results and keeps track of scores.\n"
 
     // Starboard
-    contentScanningString += "Starboard Reaction Scanning: ";
+    contentScanningString += "2. Starboard Reaction Scanning: ";
     if ( guildData.messageScanning.starboardScanning ) {
-        contentScanningString += "Enabled\n";
-    } else { contentScanningString += "Disabled\n"; }
+        contentScanningString += "**Enabled**\n";
+    } else { contentScanningString += "**Disabled**\n"; }
+    contentScanningString += " - Scans reactions for a configurable emoji, and posts to a starboard channel (if configured).\n"
 
     // Twitter Embed Fix
-    contentScanningString += "Twitter URL Scanning: ";
+    contentScanningString += "3. Twitter Embed Fix: ";
     if ( guildData.messageScanning.twitterEmbedFix ) {
-        contentScanningString += "Enabled\n";
-    } else { contentScanningString += "Disabled\n"; }
+        contentScanningString += "**Enabled**\n";
+    } else { contentScanningString += "**Disabled**\n"; }
+    contentScanningString += " - Scans messages for Twitter/X URLs and fixes broken video embeds.\n"
 
-     // TikTok Embed Fix
-     contentScanningString += "TikTok URL Scanning: ";
-     if ( guildData.messageScanning.tiktokEmbedFix ) {
-         contentScanningString += "Enabled\n";
-     } else { contentScanningString += "Disabled\n"; }
+    // TikTok Embed Fix
+    contentScanningString += "4. TikTok Embed Fix: ";
+    if ( guildData.messageScanning.tiktokEmbedFix ) {
+        contentScanningString += "**Enabled**\n";
+    } else { contentScanningString += "**Disabled**\n"; }
+    contentScanningString += " - Scans messages for TikTok URLs and fixes broken video embeds.\n"
+    
+    // Instagram Embed Fix
+    contentScanningString += "5. Instagram Embed Fix: ";
+    if ( guildData.messageScanning.instagramEmbedFix ) {
+        contentScanningString += "**Enabled**\n";
+    } else { contentScanningString += "**Disabled**\n"; }
+    contentScanningString += " - Scans messages for TikTok URLs and fixes broken video embeds.\n"
 
-    embed.addFields({name: 'Available Features', value: contentScanningString});
+    // Custom Response
+    contentScanningString += "6. Custom Responses: ";
+    if ( guildData.messageScanning.customResponse ) {
+        contentScanningString += "**Enabled**\n";
+    } else { contentScanningString += "**Disabled**\n"; }
+    contentScanningString += " - Scans messages for configurable phrases, and responds with a user-defined reply (if configured).\n"
 
-    if ( guildData.messageScanning.starboardScanning ) {
-        embed.addFields({name: 'Starboard Settings', value: ` - Channel: <#${guildData.channels.starboardChannelId}>\n- Emoji: ${guildData.starboard.emoji}\n- Threshold: ${guildData.starboard.threshold}\n- Success Emoji: ${guildData.starboard.successEmoji}\n- Blacklist?: ${guildData.starboard.blacklistEnabled}\n - Blacklisted Channels: ${guildData.starboard.blacklistChannels.map((channelId) => `<#${channelId}>`).join(', ')}`});
-    }
-
+    embed.setDescription(contentScanningString);
     return embed;
 }
 
-const checkPermission = async ( interaction: CommandInteraction ): Promise<boolean> => {
-    if (!interaction.guild) {
-        const messageContent: string = "This command can only be used in a server.";
-        if (interaction.replied || interaction.deferred ) await interaction.editReply({content: messageContent})
-        else await interaction.reply({content: messageContent, ephemeral: true});
-        return false;
-    }
-    if (!hasPermissions(requiredPermissions, interaction.guild, interaction.user)) {
-        const messageContent: string = "You do not have permission to use this command. You gotta have the `MANAGE SERVER` permission to, uh, manage the server.";
-        if (interaction.replied || interaction.deferred ) await interaction.editReply({content: messageContent})
-        else await interaction.reply({content: messageContent, ephemeral: true});
-        return false;
-    }
-    console.log("Permission check passed.")
-    return true;
+// Main menu for server settings
+const createServerSettingsEmbed = async (message: Message) => {
+    const embed = new EmbedBuilder();
+    embed.setTitle("🛠️ Configuration for " + message.guild?.name);
 
-}
-
-const enableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
-    if ( !interaction.guild || !interaction.guildId ) { return embed; }
-    const guildData = await getGuildDataByGuildID(interaction.guild.id);
-
-    switch (featureName) {
-        case "wordle":
-            // Check if feature is already enabled
-            if (await areWordleFeaturesEnabled(guildData)) {
-                embed.setDescription("Wordle features are already enabled.");
-            } else {
-                embed.setDescription(await enableWordleFeatures(guildData));
-            }
-            break;
-
-        case "starboard":
-            // Check if feature is already enabled
-            if (await isStarboardEnabled(guildData)) {
-                embed.setDescription("Starboard feature is already enabled.");
-            } else {
-                embed.setDescription(await enableStarboardFeature(guildData));
-            }
-            break;
-
-        case "twitterembedfix":
-            // Check if feature is already enabled
-            if (await isTwitterEmbedFixEnabled(guildData)) {
-                embed.setDescription("Twitter Embed Fix feature is already enabled.");
-            } else {
-                embed.setDescription(await toggleTwitterEmbedFix(guildData, true));
-            }
-            break;
-        case "tiktokembedfix":
-            // Check if feature is already enabled
-            if (await isTikTokEmbedFixEnabled(guildData)) {
-                embed.setDescription("TikTok Embed Fix feature is already enabled.");
-            } else {
-                embed.setDescription(await toggleTikTokEmbedFix(guildData, true));
-            }
-            break;
-
-        case "customresponse":
-            if (await isCustomResponseEnabled(guildData)) {
-                embed.setDescription("Custom Response feature is already enabled");
-            } else {
-                embed.setDescription(await toggleCustomResponse(guildData, true));
-            }
-            break;
-
-        default:
-            embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
-            break;
-
-    }
-
+    let description: string = "Welcome to the settings menu.\nHere, you can enable or disable features (like message scanning) or individual commands for this server.\n";
+    description += "- **Features** are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.\n";
+    description += "- Some commands/features are enabled by default, and some are disabled by default.\n";
+    description += "- In order to enable a command or feature, you must have the `Manage Server` permission.\n";
+    description += "**NOTE:** Currently, per-server command configuration is not yet implemented. You will not be able to enable/disable specific commands.\n";
+    description += "\nUsing the buttons below, select whether you want to modify features or settings."
+    
+    embed.setDescription(description);
+    
     return embed;
 }
 
-const disableFeature = async ( interaction: CommandInteraction, featureName: string, embed: EmbedBuilder ): Promise<EmbedBuilder> => {
-    if ( !interaction.guild || !interaction.guildId ) { return embed; }
-    const guildData = await getGuildDataByGuildID(interaction.guild.id);
-
-    switch (featureName) {
-        case "wordle":
-            // Check if feature is already disabled
-            if (!await areWordleFeaturesEnabled(guildData)) {
-                embed.setDescription("Wordle features are already disabled.");
-            } else embed.setDescription(await disableWordleFeatures(guildData));
-            break;
-        case "starboard":
-            // Check if feature is already disabled
-            if (!await isStarboardEnabled(guildData)) {
-                embed.setDescription("Starboard feature is already disabled.");
-            }
-            else embed.setDescription(await disableStarboardFeature(guildData));
-            break;
-
-        case "twitterembedfix":
-            // Check if feature is already enabled
-            if (!await isTwitterEmbedFixEnabled(guildData)) {
-                embed.setDescription("Twitter Embed Fix feature is already disabled.");
-            } else {
-                embed.setDescription(await toggleTwitterEmbedFix(guildData, false));
-            }
-            break;
-        case "tiktokembedfix":
-            // Check if feature is already enabled
-            if (!await isTikTokEmbedFixEnabled(guildData)) {
-                embed.setDescription("TikTok Embed Fix feature is already disabled.");
-            } else {
-                embed.setDescription(await toggleTikTokEmbedFix(guildData, false));
-            }
-            break;
-
-        case "customresponse":
-            if (await isCustomResponseEnabled(guildData)) {
-                embed.setDescription("Custom Response feature is already disabled");
-            } else {
-                embed.setDescription(await toggleCustomResponse(guildData, false));
-            }
-            break;
-        default:
-            embed.setDescription(`Sorry! The feature ${featureName} doesn't exist.`);
-            break;
-    }
-
-    return embed;
-}
 
 
 
@@ -257,96 +404,16 @@ const disableFeature = async ( interaction: CommandInteraction, featureName: str
 export const guildSettings: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('settings')
-        .setDescription('View and modify server-specific bot settings')
-        // Command Settings
-        .addSubcommandGroup((group) =>
-            group
-                .setName('command')
-                .setDescription('Modify command settings')
-                // Enable command
-                .addSubcommand((subcommand) =>
-                    subcommand
-                        .setName('enable')
-                        .setDescription('Enable a command for this server')
-                        .addStringOption((option) =>
-                            option
-                                .setName('command')
-                                .setDescription('The command to enable')
-                                .setRequired(true)
-                        )
-                )
-                // Disable command
-                .addSubcommand((subcommand) =>
-                    subcommand
-                        .setName('disable')
-                        .setDescription('Disable a command for this server')
-                        .addStringOption((option) =>
-                            option
-                                .setName('command')
-                                .setDescription('The command to disable')
-                                .setRequired(true)
-                        )
-                )
-        )
-        // Features
-        .addSubcommandGroup((group) =>
-            group
-                .setName('feature')
-                .setDescription('Modify feature settings')
-                // Enable feature
-                .addSubcommand((subcommand) =>
-                    subcommand
-                        .setName('enable')
-                        .setDescription('Enable a feature for this server')
-                        .addStringOption((option) =>
-                            option
-                                .setName('feature')
-                                .setDescription('The feature to enable')
-                                .setRequired(true)
-                                .addChoices(
-                                    { name: 'Wordle', value: 'wordle' },
-                                    { name: 'Starboard', value: 'starboard' },
-                                    { name: 'TwitterEmbedFix', value: 'twitterembedfix' },
-                                    { name: 'TikTokEmbedFix', value: 'tiktokembedfix'},
-                                    { name: 'CustomResponses', value: 'customresponse'}
-                                )
-                        )
-                )
-                // Disable feature
-                .addSubcommand((subcommand) =>
-                    subcommand
-                        .setName('disable')
-                        .setDescription('Disable a feature for this server')
-                        .addStringOption((option) =>
-                            option
-                                .setName('feature')
-                                .setDescription('The feature to disable')
-                                .setRequired(true)
-                                .addChoices(
-                                    { name: 'Wordle', value: 'wordle' },
-                                    { name: 'Starboard', value: 'starboard' },
-                                    { name: 'TwitterEmbedFix', value: 'twitterembedfix' },
-                                    { name: 'TikTokEmbedFix', value: 'tiktokembedfix'},
-                                    { name: 'CustomResponses', value: 'customresponse'}
-                                )
-                        )
-                )
-        )
-
+        .setDescription('View and modify  bot settings')
         
-        // List all settings
+        // List guild settings
         .addSubcommand((subcommand) =>
             subcommand
-                .setName('list')
-                .setDescription('List all settings for this server')
+                .setName('server')
+                .setDescription('View settings for this server')
         )
 
-        // Help
-        .addSubcommand((subcommand) =>
-            subcommand
-                .setName('help')
-                .setDescription('Get help on this command')
-        )
+
         ,
     run: async (interaction) => {
         // Disable context menu
@@ -354,69 +421,33 @@ export const guildSettings: CommandInterface = {
             await interaction.editReply('This command cannot be used in a context menu');
             return;
         }
-        // Disable DMS
-        if (!interaction.guildId || !interaction.guild) {
-            await interaction.editReply('This command cannot be used in DMs');
-            return;
-        }
 
-        let embedToSend: EmbedBuilder = new EmbedBuilder();
-        embedToSend
-            .setTitle('Server Settings')
-            .setDescription('Configuration for ' + interaction.guild.name)
-            .setTimestamp()
-            .setFooter({text: "To modify these settings, use the /settings subcommands."});
-        switch (interaction.options.getSubcommandGroup()) {
-            case 'command':
-                switch (interaction.options.getSubcommand()) {
-                    case 'enable':
-                        // Enable a command
-                        if (!checkPermission(interaction)) return;
-                        commandNotImplemented(interaction, 'enableCommand');
-                        return;
-                    case 'disable':
-                        // Disable a command
-                        if (!checkPermission(interaction)) return;
-                        commandNotImplemented(interaction, 'disableCommand');
-                        return;
+        switch (interaction.options.getSubcommand()) {
+            // Disable DMS
+            case 'server':
+                if (!interaction.guildId || !interaction.guild) {
+                    await interaction.editReply('This command cannot be used in DMs');
+                    return;
                 }
-                break;
-            
-            case 'feature':
-                switch (interaction.options.getSubcommand()) {
-                    case 'enable':
-                        // Enable a feature
-                        if (!checkPermission(interaction)) return;
-                        embedToSend = await enableFeature(interaction, interaction.options.getString('feature', true), embedToSend);
-                        break;
-                    case 'disable':
-                        // Disable a feature
-                        if (!checkPermission(interaction)) return;
-                        embedToSend = await disableFeature(interaction, interaction.options.getString('feature', true), embedToSend);
-                        break;
-                }
-                break;
-
-            default:
-                switch (interaction.options.getSubcommand()) {
-                    case 'list':
-                        embedToSend = await displaySettingsList(interaction, embedToSend);
-                        break;
-                    case 'help':
-                        embedToSend = await displaySettingsOverview(interaction, embedToSend);
-                        break;
-                }
-        }
-        if (embedToSend !== undefined) {
-            await interaction.editReply({ embeds: [embedToSend] });
-            return;
-        } else {
-            console.error('No embed to send');
-            await interaction.editReply('An error occurred');
-            return;
-        }
         
-        
+                const message: Message<boolean> = await interaction.editReply("Fetching guild settings, please wait...");
+                const guildData: GuildDataInterface = await getGuildDataByGuildID(interaction.guildId);
+                // TODO: uncomment when command configuration is implemented
+                //const enabledCommandList = await getEnabledCommandListAsString(interaction.guildId);
+                //const disabledCommandList = await getDisabledCommandListAsString(interaction.guildId);
+                const enabledCommandList: string[] = [];
+                const disabledCommandList: string[] = [];
+                await sendEmbedAndCollectResponses(
+                    message, 
+                    await createServerSettingsEmbed(message), 
+                    guildData, 
+                    interaction.user,
+                    'home',
+                    enabledCommandList,
+                    disabledCommandList
+                );
+                break;
+        }    
 
     },
     properties: {

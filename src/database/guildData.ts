@@ -66,10 +66,8 @@ export const disableWordleFeatures = async (guildData: GuildDataInterface): Prom
     // Disable result scanning
     guildData.messageScanning.wordleResultScanning = false;
     // Disable commands
-    guildData.commands.enabledCommands.filter( function( el ) {
-        return !config.wordle.commands.includes( el.toLowerCase() );
-      } );
 
+    guildData.commands.enabledCommands = guildData.commands.enabledCommands.filter((command) => !config.wordle.commands.includes(command));
 
     await update(guildData);
     return "Wordle features have been disabled.";
