@@ -168,6 +168,20 @@
             "next": "1189716002708140232"
         }
     },
+    "game": {
+        "TwitchAPI": {
+            "authURL": "https://id.twitch.tv/oauth2/token",
+            "baseURL": "https://api.igdb.com",
+            "version": "4",
+            "endpoints": {
+                "games": "games",
+                "search": "search"
+            }
+        },
+        "AllKeyShopAPI": {
+            "baseURL" : "https://www.allkeyshop.com/api/latest/vaks.php"
+        }
+    },
     "response": {
         "allowRegex": true,
         "maxGuildResponses": 10
