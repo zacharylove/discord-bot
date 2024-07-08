@@ -226,11 +226,12 @@ export const game: CommandInterface = {
 
                     // offers
                     const offers = [];
-                    let offerString;
-                    const productOffers = product.offers.slice(0,10);
+                    let offerString, discount;
+                    const productOffers = product.offers.slice(0,10).sort((a: any,b: any) => a.price - b.price);
                     for (const offer of productOffers) {
                         offerString = "";
-                        if (offer.priceDiscount) offerString += `[${parseFloat(offer.priceDiscount) * -100}%] `;
+                        discount = Math.round(parseFloat(offer.priceDiscount) * -100);
+                        if (offer.priceDiscount) offerString += `[${discount > 0 ? `+${discount}` : discount}%] `;
                         offerString += `[${offer.store.name}](${offer.url})`;
                         offerString += `: ${offer.price} ${offer.currency}`                        
                         offerString += ` (${offer.edition.name}, ${offer.region.id}, ${offer.region.name})`
@@ -240,7 +241,7 @@ export const game: CommandInterface = {
 
                     }
 
-                    if (product.metacriticScores) {
+                    if (product.metacriticScores && (product.metacriticScores.critic.votes != 0 && product.metacriticScores.user.votes != 0 && product.metacriticScores.total.votes != 0)) {
                         if (product.metacriticScores.critic) metacriticString += `Critic: ${product.metacriticScores.critic.rating}/100 (${product.metacriticScores.critic.votes} votes)\n`;
                         if (product.metacriticScores.user) metacriticString += `User: ${product.metacriticScores.user.rating}/100 (${product.metacriticScores.user.votes} votes)\n`;
                         if (product.metacriticScores.total) metacriticString += `Total: ${product.metacriticScores.total.rating}/100 (${product.metacriticScores.total.votes} votes)`;
