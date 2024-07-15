@@ -179,7 +179,7 @@ export const broadcastCommandStatus = async (interaction: CommandInteraction | C
             break;
         case CommandStatus.DisabledInGuild:
             errorMessage += `**Command ${commandName} is disabled in this server!**\n`;
-            errorMessage += `Ask an administrator to enable it using \`/settings command enable ${commandName}\`.`;
+            errorMessage += `Ask an administrator to enable it using \`/settings\`.`;
             break;
         case CommandStatus.DisabledGlobally:
             errorMessage += `**Command ${commandName} has been globally disabled by the bot owner.**\n`;
