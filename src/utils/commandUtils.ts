@@ -4,6 +4,7 @@ import { ChatInputCommandInteraction, CommandInteraction } from "discord.js";
 import CommandList from "../commands/_CommandList.js";
 import { getGuildDataByGuildID } from "../database/guildData.js";
 import { CommandInterface } from "../interfaces/Command.js";
+import { GuildDataInterface } from "../database/models/guildModel.js";
 
 /**
  * Get a list of all (non-globally-disabled) commands.
@@ -30,8 +31,7 @@ export const getCommandListAsString = () : string[] => {
  * @param guildID 
  * @returns true if command is disabled globally or in the given guild, false if command is enabled globally and not disabled in the given guild
  */
-export const isCommandDisabled = async (command: CommandInterface, guildID: string): Promise<boolean> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const isCommandDisabled = (command: CommandInterface, guildData: GuildDataInterface): boolean => {
     const enabledGlobally: boolean = command.properties.Enabled;
     const enabledByDefault: boolean = command.properties.DefaultEnabled;
     const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command.data.name);
@@ -63,8 +63,7 @@ export const isCommandDisabled = async (command: CommandInterface, guildID: stri
  * @param guildID 
  * @returns true if command is enabled globally and not disabled in the given guild, false if command is disabled globally or in the given guild
  */
-export const isCommandEnabled = async (command: CommandInterface, guildID: string): Promise<boolean> => {
-    const guildData = await getGuildDataByGuildID(guildID);
+export const isCommandEnabled = (command: CommandInterface, guildData: GuildDataInterface): boolean => {
     const enabledGlobally: boolean = command.properties.Enabled;
     const enabledByDefault: boolean = command.properties.DefaultEnabled;
     const enabledInGuild: boolean = guildData.commands.enabledCommands.includes(command.data.name);
@@ -179,7 +178,7 @@ export const broadcastCommandStatus = async (interaction: CommandInteraction | C
             break;
         case CommandStatus.DisabledInGuild:
             errorMessage += `**Command ${commandName} is disabled in this server!**\n`;
-            errorMessage += `Ask an administrator to enable it using \`/settings\`.`;
+            errorMessage += `Ask an administrator to enable it using \`/settings command enable ${commandName}\`.`;
             break;
         case CommandStatus.DisabledGlobally:
             errorMessage += `**Command ${commandName} has been globally disabled by the bot owner.**\n`;

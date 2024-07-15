@@ -8,6 +8,7 @@ import { FilterQuery } from "mongoose";
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { onMessage } from "../events/onMessage.js";
 import { onMessageReactionAdd } from "../events/onMessageReaction.js";
+import CommandList from "../commands/_CommandList.js";
 
 /**
  * Updates an existing GuildData object in the database
@@ -274,12 +275,11 @@ export const toggleCustomResponse =  async (guildData: GuildDataInterface, enabl
  * @param guildID 
  * @returns status message
  */
-export const addEnabledCommand = async (command: CommandInterface, guildID: string): Promise<string> => {
+export const addEnabledCommand = async (command: CommandInterface, guildData: GuildDataInterface): Promise<string> => {
     // If command is enabled by default, do nothing
     if ( command.properties.DefaultEnabled ) { return "This command is already enabled by default."; }
     // If command is globally disabled, do nothing
     if ( !command.properties.Enabled ) { return "This command is globally disabled. Please contact the bot owner to enable it."; }
-    const guildData = await getGuildDataByGuildID(guildID);
     // If command is already enabled, do nothing
     if ( guildData.commands.enabledCommands.includes(command.data.name) ) { return "This command is already enabled in this guild."; }
     guildData.commands.enabledCommands.push(command.data.name);
@@ -293,12 +293,11 @@ export const addEnabledCommand = async (command: CommandInterface, guildID: stri
  * @param command 
  * @param guildID 
  */
-export const addDisabledCommand = async (command: CommandInterface, guildID: string): Promise<string> => {
+export const addDisabledCommand = async (command: CommandInterface, guildData: GuildDataInterface): Promise<string> => {
     // If command is disabled by default
     if ( !command.properties.DefaultEnabled ) { return "This command is already disabled by default."; }
     // If command is globally disabled, do nothing
     if ( !command.properties.Enabled ) { return "This command is globally disabled, so disabling it for your guild is redundant."; }
-    const guildData = await getGuildDataByGuildID(guildID);
     // If command is already disabled, do nothing
     if ( guildData.commands.disabledCommands.includes(command.data.name) ) { return "This command is already disabled in this guild."; }
     guildData.commands.disabledCommands.push(command.data.name);
@@ -312,13 +311,9 @@ export const addDisabledCommand = async (command: CommandInterface, guildID: str
  * @param guildID 
  * @returns 
  */
-export const getEnabledCommandListAsString = async (guildID: string): Promise<string[]> => {
-    const enabledCommands: string[] = [];
-    for ( const command of getCommandList() ) {
-        if ( await isCommandEnabled(command, guildID) ) { enabledCommands.push(command.properties.Name); }
-    }
+export const getEnabledCommandListAsString = async (guildData: GuildDataInterface): Promise<string[]> => {
 
-    return enabledCommands;
+    return CommandList.filter( (command) => isCommandEnabled(command, guildData) == true ).map( (command) => command.properties.Name);
 }
 
 
@@ -327,12 +322,9 @@ export const getEnabledCommandListAsString = async (guildID: string): Promise<st
  * @param guildID 
  * @returns 
  */
-export const getDisabledCommandListAsString = async (guildID: string): Promise<string[]> => {
-    const disabledCommands: string[] = [];
-    for ( const command of getCommandList() ) {
-        if ( await isCommandDisabled(command, guildID) ) { disabledCommands.push(command.properties.Name); }
-    }
-    return disabledCommands;
+export const getDisabledCommandListAsString = async (guildData: GuildDataInterface): Promise<string[]> => {
+    return CommandList.filter( (command) => isCommandDisabled(command, guildData) == true ).map( (command) => command.properties.Name);
+
 }
 
 /**

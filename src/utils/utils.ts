@@ -194,7 +194,7 @@ export const checkBotChannelPermission = async (guild: Guild, channelId: string,
 export const getCommandByName = (name: string): CommandInterface | null => {
     for (const Command of CommandList) {
         // If command matches and is not globally disabled
-        if (name === Command.data.name) return Command;
+        if (name === Command.data.name || name === Command.properties.Name) return Command;
     }
     return null;
 }

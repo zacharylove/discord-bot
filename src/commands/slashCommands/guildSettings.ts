@@ -1,7 +1,7 @@
 // View a list of guild-specific settings and enable/disable commands and features.
 import { CommandInterface } from "../../interfaces/Command.js";
 import { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
-import { areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isCustomResponseEnabled, isInstagramEmbedFixEnabled, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleCustomResponse, toggleInstagramEmbedFix, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../database/guildData.js";
+import { addDisabledCommand, addEnabledCommand, areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isCustomResponseEnabled, isInstagramEmbedFixEnabled, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleCustomResponse, toggleInstagramEmbedFix, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../database/guildData.js";
 import { GuildDataInterface } from "../../database/models/guildModel.js";
 import { commandNotImplemented, getCommandListAsString } from "../../utils/commandUtils.js";
 import { ButtonStyle, CommandInteraction, ComponentType, Message, PermissionsBitField, User } from "discord.js";
@@ -18,14 +18,15 @@ const requiredPermissions = PermissionsBitField.Flags.ManageGuild;
 // Prevents multiple edits occurring at once.
 let ongoingEdit: boolean = false;
 
+let enabledCommandList: string[];
+let disabledCommandList: string[];
+
 const sendEmbedAndCollectResponses = async (
     interaction: Message<boolean>, 
     embed: EmbedBuilder, 
     guildData: GuildDataInterface, 
     author: User, 
-    type: string,
-    enabledCommandList: string[],
-    disabledCommandList: string[]
+    type: string
 ) => {
     // Create navigation buttons
     const row: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
@@ -91,9 +92,7 @@ const sendEmbedAndCollectResponses = async (
                             await createServerSettingsEmbed(response),
                             guildData,
                             author,
-                            'home',
-                            enabledCommandList,
-                            disabledCommandList
+                            'home'
                         );
                     });
                     break;
@@ -105,9 +104,7 @@ const sendEmbedAndCollectResponses = async (
                             await createServerFeatureEmbed(guildData, response),
                             guildData,
                             author,
-                            'feature',
-                            enabledCommandList,
-                            disabledCommandList
+                            'feature'
                         );
                     } );
                     break;
@@ -117,12 +114,10 @@ const sendEmbedAndCollectResponses = async (
                     sleep(200).then( async () => {
                         await sendEmbedAndCollectResponses(
                             response,
-                            await createServerCommandEmbed(guildData, response, enabledCommandList, disabledCommandList),
+                            await createServerCommandEmbed(guildData, response),
                             guildData,
                             author,
-                            'command',
-                            enabledCommandList,
-                            disabledCommandList
+                            'command'
                         );
                     } );
                     break;
@@ -135,7 +130,7 @@ const sendEmbedAndCollectResponses = async (
                     }
                     else if (type == 'command' && !ongoingEdit) {
                         ongoingEdit = true;
-                        await enableDisableCommand(response, guildData, enabledCommandList, disabledCommandList, author, true);
+                        await enableDisableCommand(response, guildData, author, true);
                     }
                     break;
                 case "disable":
@@ -145,7 +140,7 @@ const sendEmbedAndCollectResponses = async (
                     }
                     else if (type == 'command' && !ongoingEdit) {
                         ongoingEdit = true;
-                        await enableDisableCommand(response, guildData, enabledCommandList, disabledCommandList, author, false);
+                        await enableDisableCommand(response, guildData, author, false);
                     }
                     break;
                 case "done":
@@ -248,12 +243,8 @@ const enableDisableFeature = async (message: Message<boolean>, guildData: GuildD
     });
 }
 
-const enableDisableCommand = async (message: Message<boolean>, guildData: GuildDataInterface, enabledCommandList: string[], disabledCommandList: string[], author: User, enable: boolean) => {
-    // Not implemented yet.
-    // TODO: Enable when command enabling/disabling is implemented
-    await message.reply({content: 'Sorry, per-command server settings have not yet been implemented.'});
-    return;
-    
+const enableDisableCommand = async (message: Message<boolean>, guildData: GuildDataInterface, author: User, enable: boolean) => {
+   
     
     const reply = await message.reply(`Please enter the number corresponding to the command you want to ${enable ? 'enable' : 'disable'}, or type 'cancel' to cancel.`);
 
@@ -272,16 +263,27 @@ const enableDisableCommand = async (message: Message<boolean>, guildData: GuildD
                     await reply.edit({content: "Invalid number. Try again."});
                 } else {
                     let command: string | undefined = '';
+                    let commandInterface;
                     // Enable
                     if (enable) {
-                        command = enabledCommandList.at(receivedNumber - 1);
-                        if (!command) return;
-                        const commandInterface = getCommandByName(command);
-
-                    } else {
                         command = disabledCommandList.at(receivedNumber - 1);
                         if (!command) return;
-                        const commandInterface = getCommandByName(command);
+                        commandInterface = getCommandByName(command);
+
+                    } else {
+                        command = enabledCommandList.at(receivedNumber - 1);
+                        if (!command) return;
+                        commandInterface = getCommandByName(command);
+                    }
+
+                    let response = "";
+                    try {
+                        if (commandInterface == null) response = `${command} does not correspond to any command name. Try again.`;
+                        else if (enable) response = await addEnabledCommand(commandInterface, guildData);
+                        else response = await addDisabledCommand(commandInterface, guildData);
+                        await reply.edit({content: response});
+                    } catch (e) {
+                        await reply.edit({content: "An error occurred when trying to make changes."});
                     }
                     try { await messageResponse.delete(); } catch (e) {}
                 }
@@ -292,7 +294,7 @@ const enableDisableCommand = async (message: Message<boolean>, guildData: GuildD
     });
 }
 
-const createServerCommandEmbed = async (guildData: GuildDataInterface, message: Message<boolean>, enabledCommandList: string[], disabledCommandList: string[]) => {
+const createServerCommandEmbed = async (guildData: GuildDataInterface, message: Message<boolean>) => {
     const embed: EmbedBuilder = new EmbedBuilder()
         .setTitle("💬 Command Configuration for " + message.guild?.name)
         .setDescription("Use the buttons below to enable/disable commands for this server.");
@@ -387,6 +389,7 @@ const createServerSettingsEmbed = async (message: Message) => {
     description += "\nUsing the buttons below, select whether you want to modify features or settings."
     
     embed.setDescription(description);
+    if (message.guild?.iconURL()) embed.setThumbnail(message.guild?.iconURL());
     
     return embed;
 }
@@ -432,19 +435,14 @@ export const guildSettings: CommandInterface = {
         
                 const message: Message<boolean> = await interaction.editReply("Fetching guild settings, please wait...");
                 const guildData: GuildDataInterface = await getGuildDataByGuildID(interaction.guildId);
-                // TODO: uncomment when command configuration is implemented
-                //const enabledCommandList = await getEnabledCommandListAsString(interaction.guildId);
-                //const disabledCommandList = await getDisabledCommandListAsString(interaction.guildId);
-                const enabledCommandList: string[] = [];
-                const disabledCommandList: string[] = [];
+                enabledCommandList = await getEnabledCommandListAsString(guildData);
+                disabledCommandList = await getDisabledCommandListAsString(guildData);
                 await sendEmbedAndCollectResponses(
                     message, 
                     await createServerSettingsEmbed(message), 
                     guildData, 
                     interaction.user,
-                    'home',
-                    enabledCommandList,
-                    disabledCommandList
+                    'home'
                 );
                 break;
         }    

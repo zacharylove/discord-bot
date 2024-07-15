@@ -5,6 +5,7 @@ import { CommandStatus, broadcastCommandStatus, isCommandDisabled, isCommandEnab
 import { hasPermissions } from '../utils/userUtils.js';
 import { CommandInterface } from '../interfaces/Command.js';
 import { getCommandByName } from '../utils/utils.js';
+import { getGuildDataByGuildID } from '../database/guildData.js';
 
 
 
@@ -49,9 +50,10 @@ export const onInteraction : EventInterface = {
 
                 // If sent in guild
                 if (interaction.guild) {
+                    const guildData = await getGuildDataByGuildID(interaction.guild.id);
 
-                    const commandEnabled = await isCommandEnabled(Command, interaction.guild.id);
-                    const commandDisabled = await isCommandDisabled(Command, interaction.guild.id);
+                    const commandEnabled = isCommandEnabled(Command, guildData);
+                    const commandDisabled = isCommandDisabled(Command, guildData);
 
                     // If user has permissions
                     if (Command.properties.Permissions) {
@@ -64,11 +66,15 @@ export const onInteraction : EventInterface = {
                     if (Command.properties.DefaultEnabled && commandDisabled) {
                         console.debug("Command " + Command.data.name + " has been disabled in guild " + interaction.guild.id + ".");
                         errorList.push("Command `" + Command.data.name + "` has been disabled in this server.");
+                        await interaction.editReply(`Command ${Command.properties.Name} has been disabled in this server. Use \`/settings\` to enable.`);
+                        return;
                     } 
                     // If disabled globally
-                    else if (!commandEnabled) {
+                    else if (!Command.properties.DefaultEnabled && !commandEnabled) {
                         console.debug("Command " + Command.data.name + " is not enabled in guild " + interaction.guild.id + ".");
                         errorList.push("Command `" + Command.data.name + "` is disabled by default and has not been enabled in this server.");
+                        await interaction.editReply(`Command ${Command.properties.Name} is disabled by default and has not been enabled in this server. Use \`/settings\` to enable.`);
+                        return;
                     }
                     
                     // If command is enabled in the guild or enabled globally and not disabled in guild
