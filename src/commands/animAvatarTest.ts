@@ -153,7 +153,7 @@ export const animAvatarTest: CommandInterface = {
 
     },
     properties: {
-        Name: 'AnimAvatarTest',
+        Name: '[TEST] Animated Avatar Test',
         Scope: 'global',
         GuildOnly: false,
         Enabled: false,

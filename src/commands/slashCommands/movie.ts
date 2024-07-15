@@ -324,7 +324,7 @@ export const movie: CommandInterface = {
 
     },
     properties: {
-        Name: "movie",
+        Name: "Search Movie",
         Aliases: [],
         Scope: "global",
         GuildOnly: false,

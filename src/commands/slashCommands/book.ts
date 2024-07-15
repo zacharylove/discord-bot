@@ -276,7 +276,7 @@ export const book: CommandInterface = {
         }
     },
     properties: {
-        Name: "book",
+        Name: "Search Book",
         Aliases: [],
         Scope: "global",
         GuildOnly: false,

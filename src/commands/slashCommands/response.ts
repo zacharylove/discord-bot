@@ -420,7 +420,7 @@ export const response: CommandInterface = {
 
     },
     properties: {
-        Name: 'Response',
+        Name: 'Custom Response',
         Aliases: [],
         Scope: 'global',
         GuildOnly: true,

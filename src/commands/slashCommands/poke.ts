@@ -74,7 +74,7 @@ export const poke: CommandInterface = {
 
     // Define command properties
     properties: {
-        Name: 'Poke',
+        Name: 'Poke User',
         Scope: 'global',
         GuildOnly: false,
         Enabled: true,

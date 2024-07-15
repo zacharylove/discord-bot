@@ -121,8 +121,8 @@ export const playSong: CommandInterface = {
         await autocompleteQuery(interaction, limit);
     },
     properties: {
-        Name: "play",
-        Aliases: ["p"],
+        Name: "Play Song",
+        Aliases: [],
         Scope: "global",
         GuildOnly: true,
         Enabled: true,
@@ -180,7 +180,7 @@ export const pSong: CommandInterface = {
         await autocompleteQuery(interaction, limit);
     },
     properties: {
-        Name: "p",
+        Name: "Play Song",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,
@@ -232,7 +232,7 @@ export const playNext: CommandInterface = {
         await autocompleteQuery(interaction, limit);
     },
     properties: {
-        Name: "playnext",
+        Name: "Play Next",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,
@@ -285,7 +285,7 @@ export const pNext: CommandInterface = {
         await autocompleteQuery(interaction, limit);
     },
     properties: {
-        Name: "pn",
+        Name: "Play Next",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

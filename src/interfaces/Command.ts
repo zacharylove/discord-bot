@@ -39,6 +39,8 @@ export interface CommandProperties {
     Defer?: boolean;
     // What feature the command belongs to
     Feature?: Feature;
+    // Whether the command is a slash command or a context command
+    CommandType?: "Slash" | "Context";
 }
 
 

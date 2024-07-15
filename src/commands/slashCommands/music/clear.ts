@@ -28,7 +28,7 @@ export const clearQueue: CommandInterface = {
         await interaction.editReply(`${confirmationMessage()} cleared ${clearCurrent ? numSongs : numSongs - 1} songs in the queue!${clearCurrent ? ' Stopping playback.' : ''}`);
     },
     properties: {
-        Name: "clear",
+        Name: "Clear Music Queue",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

@@ -53,7 +53,7 @@ export const stats: CommandInterface = {
         return;
     },
     properties: {
-        Name: 'Stats',
+        Name: 'Bot Stats',
         Aliases: [],
         Scope: 'global',
         GuildOnly: false,

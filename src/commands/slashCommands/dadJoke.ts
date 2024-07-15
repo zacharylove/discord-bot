@@ -38,7 +38,7 @@ export const dadJoke: CommandInterface = {
         await interaction.editReply(joke);
     },
     properties: {
-        Name: "dadjoke",
+        Name: "Dad Joke",
         Aliases: [],
         Scope: 'global',
         GuildOnly: false,

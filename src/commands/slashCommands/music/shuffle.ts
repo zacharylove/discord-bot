@@ -22,7 +22,7 @@ export const shuffleQueue: CommandInterface = {
         await interaction.editReply(`${confirmationMessage()} shuffled ${numSongs} songs in the queue! Up next is **${player.getQueue()[1].title}**`);
     },
     properties: {
-        Name: "shuffle",
+        Name: "Shuffle Music Queue",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

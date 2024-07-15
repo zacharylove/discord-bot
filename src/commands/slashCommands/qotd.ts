@@ -369,7 +369,7 @@ export const qotd: CommandInterface = {
         return;
     },
     properties: {
-        Name: 'QOTD',
+        Name: 'Question Of the Day',
         Scope: 'global',
         GuildOnly: true,
         DefaultEnabled: true,

@@ -213,6 +213,7 @@ export const caption: CommandInterface = {
         DefaultEnabled: true,
         Intents: [],
         Defer: false,
+        CommandType: "Context"
     }
 
 }

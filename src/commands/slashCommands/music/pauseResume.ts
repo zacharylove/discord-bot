@@ -24,7 +24,7 @@ export const pause: CommandInterface = {
         await interaction.editReply(`Paused! Use /resume to resume playback.`);
     },
     properties: {
-        Name: "pause",
+        Name: "Pause Playback",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,
@@ -58,7 +58,7 @@ export const resume: CommandInterface = {
         await interaction.editReply(`Resumed! Use /pause or /stop to stop playback.`);
     },
     properties: {
-        Name: "resume",
+        Name: "Resume Playback",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

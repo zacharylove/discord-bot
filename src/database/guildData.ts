@@ -311,9 +311,18 @@ export const addDisabledCommand = async (command: CommandInterface, guildData: G
  * @param guildID 
  * @returns 
  */
-export const getEnabledCommandListAsString = async (guildData: GuildDataInterface): Promise<string[]> => {
+export const getEnabledCommandListAsString = async (guildData: GuildDataInterface, withCommand?: boolean): Promise<string[]> => {
 
-    return CommandList.filter( (command) => isCommandEnabled(command, guildData) == true ).map( (command) => command.properties.Name);
+    return CommandList.filter( (command) => 
+            isCommandEnabled(command, guildData) == true 
+        ).map( (command) => {
+                if (withCommand) {
+                    if (command.properties.CommandType == "Context") return `"${command.data.name}"`;
+                    else return `${command.properties.Name}: \`/${command.data.name}\``;
+                }
+                return command.properties.Name;
+            }
+        );
 }
 
 
@@ -322,8 +331,12 @@ export const getEnabledCommandListAsString = async (guildData: GuildDataInterfac
  * @param guildID 
  * @returns 
  */
-export const getDisabledCommandListAsString = async (guildData: GuildDataInterface): Promise<string[]> => {
-    return CommandList.filter( (command) => isCommandDisabled(command, guildData) == true ).map( (command) => command.properties.Name);
+export const getDisabledCommandListAsString = async (guildData: GuildDataInterface, withCommand?: boolean): Promise<string[]> => {
+    return CommandList.filter( (command) => 
+            isCommandDisabled(command, guildData) == true 
+        ).map( (command) => 
+            withCommand ? `${command.properties.Name}: \`/${command.data.name}\`` : command.properties.Name
+        );
 
 }
 

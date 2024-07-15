@@ -217,8 +217,8 @@ export const queue: CommandInterface = {
         
     },
     properties: {
-        Name: "queue",
-        Aliases: ["q"],
+        Name: "View Music Queue",
+        Aliases: [],
         Scope: "global",
         GuildOnly: true,
         Enabled: true,
@@ -254,7 +254,7 @@ export const q: CommandInterface = {
         
     },
     properties: {
-        Name: "q",
+        Name: "View Music Queue",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

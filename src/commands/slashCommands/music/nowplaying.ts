@@ -15,8 +15,8 @@ export const nowPlaying: CommandInterface = {
 
     },
     properties: {
-        Name: "nowplaying",
-        Aliases: ["np"],
+        Name: "Now Playing",
+        Aliases: [],
         Scope: "global",
         GuildOnly: true,
         Enabled: true,

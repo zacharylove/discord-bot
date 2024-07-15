@@ -24,7 +24,7 @@ export const stopSong: CommandInterface = {
         await interaction.editReply(`${confirmationMessage()} Stopped playback and cleared ${numCleared} songs from the queue.`)
     },
     properties: {
-        Name: "stop",
+        Name: "Stop Playback",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

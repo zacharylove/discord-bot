@@ -97,5 +97,6 @@ export const inBible: CommandInterface = {
         DefaultEnabled: true,
         Intents: [],
         Defer: false,
+        CommandType: "Context"
     }
 }

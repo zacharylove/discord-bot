@@ -28,7 +28,7 @@ export const skipSong: CommandInterface = {
         else interaction.editReply(`${confirmationMessage()} skipped ${numToSkip} songs!`);
     },
     properties: {
-        Name: "skip",
+        Name: "Skip Song",
         Aliases: [],
         Scope: "global",
         GuildOnly: true,

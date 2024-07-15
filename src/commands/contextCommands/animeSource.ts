@@ -59,5 +59,6 @@ export const animeSource: CommandInterface = {
         DefaultEnabled: true,
         Intents: [],
         Defer: false,
+        CommandType: "Context"
     }
 }

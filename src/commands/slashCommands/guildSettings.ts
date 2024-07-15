@@ -435,8 +435,8 @@ export const guildSettings: CommandInterface = {
         
                 const message: Message<boolean> = await interaction.editReply("Fetching guild settings, please wait...");
                 const guildData: GuildDataInterface = await getGuildDataByGuildID(interaction.guildId);
-                enabledCommandList = await getEnabledCommandListAsString(guildData);
-                disabledCommandList = await getDisabledCommandListAsString(guildData);
+                enabledCommandList = await getEnabledCommandListAsString(guildData, true);
+                disabledCommandList = await getDisabledCommandListAsString(guildData, true);
                 await sendEmbedAndCollectResponses(
                     message, 
                     await createServerSettingsEmbed(message), 

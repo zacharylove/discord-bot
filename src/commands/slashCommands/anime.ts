@@ -292,7 +292,7 @@ export const anime: CommandInterface = {
         return;
     },
     properties: {
-        Name: "anime",
+        Name: "Search Anime",
         Aliases: [],
         Scope: "global",
         GuildOnly: false,

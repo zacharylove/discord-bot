@@ -291,7 +291,7 @@ export const game: CommandInterface = {
 
     },
     properties: {
-        Name: "game",
+        Name: "Search Game",
         Aliases: [],
         Scope: "global",
         GuildOnly: false,
