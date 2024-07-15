@@ -145,13 +145,14 @@ const sendEmbedAndCollectResponses = async (
                     break;
                 case "done":
                     await response.delete();
+                    
                     break;
 
             }
         }
     });
 
-    buttonCollector.on('end', async endResponse => { return; });
+    buttonCollector.on('end', async endResponse => { await interaction.edit({content: "", embeds: [embed], components: []}); });
 }
 
 const enableDisableFeature = async (message: Message<boolean>, guildData: GuildDataInterface, author: User, enable: boolean) => {
@@ -385,7 +386,6 @@ const createServerSettingsEmbed = async (message: Message) => {
     description += "- **Features** are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.\n";
     description += "- Some commands/features are enabled by default, and some are disabled by default.\n";
     description += "- In order to enable a command or feature, you must have the `Manage Server` permission.\n";
-    description += "**NOTE:** Currently, per-server command configuration is not yet implemented. You will not be able to enable/disable specific commands.\n";
     description += "\nUsing the buttons below, select whether you want to modify features or settings."
     
     embed.setDescription(description);
