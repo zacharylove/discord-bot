@@ -5,7 +5,7 @@ import { getWordleDataByUserID, update as wordleUpdate } from "../database/wordl
 import { getTradleDataByUserID, update as tradleUpdate } from "../database/tradleData.js";
 import { WordleDataInterface } from "../database/models/wordleModel";
 import { Canvas, CanvasRenderingContext2D, createCanvas } from "canvas";
-import { convertLocalDateToUTC } from "./utils.js";
+import { getCurrentUTCDate }from "./utils.js";
 
 
 class sharedWordleUtils {
@@ -163,8 +163,8 @@ export class wordle {
             else puzzleData.results = [puzzleInfo.emojis]
             if (puzzleData.scores) puzzleData.scores.push(puzzleInfo.score);
             else puzzleData.scores = [puzzleInfo.score]
-            if (puzzleData.submissionDates) puzzleData.submissionDates.push(convertLocalDateToUTC(new Date()));
-            else puzzleData.submissionDates = [convertLocalDateToUTC(new Date())]
+            if (puzzleData.submissionDates) puzzleData.submissionDates.push(getCurrentUTCDate());
+            else puzzleData.submissionDates = [getCurrentUTCDate()]
 
             
         } else {
@@ -172,7 +172,7 @@ export class wordle {
                 puzzleID: puzzleInfo.puzzleNum,
                 results: [puzzleInfo.emojis],
                 scores: [puzzleInfo.score],
-                submissionDates: [convertLocalDateToUTC(new Date())]
+                submissionDates: [getCurrentUTCDate()]
             });
         }
         // If the last submission's puzzle number = today's puzzle number - 1
@@ -195,7 +195,7 @@ export class wordle {
             if (userData.lastWordleSubmission) {
                 if (!userData.wordleStreak) userData.wordleStreak = 1
                 else {
-                    const twoDaysAgo = new Date(convertLocalDateToUTC(new Date()).getTime() - (48 * 60 * 60 * 1000));
+                    const twoDaysAgo = new Date(getCurrentUTCDate().getTime() - (48 * 60 * 60 * 1000));
                     if (userData.lastWordleSubmission >= twoDaysAgo) {
                         userData.wordleStreak++;
                         if (userData.longestStreak < userData.wordleStreak) userData.longestStreak = userData.wordleStreak
@@ -206,7 +206,7 @@ export class wordle {
         // Set the last submission puzzle number to today's puzzle
         userData.lastWordleNumber = puzzleInfo.puzzleNum;
         // Set last submission date to now
-        userData.lastWordleSubmission = convertLocalDateToUTC(new Date());
+        userData.lastWordleSubmission = getCurrentUTCDate();
         
         // For users that have records from before longest streak was implemented
         if (!userData.longestStreak) userData.longestStreak = 0;
@@ -421,7 +421,7 @@ export const initializeTradleUtil = (): tradle => {
 export const buildResultCalendar = async (canvas: Canvas, ctx: CanvasRenderingContext2D, wordleData: WordleDataInterface, startY: number, startX: number): Promise<any> => {
 
     // Get current date
-    const currentDate = convertLocalDateToUTC(new Date());
+    const currentDate = getCurrentUTCDate();
     const month = currentDate.toLocaleString('default', { month: 'long' });
     const day = currentDate.getDate();
     const year = currentDate.getFullYear();
@@ -446,7 +446,7 @@ export const buildResultCalendar = async (canvas: Canvas, ctx: CanvasRenderingCo
     const resultArray = new Array(lengthOfMonth).fill(-1);
 
     // Number of days since epoch
-    const fullDaysSinceEpoch = Math.floor(convertLocalDateToUTC(new Date()).getTime()/8.64e7);
+    const fullDaysSinceEpoch = Math.floor(getCurrentUTCDate().getTime()/8.64e7);
     // Date of the first wordle puzzle in days since epoch
     const epochDateOfFirstWordle = 18797;
     // First day of month in days since epoch

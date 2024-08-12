@@ -6,10 +6,10 @@ import { connectDatabase } from "./database/connectDatabase.js";
 import { validateEnv, validateEventPermissions } from "./utils/validateProperties.js";
 import { onReady } from "./events/onReady.js";
 import { onMessage } from "./events/onMessage.js";
-import { Events, TextChannel } from "discord.js";
+import { Events } from "discord.js";
 import { onMessageReactionAdd, onMessageReactionRemove } from "./events/onMessageReaction.js";
-import { createInternalData } from "./database/models/internalModel.js";
-
+import { getCurrentUTCDate, logErrorToFile } from "./utils/utils.js";
+import { cleanupCommandLogs, cleanupThreads, logMaintenenceEventToFile } from "./events/onMaintenance.js";
 
 let BOT: Bot;
 
@@ -37,9 +37,28 @@ const registerEvents = async (BOT: Bot) => {
     } else { console.log("messageReactionAdd event is disabled. Skipping..."); }
 }
 
-const performStartupTasks = async () => {
-    await cleanupThreads();
-    await cleanupCommandLogs()
+// Executes maintenence methods every day at 1AM UTC
+const performMaintenanceTasks = async (doItNow: boolean = false) => {
+    let millisTill1AM;
+    if (doItNow) millisTill1AM = 1;
+    else {
+        // Check whether it is 1AM
+        const now = getCurrentUTCDate();
+        millisTill1AM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 1, 0, 0, 0).getTime() - now.getTime();
+        if (millisTill1AM < 0) {
+            millisTill1AM += 86400000; // it's after 1am, try 1am tomorrow.
+        }
+    }
+
+    // Run tasks
+    await new Promise(resolve => setTimeout(resolve, millisTill1AM)).then( async () => {
+        console.log("Performing daily maintenence tasks...");
+        await await logMaintenenceEventToFile("==== BEGINNING MAINTENENCE TASKS ====")
+        await cleanupThreads();
+        await cleanupCommandLogs()
+        await await logMaintenenceEventToFile("======= END MAINTENENCE TASKS =======")
+    });
+
 }
 
 
@@ -57,13 +76,9 @@ const performStartupTasks = async () => {
 
     await BOT.login(process.env.BOT_TOKEN);
 
-    await performStartupTasks();
+    await performMaintenanceTasks();
    
 })();
-
-
-import { logErrorToFile } from "./utils/utils.js";
-import { cleanupCommandLogs, cleanupThreads } from "./events/onStartup.js";
 
 // Log crashes to file
 process.on('uncaughtException', function (err: any) {

@@ -10,14 +10,14 @@ import { onMessage } from "../events/onMessage.js";
 import { onMessageReactionAdd } from "../events/onMessageReaction.js";
 import CommandList from "../commands/_CommandList.js";
 import { Interaction } from "discord.js";
-import { convertLocalDateToUTC, getDateTimeString } from "../utils/utils.js";
+import { getCurrentUTCDate, getDateTimeString } from "../utils/utils.js";
 
 /**
  * Updates an existing GuildData object in the database
  * @param guildData 
  */
 export const update = async (guildData: GuildDataInterface) => {
-    guildData.updatedAt = convertLocalDateToUTC(new Date());
+    guildData.updatedAt = getCurrentUTCDate();
     await guildData.save();
 }
 
@@ -402,7 +402,7 @@ export const addToCommandLog = async (guildData: GuildDataInterface, command: Co
         displayName: command.properties.Name.toLowerCase(),
         callingUserId: interaction.user.id,
         channelId: interaction.channelId ? interaction.channelId : "",
-        timestamp: convertLocalDateToUTC(new Date())
+        timestamp: getCurrentUTCDate()
     } as CommandLog);
     // Sort by newest
     guildData.commands.commandLog = log.sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
@@ -433,7 +433,7 @@ export const getCommandLogLength = async (guildData: GuildDataInterface) => {
 
 // Delete all entries older than the given timestamp
 export const purgeCommandLog = async (olderThan: Date) => {
-    console.log('Deleting documents older than:', olderThan);
+    let message = `  Deleting documents older than: ${olderThan}...`;
     try {
         const result = await guildModel.updateMany(
             {},
@@ -445,8 +445,9 @@ export const purgeCommandLog = async (olderThan: Date) => {
               }
             }
           );
-        console.log(`Deleted ${result.modifiedCount} documents older than ${getDateTimeString(olderThan)}`);
+          message += `Deleted ${result.modifiedCount} documents older than ${getDateTimeString(olderThan)}`;
     } catch (error) {
-        console.error('Error updating documents:', error);
+        message += `Error updating documents:${error}`;
     }
+    return message;
 }   

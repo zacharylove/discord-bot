@@ -224,16 +224,20 @@ export function convertLocalDateToUTC(date: Date) {
     );
   
     return new Date(timestamp);
-  }
-  
-  export function convertUTCToLocalDate(utcDate: Date) {
+}
+
+export function getCurrentUTCDate() {
+    return convertLocalDateToUTC(new Date());
+}
+
+export function convertUTCToLocalDate(utcDate: Date) {
     return new Date(
-      utcDate.getUTCFullYear(),
-      utcDate.getUTCMonth(),
-      utcDate.getUTCDate(),
-      utcDate.getUTCHours(),
-      utcDate.getUTCMinutes(),
-      utcDate.getUTCSeconds(),
-      utcDate.getUTCMilliseconds(),
+        utcDate.getUTCFullYear(),
+        utcDate.getUTCMonth(),
+        utcDate.getUTCDate(),
+        utcDate.getUTCHours(),
+        utcDate.getUTCMinutes(),
+        utcDate.getUTCSeconds(),
+        utcDate.getUTCMilliseconds(),
     );
-  }
+}

@@ -4,7 +4,7 @@ import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "../data
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { getGuildDataByGuildID, isStarboardEnabled, removeStoredStarboardPost, setStarboardDefaults, update } from "../database/guildData.js";
-import { checkBotGuildPermission, convertLocalDateToUTC, truncateString } from "../utils/utils.js";
+import { checkBotGuildPermission, getCurrentUTCDate, truncateString } from "../utils/utils.js";
 import { getUserData } from "../database/userData.js";
 
 
@@ -312,7 +312,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                     if (leaderboardEntry) {
                         console.debug("Updating existing entry in leaderboard")
                         leaderboardEntry.numReactions = reaction.count;
-                        leaderboardEntry.timestamp = convertLocalDateToUTC(new Date());
+                        leaderboardEntry.timestamp = getCurrentUTCDate();
                     } 
                     // If reactionCount is above the minimum numReactions entry in guildData.starboard.leaderboard, add to leaderboard
                     else {
@@ -324,7 +324,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                                 channelID: starboardMessage.channelId,
                                 originalMessageID: reaction.message.id,
                                 originalChannelID: reaction.message.channelId,
-                                timestamp: convertLocalDateToUTC(new Date()),
+                                timestamp: getCurrentUTCDate(),
                                 authorID: reaction.message.author.id,
                                 numReactions: reaction.count,
                             });
@@ -354,7 +354,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                                     channelID: starboardMessage.channelId,
                                     originalMessageID: reaction.message.id,
                                     originalChannelID: reaction.message.channelId,
-                                    timestamp: convertLocalDateToUTC(new Date()),
+                                    timestamp: getCurrentUTCDate(),
                                     authorID: reaction.message.author.id,
                                     numReactions: reaction.count,
                                 };
