@@ -16,7 +16,7 @@
   "dependencies": {
     "@discordjs/builders": "^1.6.5",
     "@discordjs/opus": "^0.9.0",
-    "@discordjs/rest": "^2.2.0",
+    "@discordjs/rest": "^2.3.0",
     "@discordjs/voice": "^0.17.0",
     "axios": "^1.6.8",
     "canvas": "^2.11.2",
@@ -33,7 +33,7 @@
     "libsodium": "^0.7.13",
     "libsodium-wrappers": "^0.7.13",
     "module-alias": "^2.2.3",
-    "mongoose": "^8.3.2",
+    "mongoose": "^8.5.2",
     "p-retry": "^6.2.0",
     "play-dl": "^1.9.7",
     "spotify-uri": "^4.0.1",
@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.24",
-    "@types/node": "^20.12.7",
+    "@types/node": "^22.1.0",
     "@types/spotify-web-api-node": "^5.0.11",
     "fluent-ffmpeg": "^2.1.2",
     "spotify-web-api-node": "^5.0.2",
