@@ -3,6 +3,7 @@ import { Message } from "discord.js";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { getConnectionsDataByUserID, update as connectionsUpdate } from "../database/connectionsData.js";
+import { convertLocalDateToUTC } from "./utils.js";
 
 interface puzzleInfo {
     authorID: string,
@@ -44,15 +45,15 @@ export class connections {
             else puzzleData.guesses = [puzzleInfo.guesses]
             if (puzzleData.scores) puzzleData.scores.push(puzzleInfo.score);
             else puzzleData.scores = [puzzleInfo.score]
-            if (puzzleData.submissionDates) puzzleData.submissionDates.push(new Date());
-            else puzzleData.submissionDates = [new Date()]
+            if (puzzleData.submissionDates) puzzleData.submissionDates.push(convertLocalDateToUTC(new Date()));
+            else puzzleData.submissionDates = [convertLocalDateToUTC(new Date())]
         } else {
             userData.results.push({
                 puzzleID: puzzleInfo.puzzleNum,
                 results: [puzzleInfo.emojis],
                 guesses: [puzzleInfo.guesses],
                 scores: [puzzleInfo.score],
-                submissionDates: [new Date()]
+                submissionDates: [convertLocalDateToUTC(new Date())]
             });
         }
         // If the previous submission is the previous puzzle number, increment streak

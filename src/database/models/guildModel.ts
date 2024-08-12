@@ -3,6 +3,7 @@ import { Document, model, Schema } from 'mongoose';
 import { CommandInterface } from "../../interfaces/Command.js";
 // @ts-ignore
 import { default as config } from "../../config/config.json" assert { type: "json" };
+import { convertLocalDateToUTC } from '../../utils/utils.js';
 const starboardConfig = config.starboard.config;
 
 export interface GuildDataInterface extends Document {
@@ -155,8 +156,8 @@ export const createNewGuildData = async (guildID: string) => {
     console.log(`Creating new GuildData object for guild ${guildID}...`)
     return guildModel.create({
         _id: guildID,
-        registeredAt: new Date(),
-        updatedAt: new Date(),
+        registeredAt: convertLocalDateToUTC(new Date()),
+        updatedAt: convertLocalDateToUTC(new Date()),
         commands: {
             enabledCommands: new Array<string>(),
             disabledCommands: new Array<string>(),

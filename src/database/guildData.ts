@@ -10,13 +10,14 @@ import { onMessage } from "../events/onMessage.js";
 import { onMessageReactionAdd } from "../events/onMessageReaction.js";
 import CommandList from "../commands/_CommandList.js";
 import { Interaction } from "discord.js";
+import { convertLocalDateToUTC, getDateTimeString } from "../utils/utils.js";
 
 /**
  * Updates an existing GuildData object in the database
  * @param guildData 
  */
 export const update = async (guildData: GuildDataInterface) => {
-    guildData.updatedAt = new Date();
+    guildData.updatedAt = convertLocalDateToUTC(new Date());
     await guildData.save();
 }
 
@@ -29,6 +30,11 @@ export const update = async (guildData: GuildDataInterface) => {
 export const getGuildDataByGuildID = async (guildID: string): Promise<GuildDataInterface> => {
     return ( await guildModel.findOne({ _id: guildID}) ) || ( await createNewGuildData(guildID) );
 }
+
+
+// ====================
+// WORDLE
+// ====================
 
 /**
  * Enables wordle features for the given guild
@@ -78,6 +84,11 @@ export const disableWordleFeatures = async (guildData: GuildDataInterface): Prom
 export const areWordleFeaturesEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     return guildData.messageScanning.wordleResultScanning && guildData.commands.enabledCommands.includes( wordleStats.data.name );
 }
+
+
+// ====================
+// STARBOARD
+// ====================
 
 /**
  * Enables starboard features for the given server
@@ -172,6 +183,10 @@ export const removeStoredStarboardPost = async (guildData: GuildDataInterface, p
     if (leaderboardIndexToRemove != -1) guildData.starboard.leaderboard.splice(leaderboardIndexToRemove, 1);
 }
 
+// ====================
+// EMBED FIXES
+// ====================
+
 // Twitter Embed Fix
 export const isTwitterEmbedFixEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     // If not configured, default to true
@@ -244,6 +259,10 @@ export const toggleInstagramEmbedFix =  async (guildData: GuildDataInterface, en
      return toReturn;
 }
 
+// ====================
+// CUSTOM RESPONSE
+// ====================
+
 // Custom Responses
 export const isCustomResponseEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     // If not configured, default to true
@@ -268,6 +287,10 @@ export const toggleCustomResponse =  async (guildData: GuildDataInterface, enabl
      return toReturn;
 }
 
+
+// ====================
+// GUILD SETTINGS
+// ====================
 
 /**
  * Attempts to add a command to the list of enabled commands for the given guild
@@ -366,6 +389,10 @@ export const getGlobalGuildCounterStats = async () => {
     }
 }
 
+// ====================
+// COMMAND LOGGING
+// ====================
+
 export const addToCommandLog = async (guildData: GuildDataInterface, command: CommandInterface, interaction: Interaction) => {
     console.debug(`Adding command ${command.properties.Name} to server command log`);
     const log = await getCommandLog(guildData);
@@ -375,7 +402,7 @@ export const addToCommandLog = async (guildData: GuildDataInterface, command: Co
         displayName: command.properties.Name.toLowerCase(),
         callingUserId: interaction.user.id,
         channelId: interaction.channelId ? interaction.channelId : "",
-        timestamp: new Date()
+        timestamp: convertLocalDateToUTC(new Date())
     } as CommandLog);
     // Sort by newest
     guildData.commands.commandLog = log.sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
@@ -405,24 +432,21 @@ export const getCommandLogLength = async (guildData: GuildDataInterface) => {
 }
 
 // Delete all entries older than the given timestamp
-export const purgeCommandLog = async (guildData: GuildDataInterface, olderThan: Date) => {
-    const log = await getCommandLog(guildData);
-    // Because the array is sorted by date, we just need to find the first entry that is <= olderThan and delete all subsequent entries
-    const isOlderThan = function (command: CommandLog) {
-        return command.timestamp <= olderThan;
+export const purgeCommandLog = async (olderThan: Date) => {
+    console.log('Deleting documents older than:', olderThan);
+    try {
+        const result = await guildModel.updateMany(
+            {},
+            {
+              $pull: {
+                'commands.commandLog': {
+                  timestamp: { $lt: olderThan }
+                }
+              }
+            }
+          );
+        console.log(`Deleted ${result.modifiedCount} documents older than ${getDateTimeString(olderThan)}`);
+    } catch (error) {
+        console.error('Error updating documents:', error);
     }
-    const endIndex = log.findIndex(isOlderThan);
-    guildData.commands.commandLog = log.slice(0, endIndex);
-    await update(guildData);
 }   
-
-
-// ====================
-// Music Bot Functions
-// ====================
-
-
-
-// ====================
-// Custom Responses
-// ====================

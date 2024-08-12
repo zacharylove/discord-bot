@@ -13,53 +13,6 @@ import { createInternalData } from "./database/models/internalModel.js";
 
 let BOT: Bot;
 
-// Cleanup dangling threads on startup
-import { getNumThreads, getThreads, removeThread, getInternalData } from "./database/internalData.js";
-import { Thread } from "./database/models/internalModel.js";
-const cleanupThreads = async () => {
-    // If this is the first time the bot is running, create the internal data
-    if (await getInternalData() === null) {
-        console.log("Internal data does not exist in database- creating collection...");
-        await createInternalData();
-    }
-    console.log(`Checking for dangling threads with debug mode ${process.env.DEBUG_MODE}...`);
-    let threadMessage = "";
-    const numThreads = await getNumThreads(process.env.DEBUG_MODE);
-    let numErrors = 0;
-    let numSuccess = 0;
-    let numIgnored = 0;
-    if ( numThreads > 0) {
-        threadMessage += `${numThreads} threads found. Cleaning... `;
-        const threads: Thread[] = await getThreads(process.env.DEBUG_MODE);
-        for (const thread of threads) {
-            // Ignore qotd threads
-            if (thread.type == "qotd") {
-                numIgnored++;
-                continue;
-            }
-            const channel = await BOT.channels.fetch(thread.channelID);
-            if (channel) {
-                const fetchedChannel = await channel.fetch();
-                let threadChannel = null;
-                if (channel instanceof TextChannel) {
-                    threadChannel = channel.threads.cache.find(x => x.id = thread.threadID);
-                }                
-                if (threadChannel) {
-                    await threadChannel.delete();
-                    numSuccess++;
-                    await removeThread(thread.threadID);
-                } else {
-                    numErrors++;
-                }
-            }
-        }
-        threadMessage += `${numSuccess} deleted, ${numErrors} errors. ${numIgnored} threads ignored.`;
-        threadMessage += ` Cleanup complete.${numErrors > 0 ? `${await getNumThreads(process.env.DEBUG_MODE)} threads remaining..` : ''}`;
-    } else {
-        threadMessage += " No threads found.";
-    }
-    console.log(threadMessage);
-}
 
 
 const registerEvents = async (BOT: Bot) => {
@@ -84,6 +37,11 @@ const registerEvents = async (BOT: Bot) => {
     } else { console.log("messageReactionAdd event is disabled. Skipping..."); }
 }
 
+const performStartupTasks = async () => {
+    await cleanupThreads();
+    await cleanupCommandLogs()
+}
+
 
 // This anonymous immediately-invoked function expression (IIFE) is the entry point of program
 (async () => {
@@ -99,12 +57,13 @@ const registerEvents = async (BOT: Bot) => {
 
     await BOT.login(process.env.BOT_TOKEN);
 
-    await cleanupThreads();
+    await performStartupTasks();
    
 })();
 
 
 import { logErrorToFile } from "./utils/utils.js";
+import { cleanupCommandLogs, cleanupThreads } from "./events/onStartup.js";
 
 // Log crashes to file
 process.on('uncaughtException', function (err: any) {

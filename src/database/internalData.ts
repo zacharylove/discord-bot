@@ -1,6 +1,7 @@
 import internalModel, { Thread } from "./models/internalModel.js";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
+import { convertLocalDateToUTC } from "../utils/utils.js";
 
 export const getInternalData = async () => {
     return internalModel.findOne();
@@ -19,7 +20,7 @@ export const addThread = async (threadID: string, channelID: string, type: strin
     const thread: Thread = {
         threadID: threadID,
         channelID: channelID,
-        createdAt: new Date(),
+        createdAt: convertLocalDateToUTC(new Date()),
         type: type,
         localDev: process.env.DEBUG_MODE ? process.env.DEBUG_MODE : "false",
     }

@@ -210,3 +210,30 @@ export const getCommandByName = (name: string): CommandInterface | null => {
     }
     return null;
 }
+
+
+export function convertLocalDateToUTC(date: Date) {
+    const timestamp = Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      date.getSeconds(),
+      date.getMilliseconds(),
+    );
+  
+    return new Date(timestamp);
+  }
+  
+  export function convertUTCToLocalDate(utcDate: Date) {
+    return new Date(
+      utcDate.getUTCFullYear(),
+      utcDate.getUTCMonth(),
+      utcDate.getUTCDate(),
+      utcDate.getUTCHours(),
+      utcDate.getUTCMinutes(),
+      utcDate.getUTCSeconds(),
+      utcDate.getUTCMilliseconds(),
+    );
+  }
