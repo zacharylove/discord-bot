@@ -150,7 +150,7 @@ export const commandLog: CommandInterface = {
         Name: "Command Log",
         Aliases: [],
         Scope: "guild",
-        GuildOnly: true,
+        GuildOnly: false,
         Enabled: true,
         DefaultEnabled: true,
         CanBeDisabled: false,
