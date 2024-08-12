@@ -12,6 +12,7 @@ export interface GuildDataInterface extends Document {
     commands: {
         enabledCommands: string[];
         disabledCommands: string[];
+        commandLog: CommandLog[]
     }
     messageScanning: {
         wordleResultScanning: boolean;
@@ -73,6 +74,15 @@ export interface StarboardLeaderboard {
     numReactions: number;
 }
 
+export interface CommandLog {
+    commandName: string;
+    displayName: string;
+    arguments: string[];
+    callingUserId: string;
+    channelId: string;
+    timestamp: Date;
+}
+
 export const GuildData = new Schema({
     // Guild ID
     _id: String,
@@ -86,11 +96,13 @@ export const GuildData = new Schema({
     commands: {
         // Enabled commands 
         // Commands that are disabled by default but enabled in this guild
-        enabledCommands: new Array<CommandInterface>(),
+        enabledCommands: new Array<String>(),
 
         // Disabled commands
         // Commands that are enabled by default but disabled in this guild
-        disabledCommands: new Array<CommandInterface>(),
+        disabledCommands: new Array<String>(),
+
+        commandLog: new Array<CommandLog>(),
     },
 
     // Message scanning settings
@@ -148,6 +160,7 @@ export const createNewGuildData = async (guildID: string) => {
         commands: {
             enabledCommands: new Array<string>(),
             disabledCommands: new Array<string>(),
+            commandLog: new Array<CommandLog>(),
         },
         messageScanning: {
             // Wordle scanning is disabled by default

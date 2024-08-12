@@ -1,13 +1,13 @@
 // View a list of guild-specific settings and enable/disable commands and features.
-import { CommandInterface } from "../../interfaces/Command.js";
+import { CommandInterface } from "../../../interfaces/Command.js";
 import { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
-import { addDisabledCommand, addEnabledCommand, areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isCustomResponseEnabled, isInstagramEmbedFixEnabled, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleCustomResponse, toggleInstagramEmbedFix, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../database/guildData.js";
-import { GuildDataInterface } from "../../database/models/guildModel.js";
-import { commandNotImplemented, getCommandListAsString } from "../../utils/commandUtils.js";
+import { addDisabledCommand, addEnabledCommand, areWordleFeaturesEnabled, disableStarboardFeature, disableWordleFeatures, enableStarboardFeature, enableWordleFeatures, getDisabledCommandListAsString, getEnabledCommandListAsString, getGuildDataByGuildID, isCustomResponseEnabled, isInstagramEmbedFixEnabled, isStarboardEnabled, isTikTokEmbedFixEnabled, isTwitterEmbedFixEnabled, toggleCustomResponse, toggleInstagramEmbedFix, toggleTikTokEmbedFix, toggleTwitterEmbedFix } from "../../../database/guildData.js";
+import { GuildDataInterface } from "../../../database/models/guildModel.js";
+import { commandNotImplemented, getCommandListAsString } from "../../../utils/commandUtils.js";
 import { ButtonStyle, CommandInteraction, ComponentType, Message, PermissionsBitField, User } from "discord.js";
-import { hasPermissions } from "../../utils/userUtils.js";
-import CommandList from "../_CommandList.js";
-import { getCommandByName, sleep } from "../../utils/utils.js";
+import { hasPermissions } from "../../../utils/userUtils.js";
+import CommandList from "../../_CommandList.js";
+import { getCommandByName, sleep } from "../../../utils/utils.js";
 
 // TODO: clean up enabled/disabled features.... lots of repeated code rn
 

@@ -153,14 +153,17 @@ export const invalidMessage = (): string => {
     return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export const getCurrentDateTimeString = (): string => {
-    const date = new Date();
+export const getDateTimeString = (date: Date): string => {
     return date.getFullYear() + '-' +
         (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
         date.getDate().toString().padStart(2, '0') + ':' +
         date.getHours().toString().padStart(2, '0') + ':' +
         date.getMinutes().toString().padStart(2, '0') + ':' +
         date.getSeconds().toString().padStart(2, '0');
+}
+
+export const getCurrentDateTimeString = (): string => {
+   return getDateTimeString(new Date());
 }
 
 export const logErrorToFile = (err: any, type: string) => {
@@ -175,7 +178,7 @@ export const logErrorToFile = (err: any, type: string) => {
 
 export const logCommandToFile = (command: CommandInterface, interaction: Interaction, isDm: boolean = false) => {
     console.debug(`[i] ${interaction.user.username} called command ${command.data.name}, writing to log...`);
-    let commandMessage = `[${getCurrentDateTimeString()}] Command "${command.data.name}" called by ${interaction.user.username}${isDm ? ' in DMs' : ''}\n----------\n`;
+    let commandMessage = `[${getCurrentDateTimeString()}] Command "${command.data.name}" called by ${interaction.user.username} - ${isDm ? ' DM' : ''}${interaction.inGuild() ? ` Guild ${interaction.guildId}` : '' }${interaction.channelId ? `, channel ${interaction.channelId}` : ''}`;
     appendFile(`./logs/${config.commandLogFile ? config.commandLogFile : 'command.log'}`, commandMessage, (error) => {
         if (error) console.error(`[!] Error appending command message to file: ${error}`);
         else console.debug(`Successfully appended command message to file.`)

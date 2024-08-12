@@ -1,7 +1,7 @@
 import { CommandInterface } from "../interfaces/Command.js";
 import { validateEventPermissions } from "../utils/validateProperties.js";
 import { wordleStats } from "../commands/slashCommands/wordle/wordleStats.js";
-import guildModel, { GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel.js";
+import guildModel, { CommandLog, GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel.js";
 import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils.js";
 import { FilterQuery } from "mongoose";
 // @ts-ignore
@@ -9,6 +9,7 @@ import { default as config } from "../config/config.json" assert { type: "json" 
 import { onMessage } from "../events/onMessage.js";
 import { onMessageReactionAdd } from "../events/onMessageReaction.js";
 import CommandList from "../commands/_CommandList.js";
+import { Interaction } from "discord.js";
 
 /**
  * Updates an existing GuildData object in the database
@@ -364,6 +365,56 @@ export const getGlobalGuildCounterStats = async () => {
         numStarboardMessages: numStarboardMessages
     }
 }
+
+export const addToCommandLog = async (guildData: GuildDataInterface, command: CommandInterface, interaction: Interaction) => {
+    console.debug(`Adding command ${command.properties.Name} to server command log`);
+    const log = await getCommandLog(guildData);
+    
+    log.push({
+        commandName: command.data.name.toLowerCase(),
+        displayName: command.properties.Name.toLowerCase(),
+        callingUserId: interaction.user.id,
+        channelId: interaction.channelId ? interaction.channelId : "",
+        timestamp: new Date()
+    } as CommandLog);
+    // Sort by newest
+    guildData.commands.commandLog = log.sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
+    await update(guildData);
+}
+
+export const getCommandLog = async (guildData: GuildDataInterface) => {
+    if (!guildData.commands.commandLog) guildData.commands.commandLog = new Array<CommandLog>();
+    return guildData.commands.commandLog;
+}
+
+// Get the most recent commands in commandLog
+export const getFilteredCommandLog = async (guildData: GuildDataInterface, commandFilter: CommandInterface | null) => {
+    let log = await getCommandLog(guildData);
+    if (commandFilter != null) {
+        log = log.filter((command) => {
+            return command.commandName.toLowerCase() == commandFilter.data.name.toLowerCase() || command.displayName.toLowerCase() == commandFilter.properties.Name.toLowerCase()
+        });
+    }
+    
+    return log
+}
+
+export const getCommandLogLength = async (guildData: GuildDataInterface) => {
+    const log = await getCommandLog(guildData);
+    return log.length;
+}
+
+// Delete all entries older than the given timestamp
+export const purgeCommandLog = async (guildData: GuildDataInterface, olderThan: Date) => {
+    const log = await getCommandLog(guildData);
+    // Because the array is sorted by date, we just need to find the first entry that is <= olderThan and delete all subsequent entries
+    const isOlderThan = function (command: CommandLog) {
+        return command.timestamp <= olderThan;
+    }
+    const endIndex = log.findIndex(isOlderThan);
+    guildData.commands.commandLog = log.slice(0, endIndex);
+    await update(guildData);
+}   
 
 
 // ====================

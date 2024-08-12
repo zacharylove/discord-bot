@@ -1,12 +1,12 @@
 import { Channel, CommandInteraction, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
-import { CommandInterface, Feature } from "../../interfaces/Command.js";
-import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold, update } from "../../database/guildData.js";
-import { hasPermissions } from "../../utils/userUtils.js";
+import { CommandInterface, Feature } from "../../../interfaces/Command.js";
+import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold, update } from "../../../database/guildData.js";
+import { hasPermissions } from "../../../utils/userUtils.js";
 import { EmbedBuilder } from "@discordjs/builders";
-import { BOT } from "../../index.js";
-import { checkBotChannelPermission, checkBotGuildPermission, confirmationMessage, truncateString } from "../../utils/utils.js";
-import { StarboardLeaderboard, StarboardPost } from "../../database/models/guildModel.js";
-import { commandNotImplemented } from "../../utils/commandUtils.js";
+import { BOT } from "../../../index.js";
+import { checkBotChannelPermission, checkBotGuildPermission, confirmationMessage, truncateString } from "../../../utils/utils.js";
+import { StarboardLeaderboard, StarboardPost } from "../../../database/models/guildModel.js";
+import { commandNotImplemented } from "../../../utils/commandUtils.js";
 
 const setStarboardChannel = async (interaction: any): Promise<string> => {
     // Check if user has permissions
