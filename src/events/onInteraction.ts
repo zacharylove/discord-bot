@@ -4,7 +4,7 @@ import { EventInterface } from '../interfaces/Event.js';
 import { CommandStatus, broadcastCommandStatus, isCommandDisabled, isCommandEnabled } from '../utils/commandUtils.js';
 import { hasPermissions } from '../utils/userUtils.js';
 import { CommandInterface } from '../interfaces/Command.js';
-import { getCommandByName } from '../utils/utils.js';
+import { getCommandByName, logCommandToFile } from '../utils/utils.js';
 import { getGuildDataByGuildID } from '../database/guildData.js';
 
 
@@ -82,12 +82,14 @@ export const onInteraction : EventInterface = {
                         if ( errorList.length > 0 ) {
                             console.error("Command " + Command.data.name + " failed validation but was run anyways!");
                         }
+                        logCommandToFile(Command, interaction);
                         await Command.run(interaction);
                         return;
                     }
                 }
                 // If command is in DMs and is not restricted to guilds
                 if (!interaction.guild && !Command.properties.GuildOnly) {
+                    logCommandToFile(Command, interaction, true);
                     await Command.run(interaction);
                     return;
                 }

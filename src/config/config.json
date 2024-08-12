@@ -13,7 +13,8 @@
         "I support custom message responses!",
         "<3" 
     ],
-    "logFile": "error.log",
+    "errorLogFile": "error.log",
+    "commandLogFile": "command.log",
     "starboard": {
         "config": {
             "fetchLimit": 100,

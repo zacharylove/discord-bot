@@ -4,7 +4,7 @@ import { GatewayIntentBits } from "discord-api-types/v10";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { appendFile } from "fs";
-import { Guild, Message, PermissionResolvable, TextChannel } from "discord.js";
+import { Guild, Interaction, Message, PermissionResolvable, TextChannel } from "discord.js";
 import { CommandList } from "../commands/_CommandList.js";
 import { CommandInterface } from "../interfaces/Command";
 
@@ -166,11 +166,20 @@ export const getCurrentDateTimeString = (): string => {
 export const logErrorToFile = (err: any, type: string) => {
     console.error(`[!] Found ${type}, writing to log...`);
     let errorMessage = `[${getCurrentDateTimeString()}] Found ${type}:\n${err.stack}\n----------\n`;
-    appendFile(`./logs/${config.logFile ? config.logFile : 'error.log'}`, errorMessage, (error) => {
+    appendFile(`./logs/${config.errorLogFile ? config.errorLogFile : 'error.log'}`, errorMessage, (error) => {
         if (error) console.log(`[!] Error appending error message to file: ${error}`);
         else console.log(`Successfully appended error message to file.`)
     })
 
+}
+
+export const logCommandToFile = (command: CommandInterface, interaction: Interaction, isDm: boolean = false) => {
+    console.debug(`[i] ${interaction.user.username} called command ${command.data.name}, writing to log...`);
+    let commandMessage = `[${getCurrentDateTimeString()}] Command "${command.data.name}" called by ${interaction.user.username}${isDm ? ' in DMs' : ''}\n----------\n`;
+    appendFile(`./logs/${config.commandLogFile ? config.commandLogFile : 'command.log'}`, commandMessage, (error) => {
+        if (error) console.error(`[!] Error appending command message to file: ${error}`);
+        else console.debug(`Successfully appended command message to file.`)
+    })
 }
 
 export const checkBotGuildPermission = async (guild: Guild, checkAdmin: boolean = false, ...permission: PermissionResolvable[] ) => {
