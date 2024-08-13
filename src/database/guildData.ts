@@ -1,7 +1,7 @@
 import { CommandInterface } from "../interfaces/Command.js";
 import { validateEventPermissions } from "../utils/validateProperties.js";
 import { wordleStats } from "../commands/slashCommands/wordle/wordleStats.js";
-import guildModel, { CommandLog, GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel.js";
+import guildModel, { CommandLog, Confession, GuildDataInterface, StarboardPost, createNewGuildData } from "./models/guildModel.js";
 import { getCommandList, isCommandDisabled, isCommandEnabled } from "../utils/commandUtils.js";
 import { FilterQuery } from "mongoose";
 // @ts-ignore
@@ -451,3 +451,34 @@ export const purgeCommandLog = async (olderThan: Date) => {
     }
     return message;
 }   
+
+
+// ====================
+// CONFESSIONS
+// ====================
+
+export const addConfessionToApprovalQueue = async (guildData: GuildDataInterface, id: string, confession: Confession) => {
+    if (guildData.confession.approvalQueue == undefined) guildData.confession.approvalQueue = new Map<String, Confession>();
+    guildData.confession.approvalQueue.set(id, confession);
+    await update(guildData);
+}
+
+export const getConfessionFromApprovalQueue = (guildData: GuildDataInterface, id: string) => {
+    return guildData.confession.approvalQueue.get(id);
+}
+
+export const removeConfessionFromApprovalQueue = (guildData: GuildDataInterface, id: string) => {
+    guildData.confession.approvalQueue.delete(id);
+}
+
+export const getConfessionNumber = (guildData: GuildDataInterface): number => {
+    const confessionNumber = guildData.counters.numConfessions;
+    guildData.counters.numConfessions++;
+    return confessionNumber;
+}
+
+// Approves confession and returns confession number
+export const approveConfession = async (guildData: GuildDataInterface, id: string): Promise<number> => {
+    removeConfessionFromApprovalQueue(guildData, id)
+    return getConfessionNumber(guildData);
+}

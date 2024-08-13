@@ -25,8 +25,12 @@ export interface GuildDataInterface extends Document {
     },
     channels: {
         confessionChannelId: string;
+        confessionApprovalChannelId: string;
         starboardChannelId: string;
         qotdChannelId: string;
+    },
+    confession: {
+        approvalQueue: Map<String, Confession>;
     },
     starboard: {
         emoji: string;
@@ -84,6 +88,14 @@ export interface CommandLog {
     timestamp: Date;
 }
 
+export interface Confession {
+    userId: string;
+    message: string;
+    imageURL?: string;
+    mentionedUserId?: string;
+    timestamp: Date;
+}
+
 export const GuildData = new Schema({
     // Guild ID
     _id: String,
@@ -118,8 +130,15 @@ export const GuildData = new Schema({
     // Channels for features
     channels: {
         confessionChannelId: String,
+        confessionApprovalChannelId: String,
         starboardChannelId: String,
         qotdChannelId: String,
+    },
+    confession: {
+        approvalQueue: {
+            type: Map,
+            of: Object
+        },
     },
     // Starboard settings
     starboard: {
@@ -175,8 +194,12 @@ export const createNewGuildData = async (guildID: string) => {
         },
         channels: {
             confessionChannelId: "",
+            confessionApprovalChannelId: "",
             starboardChannelId: "",
             qotdChannelId: "",
+        },
+        confession: {
+            approvalQueue: new Map<String, Confession>(),
         },
         starboard: {
             emoji: starboardConfig.defaultEmoji,
