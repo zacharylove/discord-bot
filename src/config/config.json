@@ -1,17 +1,13 @@
 {
-    "version": "1.6.1",
+    "version": "1.6.5",
     "statuses": [ 
-        "I do music!", 
-        "I fix Twitter embeds!", 
-        "I fix Instagram embeds!", 
-        "I fix TikTok embeds!", 
-        "I support confessions!", 
+        "I stream music!", 
+        "I do confessions!", 
         "I can caption GIFs!", 
-        "I keep track of Wordle scores!", 
-        "I do starboards!", 
-        "Check out /ship!", 
+        "I track Wordle scores!", 
+        "I've got a starboard!", 
         "I support custom message responses!",
-        "<3" 
+        "I have admin tools!" 
     ],
     "errorLogFile": "error.log",
     "commandLogFile": "command.log",
