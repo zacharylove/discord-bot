@@ -13,12 +13,12 @@ import { BOT } from '../../index.js';
 export const postConfession = async (confession: Confession, guildData: GuildDataInterface) => {
    
     const footers = [
-        "To create a confession of your own, run /confess new",
+        "To create a confession of your own, run /confess",
         "Confessions are not logged or saved anywhere",
     ];
     const approvalFooters = [
         "Anonymous confessions are reviewed by mods before being posted",
-        "To create a confession of your own, run /confess new",
+        "To create a confession of your own, run /confess",
         "Confessions are 100% anonymous, but you can still get banned through them"
     ]
     
@@ -219,10 +219,6 @@ const createApprovalEmbed = async (id: string, confession: Confession, guildData
     }
 }
 
-const createApprovalMessage = async (confession: Confession, guildData: GuildDataInterface) => {
-
-}
-
 const createNewConfession = async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand() || !interaction.guildId || !interaction.guild || !interaction.channel) {
         await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {command: confess, reason: "Invalid interaction!"});
@@ -278,9 +274,9 @@ const createNewConfession = async (interaction: CommandInteraction) => {
     }
 }
 
-const createSettingsEmbed = async (interaction: Message<boolean>, guildData: GuildDataInterface): Promise<EmbedBuilder> => {   
+export const createConfessionSettingsEmbed = async (interaction: Message<boolean>, guildData: GuildDataInterface): Promise<EmbedBuilder> => {   
     const embed = new EmbedBuilder()
-        .setTitle(`🛠️ Confession settings for ${interaction.guild?.name}`);
+        .setTitle(`😶 Confession settings for ${interaction.guild?.name}`);
 
     let description = "Welcome to the confession settings menu.\n";
     description += "Here, you can customize how confessions work for your server.\n";
@@ -383,11 +379,12 @@ const sendReplyAndCollectResponses = async (
     }
 }
 
-const sendEmbedAndCollectResponses = async (
+export const sendConfessionSettingsEmbedAndCollectResponses = async (
     interaction: Message<boolean>,
     embed: EmbedBuilder,
     guildData: GuildDataInterface,
     authorId: string,
+    selectRow: ActionRowBuilder<MessageActionRowComponentBuilder>
 ) => {
     const row: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
     
@@ -409,7 +406,7 @@ const sendEmbedAndCollectResponses = async (
     ;
     row.addComponents(doneButton);
 
-    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: [row]});
+    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: [selectRow, row]});
     try {
         const buttonCollectorFilter = (i: { user: { id: string; }; }) => i.user.id === authorId;
         const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: buttonCollectorFilter, time: 60000});
@@ -433,7 +430,7 @@ const sendEmbedAndCollectResponses = async (
                             sleep(200).then( async () => {await response.delete();})
                             break;
                     }
-                    await sendEmbedAndCollectResponses(interaction, embed, await getGuildDataByGuildID(interaction.guildId!), authorId);
+                    await sendConfessionSettingsEmbedAndCollectResponses(interaction, embed, await getGuildDataByGuildID(interaction.guildId!), authorId, selectRow);
                 }
             }
         });
@@ -445,34 +442,24 @@ const sendEmbedAndCollectResponses = async (
 export const confess: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('confess')
-        .setDescription('Confession commands')
-        .addSubcommand((subcommand) =>
-            subcommand
-                .setName('new')
-                .setDescription('Confess something anonymously in a designated confession channel!')
-                .addStringOption((option) =>
-                    option
-                        .setName('confession')
-                        .setDescription('Your confession')
-                        .setRequired(true)
-                )
-                .addStringOption((option) =>
-                    option
-                        .setName('image')
-                        .setDescription('An image to attach to your confession (URLs only)')
-                        .setRequired(false)
-                )
-                .addUserOption((option) =>
-                    option
-                        .setName('user')
-                        .setDescription('The user to confess to (will ping them)')
-                        .setRequired(false)
-                )
+        .setDescription('Confess something anonymously in a designated confession channel!')
+        .addStringOption((option) =>
+            option
+                .setName('confession')
+                .setDescription('Your confession')
+                .setRequired(true)
         )
-        .addSubcommand((subcommand) => 
-            subcommand
-                .setName('settings')
-                .setDescription('Edit confession settings for this server')
+        .addStringOption((option) =>
+            option
+                .setName('image')
+                .setDescription('An image to attach to your confession (URLs only)')
+                .setRequired(false)
+        )
+        .addUserOption((option) =>
+            option
+                .setName('user')
+                .setDescription('The user to confess to (will ping them)')
+                .setRequired(false)
         )
         ,
     run: async (interaction) => {
@@ -490,17 +477,6 @@ export const confess: CommandInterface = {
             case 'new':
                 await createNewConfession(interaction);
                 break;
-            case 'settings':
-                if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
-                    await interaction.editReply('You must be a mod to use this command!');
-                    return;
-                }
-                const guildData = await getGuildDataByGuildID(interaction.guildId);
-                // For servers that don't have an approval channel field in the db
-                if (guildData.channels.confessionApprovalChannelId == undefined) guildData.channels.confessionApprovalChannelId = ""; 
-                await interaction.editReply("Okay, opening up settings menu...");
-                const message = await interaction.followUp("Fetching confession settings, please wait...");
-                await sendEmbedAndCollectResponses(message, await createSettingsEmbed(message, guildData), guildData, interaction.user.id);
         }
 
         return;

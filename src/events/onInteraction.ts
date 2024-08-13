@@ -4,7 +4,7 @@ import { EventInterface } from '../interfaces/Event.js';
 import { CommandStatus, broadcastCommandStatus, isCommandDisabled, isCommandEnabled } from '../utils/commandUtils.js';
 import { hasPermissions } from '../utils/userUtils.js';
 import { CommandInterface } from '../interfaces/Command.js';
-import { getCommandByName, logCommandToFile } from '../utils/utils.js';
+import { getCommandByName, logCommandToFile, logErrorToFile } from '../utils/utils.js';
 import { addToCommandLog, getGuildDataByGuildID } from '../database/guildData.js';
 import { GuildData } from '../database/models/guildModel.js';
 
@@ -98,6 +98,7 @@ export const onInteraction : EventInterface = {
 
                 console.error(" === Command " + Command.data.name + " failed onInteraction validation- logging error! ===");
             } catch(e) {
+                logErrorToFile(e, 'DiscordAPIError');
                 await broadcastCommandStatus(interaction, CommandStatus.CriticallyFailed, {reason: "Low-level error occurred"});
             }
         }
