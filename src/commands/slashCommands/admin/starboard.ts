@@ -1,65 +1,283 @@
-import { Channel, CommandInteraction, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonInteraction, ButtonStyle, CacheType, Channel, CommandInteraction, ComponentType, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
-import { getGuildDataByGuildID, removeStoredStarboardPost, setStarboardChannel as setChannel, setStarboardEmojis as setEmojis, setStarboardThreshold as setThreshold, update } from "../../../database/guildData.js";
+import { getGuildDataByGuildID, removeStoredStarboardPost, update } from "../../../database/guildData.js";
 import { hasPermissions } from "../../../utils/userUtils.js";
-import { EmbedBuilder } from "@discordjs/builders";
+import { ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
 import { BOT } from "../../../index.js";
-import { checkBotChannelPermission, checkBotGuildPermission, confirmationMessage, truncateString } from "../../../utils/utils.js";
-import { StarboardLeaderboard, StarboardPost } from "../../../database/models/guildModel.js";
+import { checkBotChannelPermission, checkBotGuildPermission, confirmationMessage, getChannelFromString, getEmojiFromString, sleep, truncateString } from "../../../utils/utils.js";
+import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "../../../database/models/guildModel.js";
 import { commandNotImplemented } from "../../../utils/commandUtils.js";
 
-const setStarboardChannel = async (interaction: any): Promise<string> => {
-    // Check if user has permissions
-    if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
-        return 'You must be a mod to use this command!';
-    }
 
-    const channel: Channel = interaction.options.getChannel('channel');
-    var toReturn: string = "";
-    // Run checks
-    if (!await checkBotGuildPermission(interaction.guild, false, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.AddReactions)) {
-        return 'I do not have permission to post messages or add reactions in this guild!';
-    }
-    if (!await checkBotChannelPermission(interaction.guild, channel.id, false, PermissionsBitField.Flags.SendMessages)) {
-        return 'I do not have permission to post messages to this channel!';
-    }
+export const createStarboardSettingsEmbed =  async (interaction: Message<boolean>, guildData: GuildDataInterface): Promise<EmbedBuilder> => {   
+    const starboardEnabled = guildData.messageScanning.starboardScanning && guildData.messageScanning.starboardScanning == true;
+    const embed = new EmbedBuilder()
+        .setTitle(`⭐ Starboard Settings for ${interaction.guild?.name}`)
+        .setAuthor({name: `Starboard Status: ${starboardEnabled ? "ENABLED" : "DISABLED"}`});
+        ;
+    
+    let description = "Welcome to the starboard settings menu.\n";
+    description += "A starboard is a designated text channel where messages that receive a configurable number of a specific reaction will be reposted and immortalized.\n";
+    description += "\nHere, you can set up and customize the following for this server's starboard:\n";
+    description += "- The text channel where starboarded messages are posted\n";
+    description += "- The number of reactions required for a message to be posted to the starboard\n";
+    description += "- The reaction emoji that is used to determine whether a message will be starboarded\n"
+    description += "- The emoji that the bot will react with when a message has been added to the starboard\n";
+    description += "\nPress the buttons below to modify your settings.";
+    embed.setDescription(description);
 
-    if (!channel.isTextBased()) {
-        toReturn = 'The starboard channel must be a valid text channel';
+    let starboardSetting = "";
+    let blacklistSetting = "";
+    starboardSetting += `- **Emoji**: ${guildData.starboard.emoji ? guildData.starboard.emoji : "NOT SET" }\n`;
+    starboardSetting += `- **Reaction Threshold**: ${guildData.starboard.threshold ? guildData.starboard.threshold : "NOT SET"}\n`;
+    starboardSetting += `- **Success Emoji**: ${guildData.starboard.successEmoji ? guildData.starboard.successEmoji : "NOT SET"}\n`;
+    starboardSetting += `- **Channel Blacklist**: `;
+    if (guildData.starboard.blacklistEnabled) {
+        starboardSetting += `ENABLED\n`
+        blacklistSetting = "- <#" + guildData.starboard.blacklistChannels.join(">\n- <#") + ">"
     } else {
-        toReturn += await setChannel(interaction.guildId, channel.id);
+        starboardSetting += `DISABLED\n`
     }
+    embed.addFields({name: "Starboard Settings", value: starboardSetting, inline: true});
+    if (guildData.starboard.blacklistEnabled) embed.addFields({name: "Blacklisted Channels", value: blacklistSetting, inline: true});
 
-    return toReturn;
+    return embed;
 }
 
-const setStarboardThreshold = async (interaction: any): Promise<string> => {
-    // Check if user has permissions
-    if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
-        return 'You must be a mod to use this command!';
-    }
 
-    const count: number = interaction.options.getInteger('count');
-    var toReturn: string = "";
-    if (count < 1) {
-        toReturn = 'The starboard threshold must be greater than 0';
-    } else {
-        toReturn = await setThreshold(interaction.guildId, count);
+const sendReplyAndCollectResponses = async (
+    interaction: ButtonInteraction<CacheType>,
+    guildData: GuildDataInterface,
+    type: string,
+    authorId: string
+) => {
+    let replyMessage = "";
+    const messageCollectorFilter = (m: Message<boolean>) => m.author.id === authorId;
+
+    switch (type) {
+        case 'setchannel':
+            replyMessage = `Send a message tagging the channel you would like to set as the starboard.\n`;
+            replyMessage += `Say "none" to disable the starboard, or "cancel" to cancel.`;
+            await interaction.followUp({ content: replyMessage, ephemeral: true });
+            break;
+        case 'setemoji':
+            replyMessage = `Send a message with the emoji you would like to set as the starboard reaction emoji.\n`;
+            replyMessage += `Say "cancel" to cancel.`;
+            await interaction.followUp({ content: replyMessage, ephemeral: true });
+
+            break;
+        case 'setsuccessemoji':
+            replyMessage = `Send a message with the emoji you would like to set as the starboard success emoji.\n`;
+            replyMessage += `Say "cancel" to cancel.`;
+            await interaction.followUp({ content: replyMessage, ephemeral: true });
+
+            break;
+        case 'setthreshold':
+            replyMessage = `Send a message with the reaction threshold for the starboard.\n`;
+            replyMessage += `Say "cancel" to cancel.`;
+            await interaction.followUp({ content: replyMessage, ephemeral: true });
+
+            break;
+        case 'setblacklist':
+            replyMessage = `Tag the channels you would like to blacklist, one channel per message. If you would like to remove a channel from the blacklist, put a "-" in front of it, like "-#general".\n`;
+            replyMessage += `Say "done" when finished.`;
+            await interaction.followUp({ content: replyMessage, ephemeral: true });
+
+            break;
     }
-    return toReturn;
+    const selectionCollector = interaction.channel!.createMessageCollector({ filter: messageCollectorFilter, time: 60000});
+    let collected: boolean = false;
+    let emoji;
+    let numBlacklisted = 0;
+    try {
+        selectionCollector.on('collect', async messageResponse => {
+            if (messageResponse.author.id == authorId && !collected) {
+                collected = true;
+                let collectedMessage = messageResponse.content;
+                if (collectedMessage.toLowerCase() == "cancel") {
+                    await selectionCollector.emit('end');
+                    return;
+                }
+
+                switch (type) {
+                    case 'setchannel':
+                        if (collectedMessage.toLowerCase() == "none") {
+                            await messageResponse.reply({content: `${confirmationMessage()} starboard is now disabled.`});
+                            guildData.messageScanning.starboardScanning = false;
+                            await update(guildData);
+                            await selectionCollector.emit('end');
+                            return;
+                        } else {
+                            const channel = await getChannelFromString(collectedMessage, messageResponse.guild!);
+                            // If still invalid, bad channel
+                            if (channel == null) {
+                                await messageResponse.reply({content: "I can't find that channel. Try again."});
+                            } else {
+                                await messageResponse.reply({content: `${confirmationMessage()} the starboard channel has been set to <#${channel.id}>.`});
+                                guildData.channels.starboardChannelId = channel.id;
+                                await update(guildData);
+                                await selectionCollector.emit('end');
+                                return;
+                            }
+                        }
+                        break;
+                    case 'setemoji':
+                        emoji = await getEmojiFromString(collectedMessage, BOT);
+                        if (emoji == null) {
+                            await messageResponse.reply({content: "I can't find an emoji in that message. Try using an emoji I have access to."});
+                        } else {
+                            await messageResponse.reply({content: `${confirmationMessage()} the starboard emoji is now set to ${emoji}.`});
+                            guildData.starboard.emoji = emoji;
+                            await update(guildData);
+                            await selectionCollector.emit('end');
+                            return;
+                        }
+                        break;
+                    case 'setsuccessemoji':
+                        emoji = await getEmojiFromString(collectedMessage, BOT);
+                        if (emoji == null) {
+                            await messageResponse.reply({content: "I can't find an emoji in that message. Try using an emoji I have access to."});
+                        } else {
+                            await messageResponse.reply({content: `${confirmationMessage()} the bot will react to messages that reach the reaction threshold with ${emoji}.`});
+                            guildData.starboard.successEmoji = emoji;
+                            await update(guildData);
+                            await selectionCollector.emit('end');
+                            return;
+                        }
+                        break;
+                    case 'setthreshold':
+                        const isNumber = Number.isNaN(Number(collectedMessage));
+                        if (isNumber) {
+                            const threshold = Number(collectedMessage);
+                            if (threshold <= 0) {
+                                await messageResponse.reply({content: `Starboard reaction threshold cannot be 0 or negative.`});
+                            } else {
+                                await messageResponse.reply({content: `${confirmationMessage()} messages now require ${threshold}x${guildData.starboard.emoji} reactions to be added to the starboard.`});
+                                guildData.starboard.threshold = threshold;
+                                await update(guildData);
+                                await selectionCollector.emit('end');
+                                return;
+                            }
+                        } else {
+                            await messageResponse.reply({content: `Can't find a valid number in that message, try again.`});
+                        }
+                        break;
+                    case 'setblacklist':
+                        if (collectedMessage.toLowerCase() == "done") {
+                            if (numBlacklisted != 0) await messageResponse.reply({content: `${numBlacklisted < 0 ? "Removed" : "Added"} ${Math.abs(numBlacklisted)} channels ${numBlacklisted < 0 ? "from" : "to"} the starboard blacklist.`});
+                            await selectionCollector.emit('end');
+                            return;
+                        }
+                        let remove:boolean = false;
+                        if (collectedMessage.startsWith("-")) {
+                            remove = true
+                        }
+                        const channel = await getChannelFromString(collectedMessage, messageResponse.guild!);
+                        
+                        if (channel == null) {
+                            await messageResponse.reply({content: "I can't find that channel. Try again."});
+                        } else {
+                            ;
+                            if (remove) {
+                                if (!guildData.starboard.blacklistChannels.includes(channel.id)) {
+                                    await messageResponse.reply({content: `Channel <#${channel.id}> is not blacklisted!`});
+                                } else {
+                                    guildData.starboard.blacklistChannels = guildData.starboard.blacklistChannels.splice(guildData.starboard.blacklistChannels.indexOf(channel.id), 1);
+                                    await messageResponse.reply({content: `${confirmationMessage()} removed <#${channel.id}> from the blacklist.`});
+                                    await update(guildData);
+                                    numBlacklisted--;
+                                }
+                            } else {
+                                if (guildData.starboard.blacklistChannels.includes(channel.id)) {
+                                    await messageResponse.reply({content: `Channel <#${channel.id}> is already blacklisted!`});
+                                } else {
+                                    guildData.starboard.blacklistChannels.push(channel.id);
+                                    if (guildData.starboard.blacklistEnabled == false) guildData.starboard.blacklistEnabled = true;
+                                    await update(guildData);
+                                    await messageResponse.reply({content: `${confirmationMessage()} added <#${channel.id}> to the blacklist.`});
+                                    numBlacklisted++;
+                                }
+                            } 
+                        }
+                        collected = false;
+            
+                        break;
+                }
+            }
+        });
+    } catch (e) {
+        console.debug(`Error: ${e}`);
+    }
 }
 
-const setStarboardEmojis = async (interaction: any): Promise<string> => {
-    // Check if user has permissions
-    if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
-        return 'You must be a mod to use this command!';
-    }
+export const sendStarboardSettingsEmbedAndCollectResponses = async (
+    interaction: Message<boolean>,
+    guildData: GuildDataInterface,
+    authorId: string,
+    selectRow: ActionRowBuilder<MessageActionRowComponentBuilder>
+) => {
+    const embed = await createStarboardSettingsEmbed(interaction, guildData);
+    const firstButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    const secondButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
 
-    if (!interaction.options.getString('emoji') && !interaction.options.getString('success')) {
-        return 'You must provide at least one emoji';
-    } else {
-        return setEmojis(interaction.guildId, interaction.options.getString('emoji'), interaction.options.getString('success'));
+    const setChannelButton = new ButtonBuilder()
+        .setLabel("Set Channel")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setchannel');
+    firstButtonRow.addComponents(setChannelButton);
+
+    const setEmojiButton = new ButtonBuilder()
+        .setLabel("Emoji")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setemoji');
+    firstButtonRow.addComponents(setEmojiButton);
+    const setSuccessButton = new ButtonBuilder()
+        .setLabel("Success Emoji")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setsuccessemoji');
+    firstButtonRow.addComponents(setSuccessButton);
+    const setThresholdButton = new ButtonBuilder()
+        .setLabel("Threshold")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setthreshold');
+    secondButtonRow.addComponents(setThresholdButton);
+    const setBlacklistButton = new ButtonBuilder()
+        .setLabel("Channel Blacklist")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setblacklist');
+    secondButtonRow.addComponents(setBlacklistButton);
+
+    const doneButton = new ButtonBuilder()
+        .setCustomId('done')
+        .setLabel('Done')
+        .setStyle(ButtonStyle.Secondary)
+    ;
+    secondButtonRow.addComponents(doneButton);
+
+    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: [selectRow, firstButtonRow, secondButtonRow]});
+    try {
+        const buttonCollectorFilter = (i: { user: { id: string; }; }) => i.user.id === authorId;
+        const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: buttonCollectorFilter, time: 60000});
+        let collected: boolean = false;
+
+        buttonCollector.on('collect', async buttonResponse => {
+            try { await buttonResponse.deferReply() } catch (e) {}
+            if (buttonResponse.user.id == authorId && !collected) {
+                if (buttonResponse.customId == 'done') {
+                    collected = true;
+                    sleep(200).then( async () => {try {await response.delete();} catch (e) {}});
+                    await buttonCollector.emit('end');
+                    return;
+                } else {
+                    collected = true;
+                    await sendReplyAndCollectResponses(buttonResponse, guildData, buttonResponse.customId, authorId);
+                }
+            }
+        });
+    } catch (e) {
+        console.debug(`Error: ${e}`);
     }
+    
 }
 
 const retrieveStarboardLeaderboard = async (interaction: any): Promise<EmbedBuilder> => {
@@ -156,192 +374,11 @@ const retrieveRandomStarboardPost = async (interaction: any) => {
     await interaction.editReply({ content: `From <@${message.author.id}> - ${message.url}`,embeds: message.embeds });
 }
 
-const blacklistChannels = async (interaction: CommandInteraction) => {
-    if ( !interaction.guild || !interaction.guildId || !interaction.channel ) { return; }
-    // Check if user has permissions
-    if ( !hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user) ) {
-        await interaction.editReply('You must be a mod to use this command!');
-        return;
-    }
-
-    const guildData = await getGuildDataByGuildID(interaction.guildId);
-    let isBlacklistEnabled: boolean = guildData.starboard.blacklistEnabled;
-    let isBlacklistChanged: boolean = false;
-    const replyMessage = await interaction.editReply('This command lets you set a blacklist of channels that will not be scanned for starboard posts.');
-    const filter = (reaction: any, user: any) => {
-        return ['✅', '❌'].includes(reaction.emoji.name) && user.id === interaction.user.id;
-    }
-    if (!isBlacklistEnabled) {
-        const replyMessage = await interaction.followUp({ content: 'Starboard channel blacklist is not enabled on this server. Would you like to enable it now? (React to respond)', fetchReply: true});
-        replyMessage.react('✅');
-        replyMessage.react('❌');
-        const collector = replyMessage.createReactionCollector({ filter, time: 15000 });
-
-        replyMessage.awaitReactions({ filter, time: 15000, errors: ['time'] }).catch((collected) => {
-            
-        });
-        collector.on('collect', async (reaction, user) => {
-            if (user != interaction.user) return;
-            if (reaction.emoji.name === '✅') {
-                await replyMessage.edit('${confirmationMessage()} starboard channel blacklist enabled.');
-                await replyMessage.reactions.removeAll();
-                isBlacklistChanged = true;
-                await collector.stop();
-                return;
-            } else {
-                await replyMessage.edit(`${confirmationMessage()} starboard channel blacklist not enabled.`);
-                await replyMessage.reactions.removeAll();
-                await collector.stop();
-                return;
-            }
-        });
-    }
-
-    let removeChannels: boolean = false;
-    if (isBlacklistEnabled || isBlacklistChanged) {
-        const blacklistedChannels = guildData.starboard.blacklistChannels;
-        let channelList = "";
-        if (blacklistedChannels.length == 0) {
-            channelList = "No channels are currently blacklisted.";
-        } else {
-            channelList = "The following channels are blacklisted:\n";
-            for (const channelID of blacklistedChannels) {
-                const channel = await BOT.channels.fetch(channelID);
-                channelList += `<#${channelID}> `;
-            }
-            channelList += `\n\nWould you like to add (➕) or remove (➖) channels from the blacklist? (React to respond)`;
-        }
-        let replyMessage = await interaction.followUp({ content: channelList, fetchReply: true});
-        // Only give option to remove if channels exist
-        if (blacklistedChannels.length > 0) {
-            replyMessage.react('➕');
-            replyMessage.react('➖');
-
-            const collector = replyMessage.createReactionCollector({ filter, time: 15000 });
-            collector.on('collect', async (reaction, user) => {
-                if (reaction.emoji.name === '✅') {
-                    await replyMessage.edit("Cool. Mention the channels you want to remove from the blacklist and say 'DONE' when you're done.");
-                    await replyMessage.reactions.removeAll();
-                    removeChannels = true;
-                    await collector.stop();
-                } else {
-                    await replyMessage.edit(`${confirmationMessage()} mention all the channels you want to add to the blacklist and say 'DONE' when you're done.`);
-                    await replyMessage.reactions.removeAll();
-                    await collector.stop();
-                    return;
-                }
-            });
-        } else {
-            replyMessage = await interaction.followUp("Let's add some! Mention all the channels you want to add to the blacklist and say 'DONE' when you're done.");
-        }
-        // Collect responses from the user until they say 'DONE'
-        const channelCollector = interaction.channel.createMessageCollector({ filter: (m: Message) => m.author.id === interaction.user.id });
-        let channelMentions: Channel[] = new Array();
-        channelCollector.on('collect', async (message: Message) => {
-            if (message.content.toLowerCase() === 'done') {
-                await channelCollector.stop();
-                return;
-            }
-            // Handle case where multiple channels are in one message
-            const mentions = message.mentions.channels;
-            if (mentions.size == 0 || !mentions) {
-                await interaction.followUp("That's not a valid channel. Try again or say 'DONE' to stop.");
-                return;
-            } else {
-                for (const channel of mentions.values()) {
-                    channelMentions.push(channel);
-                }   
-            }
-        });
-
-        if (channelMentions.length == 0) {
-            await interaction.followUp("Hmm, you didn't mention any channels, so I'll stop listening for now.");
-            return;
-        } else {
-            let feedback = "";
-            if (removeChannels) {
-                for (const channel of channelMentions) {
-                    if (blacklistedChannels.includes(channel.id)) {
-                        feedback += "<#" + channel.id + "> was removed successfully.\n";
-                        blacklistedChannels.splice(blacklistedChannels.indexOf(channel.id), 1);
-                    } else {
-                        feedback += "<#" + channel.id + "> is not in the blacklist!\n";
-                    }
-                }
-            } else {
-                for (const channel of channelMentions) {
-                    if (blacklistedChannels.includes(channel.id)) {
-                        feedback += "<#" + channel.id + "> is already in the blacklist!\n";
-                    } else {
-                        feedback += "<#" + channel.id + "> was added successfully.\n";
-                        blacklistedChannels.push(channel.id);
-                    }
-                }
-            }
-            guildData.starboard.blacklistChannels = blacklistedChannels;
-            if ( guildData.starboard.blacklistChannels.length == 0 ) {
-                feedback += "The blacklist is now empty, so I'll disable it.";
-                guildData.starboard.blacklistEnabled = false;
-            }
-            await interaction.followUp(feedback);
-        }
-
-        if (isBlacklistChanged) guildData.starboard.blacklistEnabled = isBlacklistEnabled;
-        try {
-            update(guildData);
-        } catch (error) {
-            interaction.followUp(`ERROR: Could not update database.`);
-            console.log(error);
-        }
-    }
-
-}
-
-
-
-
 
 export const starboard: CommandInterface = {
     data: new SlashCommandBuilder()
         .setName('starboard')
-        .setDescription('Manage starboard settings for the server')
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('setchannel')
-                .setDescription('Set the starboard channel')
-                .addChannelOption(option =>
-                    option
-                        .setName('channel')
-                        .setDescription('The channel to set as the starboard channel')
-                        .setRequired(true)
-                )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('threshold')   
-                .setDescription('Set the starboard threshold')
-                .addIntegerOption(option =>
-                    option
-                        .setName('count')
-                        .setDescription('The number of stars required to be on the starboard')
-                        .setRequired(true)
-                )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('emoji')
-                .setDescription('Set the starboard emoji(s)')
-                .addStringOption(option =>
-                    option
-                        .setName('emoji')
-                        .setDescription('The emoji to use for the starboard')
-                )
-                .addStringOption(option =>
-                    option
-                        .setName('success')
-                        .setDescription('The emoji to react with when a message is successfully added to the starboard')
-                )
-        )
+        .setDescription('The place where messages are immortalized')
         .addSubcommand(subcommand =>
             subcommand
                 .setName('top')
@@ -351,11 +388,6 @@ export const starboard: CommandInterface = {
             subcommand
                 .setName('random')
                 .setDescription('View a random post on the starboard')
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('blacklist')
-                .setDescription('Set channels that will not be scanned for starboard posts')
         )
     ,
     run: async (interaction: CommandInteraction) => {
@@ -372,26 +404,12 @@ export const starboard: CommandInterface = {
         }
 
         switch (interaction.options.getSubcommand()) {
-            case 'setchannel':
-                await interaction.editReply(await setStarboardChannel(interaction));
-                break;
-            case 'threshold':
-                await interaction.editReply(await setStarboardThreshold(interaction));
-                break;
-            case 'emoji':
-                await interaction.editReply(await setStarboardEmojis(interaction));
-                break;
             case 'top':
                 await interaction.editReply({ embeds: [await retrieveStarboardLeaderboard(interaction)] });
                 break;
             case 'random':
                 await retrieveRandomStarboardPost(interaction);
                 break;
-            case 'blacklist':
-                commandNotImplemented(interaction, 'blacklist');
-                //await blacklistChannels(interaction);
-                break;
-
         }
 
         

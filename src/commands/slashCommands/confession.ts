@@ -6,7 +6,7 @@ import { addConfessionToApprovalQueue, approveConfession, getConfessionNumber, g
 import { hasPermissions } from '../../utils/userUtils.js';
 import { CommandStatus, broadcastCommandStatus } from '../../utils/commandUtils.js';
 import { Confession, GuildDataInterface } from '../../database/models/guildModel.js';
-import { confirmationMessage, getCurrentUTCDate, sleep, truncateString } from '../../utils/utils.js';
+import { confirmationMessage, getChannelFromString, getCurrentUTCDate, sleep, truncateString } from '../../utils/utils.js';
 import { randomUUID } from 'crypto';
 import { BOT } from '../../index.js';
 
@@ -276,19 +276,16 @@ const createNewConfession = async (interaction: CommandInteraction) => {
 
 export const createConfessionSettingsEmbed = async (interaction: Message<boolean>, guildData: GuildDataInterface): Promise<EmbedBuilder> => {   
     const embed = new EmbedBuilder()
-        .setTitle(`😶 Confession settings for ${interaction.guild?.name}`);
+        .setTitle(`😶 Confession settings for ${interaction.guild?.name}`)
+        .setAuthor({name: `Confession Status: ${guildData.channels.confessionChannelId != "" ? "ENABLED" : "DISABLED"}`});
+        ;
 
     let description = "Welcome to the confession settings menu.\n";
     description += "Here, you can customize how confessions work for your server.\n";
     description += "Press the buttons below to set channels for confessions and confession approval:\n";
-    description += `- **Confession Channel** (required): The channel that new confessions will be posted to.\n`;
-    description += `  - If a confession channel is not set, confessions will be disabled.\n`;
-    description += `- **Approval Channel**: Confessions will be posted to this channel and require approval by a mod before they are posted to the confessions channel.\n`;
-    description += `  - If an approval channel is not set, confessions will be posted without moderation.`
-
     embed.setDescription(description);
 
-    let confessionSetting = "";
+    let confessionSetting = "The Confession Channel is the text channel that new confessions will be posted to.\nIf a confession channel is not set, confessions will be disabled.\n";
     confessionSetting += "- **Confessions Enabled**: ";
     if (guildData.channels.confessionChannelId != "") {
         confessionSetting += "`YES`\n";
@@ -298,7 +295,8 @@ export const createConfessionSettingsEmbed = async (interaction: Message<boolean
         confessionSetting += `- **Confession Channel**: NONE\n`;
     }
 
-    let approvalSetting = "- **Approval Required**: ";
+    let approvalSetting = "The Approval Channel is the text channel where confessions will be initially posted require approval by a mod before they are posted to the confessions channel.\nIf an approval channel is not set, confessions will be posted without moderation.\n";
+    approvalSetting += "- **Approval Required**: ";
     if (guildData.channels.confessionApprovalChannelId != "") {
         approvalSetting += "`YES`\n";
         approvalSetting += `- **Approval Channel**: <#${guildData.channels.confessionApprovalChannelId}>\n`;
@@ -348,22 +346,9 @@ const sendReplyAndCollectResponses = async (
                     else guildData.channels.confessionChannelId = "";
                     await update(guildData);
                 } else {
-                    const channelRegex = new RegExp(`<#\\d*>`);
-                    let channel;
-                    let valid: boolean = false;
-                    // If channel tag
-                    if (channelRegex.exec(collectedMessage) != null) {
-                        collectedMessage = collectedMessage.replace("<", "").replace("#", "").replace(">", "");
-                        channel = messageResponse.guild?.channels.cache.get(collectedMessage);
-                        if (channel != undefined) valid = true;
-                    }
-                    // Check if it's just a channel name
-                    if (valid == false) {
-                        channel = messageResponse.guild?.channels.cache.find(c => c.name.toLowerCase() == collectedMessage.toLowerCase());
-                        if (channel != undefined) valid = true;
-                    }
+                    const channel = await getChannelFromString(collectedMessage, messageResponse.guild!);
                     // If still invalid, bad channel
-                    if (valid == false || channel == undefined) {
+                    if (channel == null) {
                         await messageResponse.reply({content: "I can't find that channel. Try again."});
                     } else {
                         await messageResponse.reply({content: `${confirmationMessage()} the ${type} channel has been set to <#${channel.id}>.`});

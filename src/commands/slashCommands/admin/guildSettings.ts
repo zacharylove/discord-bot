@@ -10,6 +10,7 @@ import CommandList from "../../_CommandList.js";
 import { getCommandByName, sleep } from "../../../utils/utils.js";
 import { createConfessionSettingsEmbed, sendConfessionSettingsEmbedAndCollectResponses } from "../confession.js";
 import { BOT } from "../../../index.js";
+import { sendStarboardSettingsEmbedAndCollectResponses } from "./starboard.js";
 
 // TODO: clean up enabled/disabled features.... lots of repeated code rn
 
@@ -65,7 +66,7 @@ const sendEmbedAndCollectResponses = async (
                 .setEmoji({
                     name: "😶"
                 }),
-            /*new StringSelectMenuOptionBuilder()
+            new StringSelectMenuOptionBuilder()
                 .setLabel('Configure Starboard')
                 .setDescription("Change starboard settings")
                 .setValue('starboard')
@@ -78,7 +79,7 @@ const sendEmbedAndCollectResponses = async (
                 .setValue('qotd')
                 .setEmoji({
                     name: "❔"
-                }), */
+                }), 
         );
     selectRow.addComponents(settingSelect);
     
@@ -155,6 +156,10 @@ const sendEmbedAndCollectResponses = async (
                     response = await response.edit("Fetching confession settings, please wait...");   
                     await sendConfessionSettingsEmbedAndCollectResponses(response, await createConfessionSettingsEmbed(response, guildData), guildData, selectResponse.user.id, selectRow);
 
+                    break;
+                case 'starboard':
+                    response = await response.edit("Fetching starboard settings, please wait...");   
+                    await sendStarboardSettingsEmbedAndCollectResponses(response, guildData, selectResponse.user.id, selectRow);
                     break;
             }
             collectedSelect = false;
@@ -384,7 +389,8 @@ const createServerCommandEmbed = async (guildData: GuildDataInterface, message: 
 
 const createServerFeatureEmbed = async (guildData: GuildDataInterface, message: Message<boolean>) => {
     const embed = new EmbedBuilder().setTitle("🧰 Feature Configuration for " + message.guild?.name);
-    let contentScanningString: string = "Use the buttons below to enable/disable features for this server.\n\n";
+    let contentScanningString: string = "**Features** are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.\n";
+    contentScanningString += "Use the buttons below to enable/disable features for this server.\n\n";
     
     contentScanningString += "1. Wordle Results Scanning: ";
     if ( guildData.messageScanning.wordleResultScanning ) {
@@ -437,7 +443,6 @@ const createServerSettingsEmbed = async (message: Message) => {
     embed.setTitle("🛠️ Configuration for " + message.guild?.name);
 
     let description: string = "Welcome to the settings menu.\nHere, you can enable or disable features (like message scanning) or individual commands for this server.\n";
-    description += "- **Features** are behaviors that run in the background, like scanning for wordle results, and sometimes require additional permissions to be given to the bot.\n";
     description += "- Some commands/features are enabled by default, and some are disabled by default.\n";
     description += "- In order to enable a command or feature, you must have the `Manage Server` permission.\n";
     description += "\nChoose the setting to modify using the selector below."

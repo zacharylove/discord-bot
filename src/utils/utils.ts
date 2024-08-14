@@ -4,9 +4,10 @@ import { GatewayIntentBits } from "discord-api-types/v10";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { appendFile } from "fs";
-import { Guild, Interaction, Message, PermissionResolvable, TextChannel } from "discord.js";
+import { Channel, Client, Guild, GuildBasedChannel, Interaction, Message, PermissionResolvable, TextChannel } from "discord.js";
 import { CommandList } from "../commands/_CommandList.js";
 import { CommandInterface } from "../interfaces/Command";
+
 
 export const toTitleCase = (text: string): string => {
     return text.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -240,4 +241,42 @@ export function convertUTCToLocalDate(utcDate: Date) {
         utcDate.getUTCSeconds(),
         utcDate.getUTCMilliseconds(),
     );
+}
+
+export const getChannelFromString = async (input: string, guild: Guild): Promise<GuildBasedChannel | null> => {
+    const channelRegex = new RegExp(`<#(\\d*)>`);
+    let channel;
+    let valid: boolean = false;
+    const res = channelRegex.exec(input);
+    // If channel tag
+    if (res != null && res.length > 1) {
+        input = res[1].replace("<", "").replace("#", "").replace(">", "");
+        channel = await guild.channels.cache.get(input);
+        if (channel != undefined) valid = true;
+    }
+    // Check if it's just a channel name
+    if (valid == false) {
+        channel = await guild.channels.cache.find(c => c.name.toLowerCase() == input.toLowerCase());
+        if (channel != undefined) valid = true;
+    }
+    // If still invalid, bad channel
+    if (valid == false || channel == undefined) {
+        return null;
+    } else {
+        return channel;
+    }
+}
+
+export const getEmojiFromString = async (input: string, bot: Client): Promise<string | null> => {
+    const hasEmoji = new RegExp(`<a?:(.+):(\\d+)>`);
+    const res = hasEmoji.exec(input);
+    if (res != null && res.length > 2) {
+        const emojiString = res[0];
+        const emojiId = res[2];
+        const emoji = await bot.emojis.cache.find(e => e.id = emojiId);
+        if (emoji != undefined) {
+            return emojiString
+        }
+    } 
+    return null;
 }

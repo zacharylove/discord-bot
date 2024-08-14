@@ -134,28 +134,6 @@ export const disableStarboardFeature = async (guildData: GuildDataInterface): Pr
     return toReturn;
 }
 
-export const setStarboardChannel = async (guildID: string, channelID: string): Promise<string> => {
-    const guildData = await getGuildDataByGuildID(guildID);
-    guildData.channels.starboardChannelId = channelID;
-    await update(guildData);
-    return "Starboard channel has been set to <#" + channelID + ">";
-}
-
-export const setStarboardThreshold = async (guildID: string, threshold: number): Promise<string> => {
-    const guildData = await getGuildDataByGuildID(guildID);
-    guildData.starboard.threshold = threshold;
-    await update(guildData);
-    return "Starboard threshold has been set to " + threshold;
-}
-
-export const setStarboardEmojis = async (guildID: string, starEmoji?: string, successEmoji?: string): Promise<string> => {
-    const guildData = await getGuildDataByGuildID(guildID);
-    if (starEmoji) guildData.starboard.emoji = starEmoji;
-    if (successEmoji) guildData.starboard.successEmoji = successEmoji;
-    await update(guildData);
-    return "Starboard emojis have been set to " + guildData.starboard.emoji + " and " + guildData.starboard.successEmoji;
-}
-
 export const isStarboardEnabled = async (guildData: GuildDataInterface): Promise<boolean> => {
     return guildData.messageScanning.starboardScanning;
 }
