@@ -159,12 +159,18 @@ const sendReplyAndCollectResponses = async (
                                 return;
                             }
                         } else {
-                            await messageResponse.reply({content: `Can't find a valid number in that message, try again.`});
+                            await messageResponse.react("❌");
                         }
                         break;
                     case 'setblacklist':
                         if (collectedMessage.toLowerCase() == "done") {
-                            if (numBlacklisted != 0) await messageResponse.reply({content: `${numBlacklisted < 0 ? "Removed" : "Added"} ${Math.abs(numBlacklisted)} channels ${numBlacklisted < 0 ? "from" : "to"} the starboard blacklist.`});
+                            if (guildData.starboard.blacklistChannels.length == 0) {
+                                await messageResponse.reply(`${confirmationMessage()} Disabled the starboard blacklist.`);
+                            } else if (numBlacklisted != 0) {
+                                await messageResponse.reply(`${confirmationMessage()} ${numBlacklisted > 0 ? "Added" : "Removed"} ${Math.abs(numBlacklisted)} channels ${numBlacklisted > 0 ? "to" : "from"} the starboard blacklist.`);
+                            } else {
+                                await messageResponse.reply(`${confirmationMessage()} no changes made to the starboard blacklist.`);
+                            }
                             await selectionCollector.emit('end');
                             return;
                         }
@@ -175,26 +181,26 @@ const sendReplyAndCollectResponses = async (
                         const channel = await getChannelFromString(collectedMessage, messageResponse.guild!);
                         
                         if (channel == null) {
-                            await messageResponse.reply({content: "I can't find that channel. Try again."});
+                            await messageResponse.react("❌");
                         } else {
                             ;
                             if (remove) {
                                 if (!guildData.starboard.blacklistChannels.includes(channel.id)) {
-                                    await messageResponse.reply({content: `Channel <#${channel.id}> is not blacklisted!`});
+                                    await messageResponse.react("🚫");
                                 } else {
-                                    guildData.starboard.blacklistChannels = guildData.starboard.blacklistChannels.splice(guildData.starboard.blacklistChannels.indexOf(channel.id), 1);
-                                    await messageResponse.reply({content: `${confirmationMessage()} removed <#${channel.id}> from the blacklist.`});
+                                    guildData.starboard.blacklistChannels.splice(guildData.starboard.blacklistChannels.indexOf(channel.id), 1);
+                                    await await messageResponse.react("👍");
                                     await update(guildData);
                                     numBlacklisted--;
                                 }
                             } else {
                                 if (guildData.starboard.blacklistChannels.includes(channel.id)) {
-                                    await messageResponse.reply({content: `Channel <#${channel.id}> is already blacklisted!`});
+                                    await messageResponse.react("🚫");
                                 } else {
                                     guildData.starboard.blacklistChannels.push(channel.id);
                                     if (guildData.starboard.blacklistEnabled == false) guildData.starboard.blacklistEnabled = true;
                                     await update(guildData);
-                                    await messageResponse.reply({content: `${confirmationMessage()} added <#${channel.id}> to the blacklist.`});
+                                    await messageResponse.react("👍");
                                     numBlacklisted++;
                                 }
                             } 
@@ -270,7 +276,8 @@ export const sendStarboardSettingsEmbedAndCollectResponses = async (
                     return;
                 } else {
                     collected = true;
-                    await sendReplyAndCollectResponses(buttonResponse, guildData, buttonResponse.customId, authorId);
+                    sleep(200).then( async () => await sendReplyAndCollectResponses(buttonResponse, guildData, buttonResponse.customId, authorId) );
+                    
                 }
             }
         });

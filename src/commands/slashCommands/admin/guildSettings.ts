@@ -80,6 +80,21 @@ const sendEmbedAndCollectResponses = async (
                 .setEmoji({
                     name: "❔"
                 }), 
+            new StringSelectMenuOptionBuilder()
+                .setLabel('Configure Custom Responses')
+                .setDescription("Add/remove custom bot responses")
+                .setValue('responses')
+                .setEmoji({
+                    name: "⤴️"
+            }), 
+            new StringSelectMenuOptionBuilder()
+                .setLabel('Configure Music')
+                .setDescription("Change music streaming settings")
+                .setValue('music')
+                .setEmoji({
+                    name: "🎧"
+            }), 
+            
         );
     selectRow.addComponents(settingSelect);
     
