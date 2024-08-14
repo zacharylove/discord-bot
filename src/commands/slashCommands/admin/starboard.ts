@@ -190,6 +190,7 @@ const sendReplyAndCollectResponses = async (
                                 } else {
                                     guildData.starboard.blacklistChannels.splice(guildData.starboard.blacklistChannels.indexOf(channel.id), 1);
                                     await await messageResponse.react("👍");
+                                    if (guildData.starboard.blacklistChannels.length == 0 && guildData.starboard.blacklistEnabled) guildData.starboard.blacklistEnabled = false;
                                     await update(guildData);
                                     numBlacklisted--;
                                 }
