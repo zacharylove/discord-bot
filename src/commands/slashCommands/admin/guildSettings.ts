@@ -11,6 +11,7 @@ import { getCommandByName, sleep } from "../../../utils/utils.js";
 import { createConfessionSettingsEmbed, sendConfessionSettingsEmbedAndCollectResponses } from "../confession.js";
 import { BOT } from "../../../index.js";
 import { sendStarboardSettingsEmbedAndCollectResponses } from "./starboard.js";
+import { sendQotdSettingsEmbedAndCollectResponses } from "../qotd.js";
 
 // TODO: clean up enabled/disabled features.... lots of repeated code rn
 
@@ -176,11 +177,16 @@ const sendEmbedAndCollectResponses = async (
                     response = await response.edit("Fetching starboard settings, please wait...");   
                     await sendStarboardSettingsEmbedAndCollectResponses(response, guildData, selectResponse.user.id, selectRow);
                     break;
+                case 'qotd':
+                    response = await response.edit("Fetching QOTD settings, please wait...");   
+                    await sendQotdSettingsEmbedAndCollectResponses(response, guildData, selectResponse.user.id, selectRow);
+                    break;
             }
             collectedSelect = false;
         }
 
     });
+
 
 
     buttonCollector.on('collect', async buttonResponse => {
@@ -222,10 +228,12 @@ const sendEmbedAndCollectResponses = async (
     const messageId = interaction.id;
     const channel = interaction.channel;
     buttonCollector.on('end', async () => { 
-        interaction = await channel.messages.fetch(messageId);
-        try {await interaction.delete()} catch (e) {
-            await interaction.edit({content: "", embeds: [embed], components: []}); 
-        }
+        try {
+            interaction = await channel.messages.fetch(messageId);
+            try {await interaction.delete()} catch (e) {
+                await interaction.edit({content: "", embeds: [embed], components: []}); 
+            }
+        } catch (e) {}
     });
 }
 

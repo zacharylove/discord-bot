@@ -4,7 +4,7 @@ import { GatewayIntentBits } from "discord-api-types/v10";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { appendFile } from "fs";
-import { Channel, Client, Guild, GuildBasedChannel, Interaction, Message, PermissionResolvable, TextChannel } from "discord.js";
+import { Channel, Client, Guild, GuildBasedChannel, Interaction, Message, PermissionResolvable, Role, TextChannel } from "discord.js";
 import { CommandList } from "../commands/_CommandList.js";
 import { CommandInterface } from "../interfaces/Command";
 
@@ -265,6 +265,20 @@ export const getChannelFromString = async (input: string, guild: Guild): Promise
     } else {
         return channel;
     }
+}
+
+export const getRoleFromString = async (input: string, guild: Guild, bot: Client): Promise<Role | null> => {
+    const hasRole = new RegExp(`<@&(\\d+)>`);
+    const res = hasRole.exec(input);
+    let role = null;
+    if (res != null && res.length > 2) {
+        const roleId = res[1];
+        role = await guild.roles.cache.find(r => r.id = roleId);
+    }
+    if (role == null) {
+        role = await guild.roles.cache.find(r => r.name == input);
+    }
+    return role == undefined ? null : role;
 }
 
 export const getEmojiFromString = async (input: string, bot: Client): Promise<string | null> => {
