@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
 import userModel from "./models/userModel.js";
 import guildModel from "./models/guildModel.js";
-import { getEmoji } from "../utils/utils.js";
-import { BOT } from "../index.js";
-import { Emoji } from "discord.js";
+
 import { MessageEmoji } from "../interfaces/MessageContent.js";
 
 // Dev use only:
@@ -64,7 +62,7 @@ export const connectDatabase = async() => {
     }
     
     console.log(databaseOutput);
-    await updateDatabase();
+    //await updateDatabase();
     if (!errorOccurred) console.log("=== DATABASE SUCCESS! ===")
     else console.log("=== DATABASE FAIL! ===")
 
