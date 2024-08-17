@@ -6,6 +6,7 @@ import { default as config } from "../../config/config.json" assert { type: "jso
 import { getCurrentUTCDate, getEmoji }from '../../utils/utils.js';
 import { Emoji } from 'discord.js';
 import { BOT } from '../../index.js';
+import { MessageEmoji } from '../../interfaces/MessageContent.js';
 const starboardConfig = config.starboard.config;
 
 export interface GuildDataInterface extends Document {
@@ -35,9 +36,9 @@ export interface GuildDataInterface extends Document {
         approvalQueue: Map<String, Confession>;
     },
     starboard: {
-        emoji: Emoji;
+        emoji: MessageEmoji;
         threshold: number;
-        successEmoji: Emoji;
+        successEmoji: MessageEmoji;
         leaderboard: StarboardLeaderboard[];
         posts: StarboardPost[];
         blacklistEnabled: boolean,

@@ -1,10 +1,11 @@
-import { ActionRowBuilder, ButtonInteraction, ButtonStyle, CacheType, Channel, CommandInteraction, ComponentType, Message, MessageCollector, SlashCommandBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonInteraction, ButtonStyle, CacheType, Channel, CommandInteraction, ComponentType, Emoji, Message, MessageCollector, SlashCommandBuilder } from "discord.js";
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
 import { getGuildDataByGuildID, removeStoredStarboardPost, update } from "../../../database/guildData.js";
 import { ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
 import { BOT } from "../../../index.js";
-import { confirmationMessage, getChannelFromString, getEmoji, sleep, truncateString } from "../../../utils/utils.js";
+import { confirmationMessage, emojiToString, getChannelFromString, getEmoji, sleep, truncateString } from "../../../utils/utils.js";
 import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "../../../database/models/guildModel.js";
+import { MessageEmoji } from "../../../interfaces/MessageContent.js";
 
 
 export const createStarboardSettingsEmbed =  async (interaction: Message<boolean>, guildData: GuildDataInterface): Promise<EmbedBuilder> => {   
@@ -26,9 +27,9 @@ export const createStarboardSettingsEmbed =  async (interaction: Message<boolean
 
     let starboardSetting = "";
     let blacklistSetting = "";
-    starboardSetting += `- **Emoji**: ${guildData.starboard.emoji ? guildData.starboard.emoji : "NOT SET" }\n`;
+    starboardSetting += `- **Emoji**: ${guildData.starboard.emoji ? emojiToString(guildData.starboard.emoji) : "NOT SET" }\n`;
     starboardSetting += `- **Reaction Threshold**: ${guildData.starboard.threshold ? guildData.starboard.threshold : "NOT SET"}\n`;
-    starboardSetting += `- **Success Emoji**: ${guildData.starboard.successEmoji ? guildData.starboard.successEmoji : "NOT SET"}\n`;
+    starboardSetting += `- **Success Emoji**: ${guildData.starboard.successEmoji ? emojiToString(guildData.starboard.successEmoji) : "NOT SET"}\n`;
     starboardSetting += `- **Channel Blacklist**: `;
     if (guildData.starboard.blacklistEnabled) {
         starboardSetting += `ENABLED\n`
@@ -85,7 +86,7 @@ const sendReplyAndCollectResponses = async (
     }
     const selectionCollector: MessageCollector = interaction.channel!.createMessageCollector({ filter: messageCollectorFilter, time: 60000});
     let collected: boolean = false;
-    let emoji;
+    let emoji: MessageEmoji | null;
     let numBlacklisted = 0;
     try {
         selectionCollector.on('collect', async (messageResponse: Message<boolean>) => {
@@ -124,7 +125,7 @@ const sendReplyAndCollectResponses = async (
                         if (emoji == null) {
                             await messageResponse.reply({content: "I can't find an emoji in that message. Try using an emoji I have access to."});
                         } else {
-                            await messageResponse.reply({content: `${confirmationMessage()} the starboard emoji is now set to ${emoji}.`});
+                            await messageResponse.reply({content: `${confirmationMessage()} the starboard emoji is now set to ${emojiToString(emoji)}.`});
                             guildData.starboard.emoji = emoji;
                             await update(guildData);
                             await selectionCollector.stop();
@@ -136,7 +137,7 @@ const sendReplyAndCollectResponses = async (
                         if (emoji == null) {
                             await messageResponse.reply({content: "I can't find an emoji in that message. Try using an emoji I have access to."});
                         } else {
-                            await messageResponse.reply({content: `${confirmationMessage()} the bot will react to messages that reach the reaction threshold with ${emoji}.`});
+                            await messageResponse.reply({content: `${confirmationMessage()} the bot will react to messages that reach the reaction threshold with ${emojiToString(emoji)}.`});
                             guildData.starboard.successEmoji = emoji;
                             await update(guildData);
                             await selectionCollector.stop();
@@ -150,7 +151,7 @@ const sendReplyAndCollectResponses = async (
                             if (threshold <= 0) {
                                 await messageResponse.reply({content: `Starboard reaction threshold cannot be 0 or negative.`});
                             } else {
-                                await messageResponse.reply({content: `${confirmationMessage()} messages now require ${threshold}x${guildData.starboard.emoji} reactions to be added to the starboard.`});
+                                await messageResponse.reply({content: `${confirmationMessage()} messages now require ${threshold}x${emojiToString(guildData.starboard.emoji)} reactions to be added to the starboard.`});
                                 guildData.starboard.threshold = threshold;
                                 await update(guildData);
                                 await selectionCollector.stop();
@@ -326,7 +327,7 @@ const retrieveStarboardLeaderboard = async (interaction: any): Promise<EmbedBuil
                 }
             }
             leaderboard.addFields({ 
-                name: `${guildData.starboard.emoji.toString()} ${post.numReactions} - ${starboardPostLink}`, 
+                name: `${emojiToString(guildData.starboard.emoji)} ${post.numReactions} - ${starboardPostLink}`, 
                 value: `**<@${post.authorID}>:** ${truncateString(originalContent, 150)} \n\n`
             });
         }       

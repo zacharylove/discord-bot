@@ -4,11 +4,12 @@ import guildModel from "./models/guildModel.js";
 import { getEmoji } from "../utils/utils.js";
 import { BOT } from "../index.js";
 import { Emoji } from "discord.js";
+import { MessageEmoji } from "../interfaces/MessageContent.js";
 
 // Dev use only:
 // Applies changes to all entries in collection
 // Useful for when we change a field
-/*const updateDatabase = async () => {
+const updateDatabase = async () => {
     console.log("Updating guild data...");
 
     // Change starboard reaction and success emojis to Emoji object from string
@@ -23,8 +24,8 @@ import { Emoji } from "discord.js";
           await guildModel.updateOne(
             { _id: doc._id },
             { $set: { 
-                'starboard.emoji': {name: "⭐"} as Emoji,
-                'starboard.successEmoji': {name: "🌟"} as Emoji  
+                'starboard.emoji': {unicode: true, name: "⭐"} as MessageEmoji,
+                'starboard.successEmoji': {unicode: true, name: "🌟"} as MessageEmoji  
             },
             }
           );
@@ -35,7 +36,7 @@ import { Emoji } from "discord.js";
         console.error('Error updating documents:', error);
     }
 
-}*/
+}
 
 // Makes mongoose connection to MongoDB Atlas database
 export const connectDatabase = async() => {
@@ -63,7 +64,7 @@ export const connectDatabase = async() => {
     }
     
     console.log(databaseOutput);
-    //await updateDatabase();
+    await updateDatabase();
     if (!errorOccurred) console.log("=== DATABASE SUCCESS! ===")
     else console.log("=== DATABASE FAIL! ===")
 

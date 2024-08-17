@@ -7,6 +7,8 @@ import { appendFile } from "fs";
 import { Channel, Client, Emoji, Guild, GuildBasedChannel, Interaction, Message, PermissionResolvable, Role, TextChannel } from "discord.js";
 import { CommandList } from "../commands/_CommandList.js";
 import { CommandInterface } from "../interfaces/Command";
+import Bot from "../bot";
+import { MessageEmoji } from "../interfaces/MessageContent";
 
 
 export const toTitleCase = (text: string): string => {
@@ -301,16 +303,47 @@ export const getEmojiFromString = async (input: string, bot: Client): Promise<st
  * @param bot 
  * @returns 
  */
-export const getEmoji = async (input: string, bot: Client): Promise<Emoji | null> => {
-    const hasEmoji = new RegExp(`<a?:(.+):(\\d+)>`);
-    const res = hasEmoji.exec(input);
-    if (res != null && res.length > 2) {
-        const emojiString = res[0];
-        const emojiId = res[2];
+export const getEmoji = async (input: string, bot: Client): Promise<MessageEmoji | null> => {
+    const hasDiscordEmoji = new RegExp(`<a?:(.+):(\\d+)>`);
+    const hasUnicodeEmoji = new RegExp(`\\p{Extended_Pictographic}`, 'gu');
+    const dRes = hasDiscordEmoji.exec(input);
+    const uRes = hasUnicodeEmoji.exec(input);
+    // Match discord emoji
+    if (dRes != null && dRes.length > 2) {
+        const emojiString = dRes[0];
+        const emojiId = dRes[2];
         const emoji = await bot.emojis.cache.find(e => e.id = emojiId);
         if (emoji != undefined) {
-            return emoji
+            return {
+                animated: emoji.animated,
+                unicode: false,
+                name: emoji.name,
+                id: emoji.id,
+                imageUrl: emoji.imageURL(),
+                createdAt: emoji.createdAt,
+                createdTimestamp: emoji.createdTimestamp
+            } as MessageEmoji;
         }
     } 
+    // Match unicode emoji
+    else if (uRes != null) {
+        return {
+            animated: false,
+            unicode: true,
+            name: uRes[0]
+        } as MessageEmoji;
+    }
     return null;
+}
+
+export const emojiToString = (emoji: MessageEmoji) => {
+    const hasUnicodeEmoji = new RegExp(`\\p{Extended_Pictographic}`, 'gu');
+    if (emoji.name && hasUnicodeEmoji.exec(emoji.name)) {
+        return emoji.name;
+    }
+
+    if (emoji.name != undefined && emoji.id != undefined) {
+        return `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
+    }
+    return "unknown emoji";
 }

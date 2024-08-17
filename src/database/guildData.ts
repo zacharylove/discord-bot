@@ -11,6 +11,7 @@ import { onMessageReactionAdd } from "../events/onMessageReaction.js";
 import CommandList from "../commands/_CommandList.js";
 import { Emoji, Interaction } from "discord.js";
 import { getCurrentUTCDate, getDateTimeString } from "../utils/utils.js";
+import { MessageEmoji } from "../interfaces/MessageContent.js";
 
 /**
  * Updates an existing GuildData object in the database
@@ -143,8 +144,8 @@ export const setStarboardDefaults = async (guildID: string) => {
     const guildData = await getGuildDataByGuildID(guildID);
     var numDefaulted = 0;
     if (guildData.starboard.threshold == undefined) { guildData.starboard.threshold = 5; numDefaulted++; }
-    if (guildData.starboard.emoji == undefined) { guildData.starboard.emoji = {name: "⭐"} as Emoji; numDefaulted++; }
-    if (guildData.starboard.successEmoji == undefined) { guildData.starboard.successEmoji = {name: "🌟"} as Emoji; numDefaulted++; }
+    if (guildData.starboard.emoji == undefined) { guildData.starboard.emoji = {unicode: true, name: "⭐"} as MessageEmoji; numDefaulted++; }
+    if (guildData.starboard.successEmoji == undefined) { guildData.starboard.successEmoji = {unicode: true, name: "🌟"} as MessageEmoji; numDefaulted++; }
     if (guildData.starboard.leaderboard == undefined) { guildData.starboard.leaderboard = new Array(); numDefaulted++; }
     if (guildData.starboard.posts == undefined) { guildData.starboard.posts = new Array(); numDefaulted++; }
     if (guildData.channels.starboardChannelId == undefined) { guildData.channels.starboardChannelId = ""; numDefaulted++; }
