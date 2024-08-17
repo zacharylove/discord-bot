@@ -97,7 +97,10 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
             }
 
             // Although our stored emoji is an Emoji class and reaction.emoji is either a GuildEmoji or ReactionEmoji, we can still compare their ids.
-            if (guildData.starboard.emoji.id == reaction.emoji.id) {
+            if (
+                (guildData.starboard.emoji.unicode && guildData.starboard.emoji.name == reaction.emoji.name) ||
+                (!guildData.starboard.emoji.unicode && guildData.starboard.emoji.id == reaction.emoji.id)
+            ) {
                 console.debug("Reaction matches starboard emoji");
                 // If starboard post exists
                 const starChannel: TextChannel | null = await getStarChannel(guildData);
