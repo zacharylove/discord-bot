@@ -249,6 +249,10 @@ const createNewConfession = async (interaction: CommandInteraction) => {
         await interaction.editReply('The confession channel has not been set up for this server yet! Run /confess channel to set it up.');
         return;
     }
+    if (guildData.confession.confessionsEnabled == undefined || !guildData.confession.confessionsEnabled) {
+        await interaction.editReply('Confessions are disabled for this server.');
+        return;
+    }
 
     
     // Get confession content
@@ -262,7 +266,12 @@ const createNewConfession = async (interaction: CommandInteraction) => {
         timestamp: getCurrentUTCDate()
     } as Confession;
     // If approval is enabled, add to approval queue- otherwise post
-    if (guildData.channels.confessionApprovalChannelId != "" && guildData.channels.confessionApprovalChannelId != undefined) {
+    if (
+        guildData.confession.approvalRequired != undefined && 
+        guildData.confession.approvalRequired == true &&
+        guildData.channels.confessionApprovalChannelId != "" && 
+        guildData.channels.confessionApprovalChannelId != undefined
+    ) {
         const confessionId = randomUUID();
         await addConfessionToApprovalQueue(guildData, confessionId, confession);
         await createApprovalEmbed(confessionId, confession, guildData);
@@ -326,10 +335,8 @@ const sendReplyAndCollectResponses = async (
     guildData: GuildDataInterface,
     type: "confession" | "approval",
     authorId: string
-) => {
+): Promise<GuildDataInterface> => {
     let replyMessage = `Please send a message tagging the channel you would like to set as the ${type} channel for this server`;
-    if (type == "confession") replyMessage += `\nOr say "none" to disable confessions.`;
-    if (type == "approval") replyMessage += `\nOr say "none" to disable confession approval.`
     await interaction.followUp({ content: replyMessage, ephemeral: true});
     const messageCollectorFilter = (m: Message<boolean>) => m.author.id === authorId;
     
@@ -340,28 +347,65 @@ const sendReplyAndCollectResponses = async (
             if (messageResponse.author.id == authorId && !collected) {
                 collected = true;
                 let collectedMessage = messageResponse.content;
-                if (collectedMessage.toLowerCase() == "none") {
-                    await messageResponse.reply({content: `${confirmationMessage()} ${type == "confession"? "confessions are" : "confession approval is"} now disabled.`});
-                    if (type == "approval") guildData.channels.confessionApprovalChannelId = "";
-                    else guildData.channels.confessionChannelId = "";
-                    await update(guildData);
+                const channel = await getChannelFromString(collectedMessage, messageResponse.guild!);
+                // If still invalid, bad channel
+                if (channel == null) {
+                    await messageResponse.reply({content: "I can't find that channel. Try again."});
                 } else {
-                    const channel = await getChannelFromString(collectedMessage, messageResponse.guild!);
-                    // If still invalid, bad channel
-                    if (channel == null) {
-                        await messageResponse.reply({content: "I can't find that channel. Try again."});
-                    } else {
-                        await messageResponse.reply({content: `${confirmationMessage()} the ${type} channel has been set to <#${channel.id}>.`});
-                        if (type == "approval") guildData.channels.confessionApprovalChannelId = channel.id;
-                        else guildData.channels.confessionChannelId = channel.id;
-                        await update(guildData);
-                    }
+                    await messageResponse.reply({content: `${confirmationMessage()} the ${type} channel has been set to <#${channel.id}>.`});
+                    if (type == "approval") guildData.channels.confessionApprovalChannelId = channel.id;
+                    else guildData.channels.confessionChannelId = channel.id;
+                    await update(guildData);
+                    selectionCollector.stop();
                 }
             }
         });
     } catch (e) {
         console.debug(`Error: ${e}`);
     }
+    return guildData;
+}
+
+const buildButtons = async (
+    confessionsEnabled: boolean,
+    approvalEnabled: boolean
+): Promise<ActionRowBuilder<MessageActionRowComponentBuilder>[]> => {
+    const firstButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    const secondButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+
+    const enableDisableConfessionsButton = new ButtonBuilder()
+        .setLabel(confessionsEnabled ? "Disable Confessions" : "Enable Confessions")
+        .setStyle(confessionsEnabled ? ButtonStyle.Danger : ButtonStyle.Success)
+        .setEmoji(confessionsEnabled ? {name: "✖️"} : {name: "✔️"})
+        .setCustomId('toggleconfessions');
+    firstButtonRow.addComponents(enableDisableConfessionsButton);
+
+    const enableDisableApprovalButton = new ButtonBuilder()
+        .setLabel("Require Approval")
+        .setStyle(approvalEnabled ? ButtonStyle.Danger : ButtonStyle.Success)
+        .setEmoji(approvalEnabled ? {name: "✖️"} : {name: "✔️"})
+        .setCustomId('toggleapproval');
+    firstButtonRow.addComponents(enableDisableApprovalButton);
+
+    const confessionChannelButton = new ButtonBuilder()
+        .setLabel("Set Confession Channel")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('confessionchannel');
+    secondButtonRow.addComponents(confessionChannelButton);
+
+    const approvalChannelButton = new ButtonBuilder()
+        .setLabel("Set Approval Channel")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('approvalchannel');
+    secondButtonRow.addComponents(approvalChannelButton);
+    const doneButton = new ButtonBuilder()
+        .setCustomId('done')
+        .setLabel('Done')
+        .setStyle(ButtonStyle.Secondary)
+    ;
+    secondButtonRow.addComponents(doneButton);
+
+    return [firstButtonRow, secondButtonRow]
 }
 
 export const sendConfessionSettingsEmbedAndCollectResponses = async (
@@ -371,52 +415,79 @@ export const sendConfessionSettingsEmbedAndCollectResponses = async (
     authorId: string,
     selectRow: ActionRowBuilder<MessageActionRowComponentBuilder>
 ) => {
-    const row: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    let confessionsEnabled = guildData.confession.confessionsEnabled != undefined && guildData.confession.confessionsEnabled ? true : false;
+    let approvalEnabled = guildData.confession.approvalRequired != undefined && guildData.confession.approvalRequired ? true : false;
+
+    let buttons = await buildButtons(
+        confessionsEnabled,
+        approvalEnabled
+    );
     
-    const confessionChannelButton = new ButtonBuilder()
-        .setLabel("Set Confession Channel")
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId('confessionchannel');
-    row.addComponents(confessionChannelButton);
 
-    const approvalChannelButton = new ButtonBuilder()
-        .setLabel("Set Approval Channel")
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId('approvalchannel');
-    row.addComponents(approvalChannelButton);
-    const doneButton = new ButtonBuilder()
-        .setCustomId('done')
-        .setLabel('Done')
-        .setStyle(ButtonStyle.Secondary)
-    ;
-    row.addComponents(doneButton);
-
-    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: [selectRow, row]});
+    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: [selectRow, buttons[0], buttons[1]]});
     try {
         const buttonCollectorFilter = (i: { user: { id: string; }; }) => i.user.id === authorId;
         const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: buttonCollectorFilter, time: 60000});
         let collected: boolean = false;
 
         buttonCollector.on('collect', async buttonResponse => {
+            try { await buttonResponse.deferReply() } catch (e) {}
             if (buttonResponse.user.id == authorId && !collected) {
-                if (buttonResponse && !buttonResponse.deferred) {
-                    try { await buttonResponse.deferUpdate(); } catch (e) {}
-                    switch (buttonResponse.customId) {
-                        case 'confessionchannel':
-                            collected = true;
-                            sleep(200).then( async () => await sendReplyAndCollectResponses(buttonResponse, guildData, "confession", authorId));
-                            break;
-                        case 'approvalchannel':
-                            collected = true;
-                            sleep(200).then( async () => await sendReplyAndCollectResponses(buttonResponse, guildData, "approval", authorId));
-                            break;
-                        case 'done':
-                            collected = true;
-                            sleep(200).then( async () => {await response.delete();})
-                            break;
-                    }
-                    await sendConfessionSettingsEmbedAndCollectResponses(interaction, embed, await getGuildDataByGuildID(interaction.guildId!), authorId, selectRow);
+                switch (buttonResponse.customId) {
+                    case 'toggleconfessions':
+                        collected = true;
+                        confessionsEnabled = !confessionsEnabled;
+                        await buttonResponse.followUp({content: `${confirmationMessage()} the confession feature is now ${confessionsEnabled ? "enabled" : "disabled"}.`, ephemeral: true});
+                        guildData.confession.confessionsEnabled = confessionsEnabled;
+                        await update(guildData);
+                        try {
+                            buttons = await buildButtons(confessionsEnabled, approvalEnabled);
+                            await response.edit({content: "", embeds: [embed], components: [selectRow, buttons[0], buttons[1]]});
+                        } catch (e) {}
+                        sleep(200).then (() => collected = false);
+                        break;
+
+                    case 'toggleapproval':
+                        collected = true;
+                        approvalEnabled = !approvalEnabled;
+                        await buttonResponse.followUp({content: `${confirmationMessage()} new confessions will ${approvalEnabled ? "require" : "not need"} approval by a moderator.`, ephemeral: true});
+                        guildData.confession.approvalRequired = approvalEnabled;
+                        await update(guildData);
+                        try {
+                            buttons = await buildButtons(confessionsEnabled, approvalEnabled);
+                            await response.edit({content: "", embeds: [embed], components: [selectRow, buttons[0], buttons[1]]});
+                        } catch (e) {}
+                        sleep(200).then (() => collected = false);
+                        break;
+
+                    case 'confessionchannel':
+                        collected = true;
+                        sleep(200).then( async () => {
+                            return await sendReplyAndCollectResponses(buttonResponse, guildData, "confession", authorId)
+                        }).then(async (guildData) =>  {
+                            try {
+                                embed = await createConfessionSettingsEmbed(response, guildData);
+                                await response.edit({content: "", embeds: [embed], components: [selectRow, buttons[0], buttons[1]]});
+                            } catch (e) {}
+                        });
+                        break;
+                    case 'approvalchannel':
+                        collected = true;
+                        sleep(200).then( async () => 
+                            guildData = await sendReplyAndCollectResponses(buttonResponse, guildData, "approval", authorId)
+                        ).then(() => sleep(1000)).then (async () => {
+                            try {
+                                embed = await createConfessionSettingsEmbed(response, guildData);
+                                await response.edit({content: "", embeds: [embed], components: [selectRow, buttons[0], buttons[1]]});
+                            } catch (e) {}
+                        });
+                        break;
+                    case 'done':
+                        collected = true;
+                        sleep(200).then( async () => {await response.delete();})
+                        break;
                 }
+                
             }
         });
     } catch (e) {

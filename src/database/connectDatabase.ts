@@ -10,20 +10,15 @@ import { MessageEmoji } from "../interfaces/MessageContent.js";
 const updateDatabase = async () => {
     console.log("Updating guild data...");
 
-    // Change starboard reaction and success emojis to Emoji object from string
     try {
-        // Fetch all documents where emojiField is still a string
         const documents = await guildModel.find({});
     
         for (const doc of documents) {
-          // Convert the string to an Emoji object using getEmoji()
-    
-          // Update the document with the new Emoji object
           await guildModel.updateOne(
             { _id: doc._id },
             { $set: { 
-                'starboard.emoji': {unicode: true, name: "⭐"} as MessageEmoji,
-                'starboard.successEmoji': {unicode: true, name: "🌟"} as MessageEmoji  
+                'confession.confessionsEnabled': false,
+                'confession.approvalRequired': false  
             },
             }
           );

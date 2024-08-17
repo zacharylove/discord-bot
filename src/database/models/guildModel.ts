@@ -34,6 +34,8 @@ export interface GuildDataInterface extends Document {
     },
     confession: {
         approvalQueue: Map<String, Confession>;
+        confessionsEnabled: boolean;
+        approvalRequired: boolean;
     },
     starboard: {
         emoji: MessageEmoji;
@@ -142,6 +144,8 @@ export const GuildData = new Schema({
             type: Map,
             of: Object
         },
+        confessionsEnabled: Boolean,
+        approvalRequired: Boolean,
     },
     // Starboard settings
     starboard: {
@@ -203,6 +207,8 @@ export const createNewGuildData = async (guildID: string) => {
         },
         confession: {
             approvalQueue: new Map<String, Confession>(),
+            confessionsEnabled: false,
+            approvalRequired: false,
         },
         starboard: {
             emoji: await getEmoji(starboardConfig.defaultEmoji, BOT),
