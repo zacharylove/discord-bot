@@ -56,7 +56,7 @@ const sendReplyAndCollectResponses = async (
     switch (type) {
         case 'setchannel':
             replyMessage = `Send a message tagging the channel you would like to set as the starboard.\n`;
-            replyMessage += `Say "none" to disable the starboard, or "cancel" to cancel.`;
+            replyMessage += `Say "cancel" to cancel.`;
             await interaction.followUp({ content: replyMessage, ephemeral: true });
             break;
         case 'setemoji':
@@ -94,30 +94,23 @@ const sendReplyAndCollectResponses = async (
                 collected = true;
                 let collectedMessage = messageResponse.content;
                 if (collectedMessage.toLowerCase() == "cancel") {
+                    await messageResponse.react("👍");
                     await selectionCollector.stop();
                     return;
                 }
 
                 switch (type) {
                     case 'setchannel':
-                        if (collectedMessage.toLowerCase() == "none") {
-                            await messageResponse.reply({content: `${confirmationMessage()} starboard is now disabled.`});
-                            guildData.messageScanning.starboardScanning = false;
+                        let ch = await getChannelFromString(collectedMessage, messageResponse.guild!);
+                        // If still invalid, bad channel
+                        if (ch == null) {
+                            await messageResponse.reply({content: "I can't find that channel. Try again."});
+                        } else {
+                            await messageResponse.reply({content: `${confirmationMessage()} the starboard channel has been set to <#${ch.id}>.`});
+                            guildData.channels.starboardChannelId = ch.id;
                             await update(guildData);
                             await selectionCollector.stop();
                             return;
-                        } else {
-                            const channel = await getChannelFromString(collectedMessage, messageResponse.guild!);
-                            // If still invalid, bad channel
-                            if (channel == null) {
-                                await messageResponse.reply({content: "I can't find that channel. Try again."});
-                            } else {
-                                await messageResponse.reply({content: `${confirmationMessage()} the starboard channel has been set to <#${channel.id}>.`});
-                                guildData.channels.starboardChannelId = channel.id;
-                                await update(guildData);
-                                await selectionCollector.stop();
-                                return;
-                            }
                         }
                         break;
                     case 'setemoji':
@@ -216,6 +209,66 @@ const sendReplyAndCollectResponses = async (
     }
 }
 
+const buildButtons = async (
+    starboardEnabled: boolean,
+    blacklistEnabled: boolean,
+): Promise<ActionRowBuilder<MessageActionRowComponentBuilder>[]> => {
+    const firstButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    const secondButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    const thirdButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+
+    const enableDisableStarboardButton = new ButtonBuilder()
+        .setLabel(starboardEnabled ? "Disable Starboard" : "Enable Starboard")
+        .setStyle(starboardEnabled ? ButtonStyle.Danger : ButtonStyle.Success)
+        .setEmoji(starboardEnabled ? {name: "✖️"} : {name: "✔️"})
+        .setCustomId('togglestarboard');
+    firstButtonRow.addComponents(enableDisableStarboardButton);
+
+    const enableDisableBlacklistButton = new ButtonBuilder()
+        .setLabel(blacklistEnabled ? "Disable Blacklist" : "Enable Blacklist")
+        .setStyle(blacklistEnabled ? ButtonStyle.Danger : ButtonStyle.Success)
+        .setEmoji(blacklistEnabled ? {name: "✖️"} : {name: "✔️"})
+        .setCustomId('toggleblacklist');
+    firstButtonRow.addComponents(enableDisableBlacklistButton);
+
+
+    const setChannelButton = new ButtonBuilder()
+        .setLabel("Set Channel")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setchannel');
+        secondButtonRow.addComponents(setChannelButton);
+
+    const setEmojiButton = new ButtonBuilder()
+        .setLabel("Set Emoji")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setemoji');
+        secondButtonRow.addComponents(setEmojiButton);
+    const setSuccessButton = new ButtonBuilder()
+        .setLabel("Success Emoji")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setsuccessemoji');
+        secondButtonRow.addComponents(setSuccessButton);
+    const setThresholdButton = new ButtonBuilder()
+        .setLabel("Set Threshold")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setthreshold');
+        thirdButtonRow.addComponents(setThresholdButton);
+    const setBlacklistButton = new ButtonBuilder()
+        .setLabel("Edit Blacklist")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId('setblacklist');
+        thirdButtonRow.addComponents(setBlacklistButton);
+
+    const doneButton = new ButtonBuilder()
+        .setCustomId('done')
+        .setLabel('Done')
+        .setStyle(ButtonStyle.Secondary)
+    ;
+    thirdButtonRow.addComponents(doneButton);
+
+    return [firstButtonRow, secondButtonRow, thirdButtonRow];
+}
+
 export const sendStarboardSettingsEmbedAndCollectResponses = async (
     interaction: Message<boolean>,
     guildData: GuildDataInterface,
@@ -223,44 +276,11 @@ export const sendStarboardSettingsEmbedAndCollectResponses = async (
     selectRow: ActionRowBuilder<MessageActionRowComponentBuilder>
 ) => {
     const embed = await createStarboardSettingsEmbed(interaction, guildData);
-    const firstButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
-    const secondButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    let blacklistEnabled = guildData.starboard.blacklistEnabled != undefined && guildData.starboard.blacklistEnabled ? true : false;
+    let starboardEnabled = guildData.messageScanning.starboardScanning != undefined && guildData.messageScanning.starboardScanning ? true : false;
+    let buttonRows = await buildButtons(starboardEnabled, blacklistEnabled);
 
-    const setChannelButton = new ButtonBuilder()
-        .setLabel("Set Channel")
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId('setchannel');
-    firstButtonRow.addComponents(setChannelButton);
-
-    const setEmojiButton = new ButtonBuilder()
-        .setLabel("Emoji")
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId('setemoji');
-    firstButtonRow.addComponents(setEmojiButton);
-    const setSuccessButton = new ButtonBuilder()
-        .setLabel("Success Emoji")
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId('setsuccessemoji');
-    firstButtonRow.addComponents(setSuccessButton);
-    const setThresholdButton = new ButtonBuilder()
-        .setLabel("Threshold")
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId('setthreshold');
-    secondButtonRow.addComponents(setThresholdButton);
-    const setBlacklistButton = new ButtonBuilder()
-        .setLabel("Channel Blacklist")
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId('setblacklist');
-    secondButtonRow.addComponents(setBlacklistButton);
-
-    const doneButton = new ButtonBuilder()
-        .setCustomId('done')
-        .setLabel('Done')
-        .setStyle(ButtonStyle.Secondary)
-    ;
-    secondButtonRow.addComponents(doneButton);
-
-    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: [selectRow, firstButtonRow, secondButtonRow]});
+    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: [selectRow, buttonRows[0], buttonRows[1], buttonRows[2]]});
     try {
         const buttonCollectorFilter = (i: { user: { id: string; }; }) => i.user.id === authorId;
         const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: buttonCollectorFilter, time: 60000});
@@ -269,15 +289,40 @@ export const sendStarboardSettingsEmbedAndCollectResponses = async (
         buttonCollector.on('collect', async buttonResponse => {
             try { await buttonResponse.deferReply() } catch (e) {}
             if (buttonResponse.user.id == authorId && !collected) {
-                if (buttonResponse.customId == 'done') {
-                    collected = true;
-                    sleep(200).then( async () => {try {await response.delete();} catch (e) {}});
-                    await buttonCollector.stop();
-                    return;
-                } else {
-                    collected = true;
-                    sleep(200).then( async () => await sendReplyAndCollectResponses(buttonResponse, guildData, buttonResponse.customId, authorId) );
-                    
+                switch (buttonResponse.customId) {
+                    case 'done':
+                        collected = true;
+                        sleep(200).then( async () => {try {await response.delete();} catch (e) {}});
+                        await buttonCollector.stop();
+                        return;
+                    case 'togglestarboard':
+                        collected = true;
+                        starboardEnabled = !starboardEnabled;
+                        await buttonResponse.followUp({content: `${confirmationMessage()} starboard is now ${starboardEnabled ? "enabled" : "disabled"}.`, ephemeral: true});
+                        guildData.messageScanning.starboardScanning = starboardEnabled;
+                        await update(guildData);
+                        try {
+                            buttonRows = await buildButtons(starboardEnabled, blacklistEnabled);
+                            await response.edit({content: "", embeds: [embed], components: [selectRow, buttonRows[0], buttonRows[1], buttonRows[2]]});
+                        } catch (e) {}
+                        sleep(200).then (() => collected = false);
+                        break;
+                    case 'toggleblacklist':
+                        collected = true;
+                        blacklistEnabled = !blacklistEnabled;
+                        await buttonResponse.followUp({content: `${confirmationMessage()} starboard channel blacklist is now ${blacklistEnabled ? "enabled" : "disabled"}.`, ephemeral: true});
+                        guildData.starboard.blacklistEnabled = blacklistEnabled;
+                        await update(guildData);
+                        try {
+                            buttonRows = await buildButtons(starboardEnabled, blacklistEnabled);
+                            await response.edit({content: "", embeds: [embed], components: [selectRow, buttonRows[0], buttonRows[1], buttonRows[2]]});
+                        } catch (e) {}
+                        sleep(200).then (() => collected = false);
+                        break;
+                    default:
+                        collected = true;
+                        sleep(200).then( async () => await sendReplyAndCollectResponses(buttonResponse, guildData, buttonResponse.customId, authorId) );
+
                 }
             }
         });

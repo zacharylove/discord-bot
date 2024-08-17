@@ -294,6 +294,7 @@ const sendReplyAndCollectResponses = async (
                 collected = true;
                 let collectedMessage = messageResponse.content;
                 if (collectedMessage.toLowerCase() == "cancel") {
+                    await messageResponse.react("👍");
                     await selectionCollector.emit('end');
                     return;
                 }
