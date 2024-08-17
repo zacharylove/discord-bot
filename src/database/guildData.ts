@@ -9,7 +9,7 @@ import { default as config } from "../config/config.json" assert { type: "json" 
 import { onMessage } from "../events/onMessage.js";
 import { onMessageReactionAdd } from "../events/onMessageReaction.js";
 import CommandList from "../commands/_CommandList.js";
-import { Interaction } from "discord.js";
+import { Emoji, Interaction } from "discord.js";
 import { getCurrentUTCDate, getDateTimeString } from "../utils/utils.js";
 
 /**
@@ -30,6 +30,7 @@ export const update = async (guildData: GuildDataInterface) => {
 export const getGuildDataByGuildID = async (guildID: string): Promise<GuildDataInterface> => {
     return ( await guildModel.findOne({ _id: guildID}) ) || ( await createNewGuildData(guildID) );
 }
+
 
 
 // ====================
@@ -142,8 +143,8 @@ export const setStarboardDefaults = async (guildID: string) => {
     const guildData = await getGuildDataByGuildID(guildID);
     var numDefaulted = 0;
     if (guildData.starboard.threshold == undefined) { guildData.starboard.threshold = 5; numDefaulted++; }
-    if (guildData.starboard.emoji == undefined) { guildData.starboard.emoji = "⭐"; numDefaulted++; }
-    if (guildData.starboard.successEmoji == undefined) { guildData.starboard.successEmoji = "🌟"; numDefaulted++; }
+    if (guildData.starboard.emoji == undefined) { guildData.starboard.emoji = {name: "⭐"} as Emoji; numDefaulted++; }
+    if (guildData.starboard.successEmoji == undefined) { guildData.starboard.successEmoji = {name: "🌟"} as Emoji; numDefaulted++; }
     if (guildData.starboard.leaderboard == undefined) { guildData.starboard.leaderboard = new Array(); numDefaulted++; }
     if (guildData.starboard.posts == undefined) { guildData.starboard.posts = new Array(); numDefaulted++; }
     if (guildData.channels.starboardChannelId == undefined) { guildData.channels.starboardChannelId = ""; numDefaulted++; }

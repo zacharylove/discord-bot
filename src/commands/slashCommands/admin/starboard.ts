@@ -1,12 +1,10 @@
-import { ActionRowBuilder, ButtonInteraction, ButtonStyle, CacheType, Channel, CommandInteraction, ComponentType, Message, PermissionsBitField, SlashCommandBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonInteraction, ButtonStyle, CacheType, Channel, CommandInteraction, ComponentType, Message, MessageCollector, SlashCommandBuilder } from "discord.js";
 import { CommandInterface, Feature } from "../../../interfaces/Command.js";
 import { getGuildDataByGuildID, removeStoredStarboardPost, update } from "../../../database/guildData.js";
-import { hasPermissions } from "../../../utils/userUtils.js";
 import { ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder } from "@discordjs/builders";
 import { BOT } from "../../../index.js";
-import { checkBotChannelPermission, checkBotGuildPermission, confirmationMessage, getChannelFromString, getEmojiFromString, sleep, truncateString } from "../../../utils/utils.js";
+import { confirmationMessage, getChannelFromString, getEmoji, sleep, truncateString } from "../../../utils/utils.js";
 import { GuildDataInterface, StarboardLeaderboard, StarboardPost } from "../../../database/models/guildModel.js";
-import { commandNotImplemented } from "../../../utils/commandUtils.js";
 
 
 export const createStarboardSettingsEmbed =  async (interaction: Message<boolean>, guildData: GuildDataInterface): Promise<EmbedBuilder> => {   
@@ -85,17 +83,17 @@ const sendReplyAndCollectResponses = async (
 
             break;
     }
-    const selectionCollector = interaction.channel!.createMessageCollector({ filter: messageCollectorFilter, time: 60000});
+    const selectionCollector: MessageCollector = interaction.channel!.createMessageCollector({ filter: messageCollectorFilter, time: 60000});
     let collected: boolean = false;
     let emoji;
     let numBlacklisted = 0;
     try {
-        selectionCollector.on('collect', async messageResponse => {
+        selectionCollector.on('collect', async (messageResponse: Message<boolean>) => {
             if (messageResponse.author.id == authorId && !collected) {
                 collected = true;
                 let collectedMessage = messageResponse.content;
                 if (collectedMessage.toLowerCase() == "cancel") {
-                    await selectionCollector.emit('end');
+                    await selectionCollector.stop();
                     return;
                 }
 
@@ -105,7 +103,7 @@ const sendReplyAndCollectResponses = async (
                             await messageResponse.reply({content: `${confirmationMessage()} starboard is now disabled.`});
                             guildData.messageScanning.starboardScanning = false;
                             await update(guildData);
-                            await selectionCollector.emit('end');
+                            await selectionCollector.stop();
                             return;
                         } else {
                             const channel = await getChannelFromString(collectedMessage, messageResponse.guild!);
@@ -116,32 +114,32 @@ const sendReplyAndCollectResponses = async (
                                 await messageResponse.reply({content: `${confirmationMessage()} the starboard channel has been set to <#${channel.id}>.`});
                                 guildData.channels.starboardChannelId = channel.id;
                                 await update(guildData);
-                                await selectionCollector.emit('end');
+                                await selectionCollector.stop();
                                 return;
                             }
                         }
                         break;
                     case 'setemoji':
-                        emoji = await getEmojiFromString(collectedMessage, BOT);
+                        emoji = await getEmoji(collectedMessage, BOT);
                         if (emoji == null) {
                             await messageResponse.reply({content: "I can't find an emoji in that message. Try using an emoji I have access to."});
                         } else {
                             await messageResponse.reply({content: `${confirmationMessage()} the starboard emoji is now set to ${emoji}.`});
                             guildData.starboard.emoji = emoji;
                             await update(guildData);
-                            await selectionCollector.emit('end');
+                            await selectionCollector.stop();
                             return;
                         }
                         break;
                     case 'setsuccessemoji':
-                        emoji = await getEmojiFromString(collectedMessage, BOT);
+                        emoji = await getEmoji(collectedMessage, BOT);
                         if (emoji == null) {
                             await messageResponse.reply({content: "I can't find an emoji in that message. Try using an emoji I have access to."});
                         } else {
                             await messageResponse.reply({content: `${confirmationMessage()} the bot will react to messages that reach the reaction threshold with ${emoji}.`});
                             guildData.starboard.successEmoji = emoji;
                             await update(guildData);
-                            await selectionCollector.emit('end');
+                            await selectionCollector.stop();
                             return;
                         }
                         break;
@@ -155,7 +153,7 @@ const sendReplyAndCollectResponses = async (
                                 await messageResponse.reply({content: `${confirmationMessage()} messages now require ${threshold}x${guildData.starboard.emoji} reactions to be added to the starboard.`});
                                 guildData.starboard.threshold = threshold;
                                 await update(guildData);
-                                await selectionCollector.emit('end');
+                                await selectionCollector.stop();
                                 return;
                             }
                         } else {
@@ -171,7 +169,7 @@ const sendReplyAndCollectResponses = async (
                             } else {
                                 await messageResponse.reply(`${confirmationMessage()} no changes made to the starboard blacklist.`);
                             }
-                            await selectionCollector.emit('end');
+                            await selectionCollector.stop();
                             return;
                         }
                         let remove:boolean = false;
@@ -273,7 +271,7 @@ export const sendStarboardSettingsEmbedAndCollectResponses = async (
                 if (buttonResponse.customId == 'done') {
                     collected = true;
                     sleep(200).then( async () => {try {await response.delete();} catch (e) {}});
-                    await buttonCollector.emit('end');
+                    await buttonCollector.stop();
                     return;
                 } else {
                     collected = true;
@@ -328,7 +326,7 @@ const retrieveStarboardLeaderboard = async (interaction: any): Promise<EmbedBuil
                 }
             }
             leaderboard.addFields({ 
-                name: `${guildData.starboard.emoji} ${post.numReactions} - ${starboardPostLink}`, 
+                name: `${guildData.starboard.emoji.toString()} ${post.numReactions} - ${starboardPostLink}`, 
                 value: `**<@${post.authorID}>:** ${truncateString(originalContent, 150)} \n\n`
             });
         }       

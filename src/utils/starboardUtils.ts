@@ -96,11 +96,8 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                 return;
             }
 
-            //console.debug(`Checking if reaction matches starboard emoji: ${reaction.emoji.name} == ${guildData.starboard.emoji}`);
-            // parse emoji
-            let reactionEmoji = parseCustomEmoji(reaction);
-
-            if (guildData.starboard.emoji == reactionEmoji) {
+            // Although our stored emoji is an Emoji class and reaction.emoji is either a GuildEmoji or ReactionEmoji, we can still compare their ids.
+            if (guildData.starboard.emoji.id == reaction.emoji.id) {
                 console.debug("Reaction matches starboard emoji");
                 // If starboard post exists
                 const starChannel: TextChannel | null = await getStarChannel(guildData);
@@ -122,7 +119,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
                     // Delete if below threshold
                     if ( reactionCount < guildData.starboard.threshold ) {
                         starboardMessage.delete();
-                        reaction.message.reactions.cache.get(guildData.starboard.successEmoji)?.remove();
+                        reaction.message.reactions.cache.get(guildData.starboard.successEmoji.id!)?.remove();
 
                         const postToRemove: StarboardPost = {
                             messageID: starboardMessage.id,
@@ -159,7 +156,7 @@ export const parseStarReact = async (reaction: MessageReaction, user: User, incr
 
                     // Add success reaction to original message
                     if (guildData.starboard.successEmoji != null ) {
-                        reaction.message.react(guildData.starboard.successEmoji);
+                        reaction.message.react(guildData.starboard.successEmoji.id!);
                     }
 
                     let footer = "";

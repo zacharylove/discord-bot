@@ -122,7 +122,7 @@ export const game: CommandInterface = {
                 const hltbEmbed = new EmbedBuilder();
 
                 let hltbService = new HowLongToBeatService();
-                await hltbService.search(query).then( async (result) => {
+                await hltbService.search(query).then( async (result: any) => {
                     // Get first entry (highest similarity)
                     if (result.length > 0) {
                         let hltb: HowLongToBeatEntry = result.at(0)!;
@@ -159,7 +159,7 @@ export const game: CommandInterface = {
                         await interaction.editReply({embeds: [hltbEmbed]});
                     }
                     
-                }).catch (async (e) => {
+                }).catch (async (e: any) => {
                     console.error(`Error fetching data from HLTB: ${e}`);
                     await interaction.editReply({content: 'An error occurred while fetching data from the HLTB API.'});
                 })

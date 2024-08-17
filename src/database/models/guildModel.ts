@@ -3,7 +3,9 @@ import { Document, model, Schema } from 'mongoose';
 import { CommandInterface } from "../../interfaces/Command.js";
 // @ts-ignore
 import { default as config } from "../../config/config.json" assert { type: "json" };
-import { getCurrentUTCDate }from '../../utils/utils.js';
+import { getCurrentUTCDate, getEmoji }from '../../utils/utils.js';
+import { Emoji } from 'discord.js';
+import { BOT } from '../../index.js';
 const starboardConfig = config.starboard.config;
 
 export interface GuildDataInterface extends Document {
@@ -33,9 +35,9 @@ export interface GuildDataInterface extends Document {
         approvalQueue: Map<String, Confession>;
     },
     starboard: {
-        emoji: string;
+        emoji: Emoji;
         threshold: number;
-        successEmoji: string;
+        successEmoji: Emoji;
         leaderboard: StarboardLeaderboard[];
         posts: StarboardPost[];
         blacklistEnabled: boolean,
@@ -142,9 +144,9 @@ export const GuildData = new Schema({
     },
     // Starboard settings
     starboard: {
-        emoji: String,
+        emoji: Object,
         threshold: Number,
-        successEmoji: String,
+        successEmoji: Object,
         leaderboard: new Array(),
         numReactions: Number,
         posts: new Array(),
@@ -202,9 +204,9 @@ export const createNewGuildData = async (guildID: string) => {
             approvalQueue: new Map<String, Confession>(),
         },
         starboard: {
-            emoji: starboardConfig.defaultEmoji,
+            emoji: await getEmoji(starboardConfig.defaultEmoji, BOT),
             threshold: starboardConfig.defaultThreshold,
-            successEmoji: starboardConfig.defaultSuccessEmoji,
+            successEmoji: await getEmoji(starboardConfig.defaultSuccessEmoji, BOT),
             leaderboard: new Array({
                 messageID: String,
                 channelID: String,

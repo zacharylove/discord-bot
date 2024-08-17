@@ -4,7 +4,7 @@ import { GatewayIntentBits } from "discord-api-types/v10";
 // @ts-ignore
 import { default as config } from "../config/config.json" assert { type: "json" };
 import { appendFile } from "fs";
-import { Channel, Client, Guild, GuildBasedChannel, Interaction, Message, PermissionResolvable, Role, TextChannel } from "discord.js";
+import { Channel, Client, Emoji, Guild, GuildBasedChannel, Interaction, Message, PermissionResolvable, Role, TextChannel } from "discord.js";
 import { CommandList } from "../commands/_CommandList.js";
 import { CommandInterface } from "../interfaces/Command";
 
@@ -290,6 +290,26 @@ export const getEmojiFromString = async (input: string, bot: Client): Promise<st
         const emoji = await bot.emojis.cache.find(e => e.id = emojiId);
         if (emoji != undefined) {
             return emojiString
+        }
+    } 
+    return null;
+}
+
+/**
+ * Given an input string, returns an Emoji object if it contains an emoji, otherwise null
+ * @param input 
+ * @param bot 
+ * @returns 
+ */
+export const getEmoji = async (input: string, bot: Client): Promise<Emoji | null> => {
+    const hasEmoji = new RegExp(`<a?:(.+):(\\d+)>`);
+    const res = hasEmoji.exec(input);
+    if (res != null && res.length > 2) {
+        const emojiString = res[0];
+        const emojiId = res[2];
+        const emoji = await bot.emojis.cache.find(e => e.id = emojiId);
+        if (emoji != undefined) {
+            return emoji
         }
     } 
     return null;
