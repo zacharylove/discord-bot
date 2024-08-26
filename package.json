@@ -33,7 +33,7 @@
     "libsodium": "^0.7.13",
     "libsodium-wrappers": "^0.7.13",
     "module-alias": "^2.2.3",
-    "mongoose": "^8.5.2",
+    "mongoose": "^8.5.4",
     "p-retry": "^6.2.0",
     "play-dl": "^1.9.7",
     "spotify-uri": "^4.0.1",
