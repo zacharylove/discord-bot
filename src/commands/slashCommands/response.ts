@@ -28,10 +28,17 @@ export const createResponseSettingsEmbed = async (interaction: Message<boolean>,
 
     let responseList = "";
     let count = 1;
-    for (let r of guildData.customResponses) {
-        responseList += `${count}. **${r.name}**${r.allowPing ? ` (pings)` : ``}${r.channelId != null ? ` ( <#${r.channelId}>)` : ``}`;
-        responseList += `: "\`${r.trigger}\`"${r.fullMessage ? ` (full)` : ` (partial)`} => ${r.response ? `"\`${r.response}\`"` : ""}${r.reaction != null ? ` + ${emojiToString(r.reaction)} reaction` : ''}\n`
-        count++;
+    if (guildData.customResponses == null) {
+        guildData.customResponses = [];
+        await update(guildData);
+    }
+    if (guildData.customResponses.length == 0) responseList = "None";
+    else {
+        for (let r of guildData.customResponses) {
+            responseList += `${count}. **${r.name}**${r.allowPing ? ` (pings)` : ``}${r.channelId != null ? ` ( <#${r.channelId}>)` : ``}`;
+            responseList += `: "\`${r.trigger}\`"${r.fullMessage ? ` (full)` : ` (partial)`} => ${r.response ? `"\`${r.response}\`"` : ""}${r.reaction != null ? ` + ${emojiToString(r.reaction)} reaction` : ''}\n`
+            count++;
+        }
     }
     embed.addFields({name: "Responses", value: responseList});
 
