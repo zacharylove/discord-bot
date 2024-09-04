@@ -344,7 +344,6 @@ export const sendAddResponseEmbedAndCollectResponses = async (
                             try {
                                 response = await updateAddButtonsAndSendMessage(response, isPartial, reactionEmoji);
                             } catch (e) {}
-                            sleep(10000).then(async () => await reactionTargetMessage.delete());
                         });
                         
 
