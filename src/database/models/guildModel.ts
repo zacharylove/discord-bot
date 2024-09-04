@@ -66,6 +66,7 @@ export interface GuildDataInterface extends Document {
         channelId: string | null;
         allowPing: boolean;
         fullMessage: boolean;
+        reaction: MessageEmoji | null;
     }[]
 }
 

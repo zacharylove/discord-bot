@@ -72,7 +72,6 @@ export const CommandList: CommandInterface[] = [
     book,
     qotd,
     connectionsStats,
-    response,
     game,
     commandLog
 ];

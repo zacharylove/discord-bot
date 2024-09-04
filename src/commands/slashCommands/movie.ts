@@ -269,7 +269,7 @@ const sendEmbedAndCollectResponse = async (interaction: Message<boolean>, movie:
                     if(Number.isNaN(Number(collectedMessage.content))) {
                     } else if (Number(collectedMessage.content) <= 0 || Number(collectedMessage.content) > results.results.length) {
                     } else {
-                        collectedMessage.delete();
+                        try { collectedMessage.delete() } catch (e) {}
                         const selectedNumber: number = Number(collectedMessage.content);
                         const selectedMovie: tmdbResultType = results.results[selectedNumber - 1];
                         await sendEmbedAndCollectResponse(interaction, selectedMovie, results, query, author);

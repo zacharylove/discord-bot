@@ -215,7 +215,7 @@ const sendEmbedAndCollectResponse = async (interaction: Message<boolean>, anime:
                     if(Number.isNaN(Number(collectedMessage.content))) {
                     } else if (Number(collectedMessage.content) <= 0 || Number(collectedMessage.content) > results.data.length) {
                     } else {
-                        collectedMessage.delete();
+                        try { collectedMessage.delete() } catch (e) {}
                         const selectedNumber: number = Number(collectedMessage.content);
                         const selectedAnime = results.data[selectedNumber - 1];
                         await sendEmbedAndCollectResponse(interaction, selectedAnime, results, query, author);

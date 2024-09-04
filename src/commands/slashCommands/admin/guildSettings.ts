@@ -12,6 +12,7 @@ import { createConfessionSettingsEmbed, sendConfessionSettingsEmbedAndCollectRes
 import { BOT } from "../../../index.js";
 import { sendStarboardSettingsEmbedAndCollectResponses } from "./starboard.js";
 import { sendQotdSettingsEmbedAndCollectResponses } from "../qotd.js";
+import { sendResponseSettingsEmbedAndCollectResponses } from "../response.js";
 
 // TODO: clean up enabled/disabled features.... lots of repeated code rn
 
@@ -180,6 +181,11 @@ const sendEmbedAndCollectResponses = async (
                 case 'qotd':
                     response = await response.edit("Fetching QOTD settings, please wait...");   
                     await sendQotdSettingsEmbedAndCollectResponses(response, guildData, selectResponse.user.id, selectRow);
+                    break;
+
+                case 'responses':
+                    response = await response.edit("Fetching Custom Response settings, please wait...");   
+                    await sendResponseSettingsEmbedAndCollectResponses(response, guildData, selectResponse.user.id, selectRow);
                     break;
             }
             collectedSelect = false;

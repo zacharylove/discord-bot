@@ -1,12 +1,468 @@
-import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
+import { ButtonBuilder, EmbedBuilder, MessageActionRowComponentBuilder, ModalActionRowComponentBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInterface } from "../../interfaces/Command.js";
-import { ChatInputCommandInteraction, CommandInteraction, Message, PermissionsBitField } from "discord.js";
+import { ActionRowBuilder, ButtonInteraction, ButtonStyle, CacheType, ChatInputCommandInteraction, CommandInteraction, ComponentType, InteractionCollector, Message, ModalBuilder, PermissionsBitField, TextInputBuilder, TextInputStyle } from "discord.js";
 import { getGuildDataByGuildID, isCustomResponseEnabled } from "../../database/guildData.js";
-import { confirmationMessage } from "../../utils/utils.js";
+import { confirmationMessage, emojiToString, getEmoji, getEmojiFromString, sleep } from "../../utils/utils.js";
 import { GuildDataInterface } from "../../database/models/guildModel.js";
 import { hasPermissions } from "../../utils/userUtils.js";
 // @ts-ignore
 import { default as config } from "../../config/config.json" assert { type: "json" };
+import { BOT } from "../../index.js";
+import { update } from "../../database/guildData.js";
+import { MessageEmoji } from "../../interfaces/MessageContent.js";
+
+export const createResponseSettingsEmbed = async (interaction: Message<boolean>, guildData: GuildDataInterface, responsesEnabled: boolean): Promise<EmbedBuilder> => {   
+    const embed = new EmbedBuilder()
+        .setTitle(`⤴️ Custom Response Settings for ${interaction.guild?.name}`)
+        .setAuthor({name: "Settings > Custom Responses"})
+        .setFooter({text: `Custom Response Status: ${responsesEnabled ? "ENABLED" : "DISABLED"}`});
+        ;
+
+    let description = "Welcome to the custom response settings menu.\n";
+    description += "Custom responses are messages or reactions that are automatically sent whenever the bot detects a trigger in a message sent to a text channel.\n";
+    description += "A trigger can be a word, phrase, or entire message. It's up to you!\n";
+    description += "\nHere, you can create or delete custom responses for this server.\n";
+
+    description += "\n Press the buttons below to modify your settings.";
+    embed.setDescription(description);
+
+    let responseList = "";
+    let count = 1;
+    for (let r of guildData.customResponses) {
+        responseList += `${count}. **${r.name}**${r.allowPing ? ` (pings)` : ``}${r.channelId != null ? ` ( <#${r.channelId}>)` : ``}`;
+        responseList += `: "\`${r.trigger}\`"${r.fullMessage ? ` (full)` : ` (partial)`} => ${r.response ? `"\`${r.response}\`"` : ""}${r.reaction != null ? ` + ${emojiToString(r.reaction)} reaction` : ''}\n`
+        count++;
+    }
+    embed.addFields({name: "Responses", value: responseList});
+
+    return embed;
+}
+
+const buildSettingsButtons = async (
+    responsesEnabled: boolean,
+    disableButtons: boolean
+): Promise<ActionRowBuilder<MessageActionRowComponentBuilder>[]> => {
+    const firstButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    const secondButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+
+    const addResponseButton = new ButtonBuilder()
+        .setLabel("Add Response")
+        .setStyle(ButtonStyle.Primary)
+        .setEmoji({name: "➕"})
+        .setCustomId('addresponse');
+    if (disableButtons) addResponseButton.setDisabled(true);
+    firstButtonRow.addComponents(addResponseButton);
+
+    const deleteResponseButton = new ButtonBuilder()
+        .setLabel("Delete Response")
+        .setStyle(ButtonStyle.Danger)
+        .setEmoji({name: "➖"})
+        .setCustomId('deleteresponse');
+    if (disableButtons) deleteResponseButton.setDisabled(true);
+    firstButtonRow.addComponents(deleteResponseButton);
+
+    const toggleResponsesButton = new ButtonBuilder()
+        .setLabel(`${responsesEnabled ? "Disable" : "Enable"} Responses`)
+        .setStyle(responsesEnabled ? ButtonStyle.Danger : ButtonStyle.Success)
+        .setEmoji(responsesEnabled ? {name: "✖️"} : {name: "✔️"})
+        .setCustomId('toggleresponses');
+    if (disableButtons) toggleResponsesButton.setDisabled(true);
+    secondButtonRow.addComponents(toggleResponsesButton);
+
+    const doneButton = new ButtonBuilder()
+        .setCustomId('done')
+        .setLabel('Done')
+        .setStyle(ButtonStyle.Secondary)
+    ;
+    if (disableButtons) doneButton.setDisabled(true);
+    secondButtonRow.addComponents(doneButton);
+
+    if (!responsesEnabled) return [secondButtonRow]
+    return [firstButtonRow, secondButtonRow]
+}
+
+const updateSettingButtonsAndSendMessage = async (
+    interaction: Message<boolean>,
+    guildData: GuildDataInterface,
+    responsesEnabled: boolean,
+    selectRow: ActionRowBuilder<MessageActionRowComponentBuilder>,
+    disableButtons: boolean = false
+): Promise<Message<boolean>> => {
+    const embed = await createResponseSettingsEmbed(interaction, guildData, responsesEnabled);
+
+    let buttonRows = await buildSettingsButtons(responsesEnabled, disableButtons);
+    if (disableButtons) selectRow.components.forEach(c => c.setDisabled(true));
+    let components = [selectRow];
+    for (const row of buttonRows) components.push(row);
+    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: components})
+    
+    return response;
+}
+
+const buildAddButtons = async (
+    partial: boolean,
+    reaction: MessageEmoji | null
+): Promise<ActionRowBuilder<MessageActionRowComponentBuilder>[]> => {
+    const firstButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+    const secondButtonRow: ActionRowBuilder<MessageActionRowComponentBuilder> = new ActionRowBuilder();
+
+    const setReactionButton = new ButtonBuilder()
+        .setLabel(`Set Reaction`)
+        .setCustomId('setreaction');
+
+    if (reaction != null) {
+        setReactionButton.setEmoji({name: reaction.name});
+    }
+    setReactionButton.setStyle(ButtonStyle.Primary);
+    firstButtonRow.addComponents(setReactionButton);
+
+    const responseTypeButton = new ButtonBuilder()
+        .setLabel(`Type: ${partial ? "Partial" : "Full"}`)
+        .setStyle(ButtonStyle.Primary)
+        .setEmoji({name: partial ? "◽" : "◻"})
+        .setCustomId('responsetype');
+    firstButtonRow.addComponents(responseTypeButton);
+
+    const createResponseButton = new ButtonBuilder()
+        .setLabel("Create")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji({name: "➕"})
+        .setCustomId('createresponse');
+    secondButtonRow.addComponents(createResponseButton)
+
+    const backButton = new ButtonBuilder()
+        .setCustomId('back')
+        .setLabel('Cancel')
+        .setStyle(ButtonStyle.Secondary)
+    ;
+    secondButtonRow.addComponents(backButton);
+
+    return [firstButtonRow, secondButtonRow]
+}
+
+const createAddResponseEmbed = async (interaction: Message<boolean>): Promise<EmbedBuilder> => {   
+    const embed = new EmbedBuilder()
+        .setTitle(`⤴️ Add Custom Response for ${interaction.guild?.name}`)
+        .setAuthor({name: "Settings > Custom Responses > Add Response"})
+        ;
+
+    let description = "Let's add a new custom response!\n";
+
+    description += `When you press the "Create" button, a modal will pop up where you can enter the following:\n`;
+    description += "**Name**\nThis is the name for your new custom response. You'll use this name to look up or delete the response.\n";
+    description += "**Trigger**\nThis is the word/phrase/message that the bot will look for. Once it sees a message with this trigger, it will reply with a response message (if set) and/or react to the message with a response emoji.\n";
+    description += "**Response**\nIf set, this is the message that will be sent as a reply to the trigger message.\n";
+
+
+    description += "\nYou can use the buttons below to set some optional parameters for your response:\n";
+    description += "**Reaction**\nSets the emoji that will be used to react to the trigger message.\n";
+    description += "**Type**\n Defines whether you want your trigger to be a full message or a partial message:\n";
+    description += "- `Full` Message means that the bot will only respond to a message that matches the trigger *exactly*.\n";
+    description += `  - E.g, if your trigger is "hello", the bot will respond to the message "hello" but not "hello guys".\n`;
+    description += "- `Partial` Message means that the bot will respond to any message that *contains* your trigger.\n";
+    description += `  - E.g, if your trigger is "hi", the bot will respond to "hi", "hi guys", and "hilarious".\n`
+
+    description +="\n**NOTES:**\n";
+    description += `- Once you press "Create" and fill out the form, the reaction will be created immediately. Make sure to set your optional parameters first!\n`;
+    description += `- Both response and reaction are optional, but you MUST define at least one of them. You can set one or the other or even both, but you cannot have both be blank.\n`
+    description += `- Whitespace matters! If your trigger is "hi ", the bot will respond to "hi guys" but not "oh hi".`
+
+    embed.setDescription(description);
+    return embed;
+}
+
+const updateAddButtonsAndSendMessage = async (
+    interaction: Message<boolean>,
+    partial: boolean,
+    reaction: MessageEmoji | null
+) => {
+    const embed = await createAddResponseEmbed(interaction);
+    let buttonRows =  await buildAddButtons(partial, reaction);
+    const components = [];
+    for (const row of buttonRows) components.push(row);
+    let response: Message<boolean> = await interaction.edit({content: "", embeds: [embed], components: components})
+    return response;
+}
+
+const buildAddModal = async (
+    isEmojiSet: boolean
+): Promise<ModalBuilder> => {
+    const modal = new ModalBuilder()
+        .setCustomId('addResponseModal')
+        .setTitle("Add Custom Response");
+
+    const responseName = new TextInputBuilder()
+        .setCustomId('name')
+        .setLabel("Enter custom response name")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setMaxLength(16)
+        .setPlaceholder('Alphanumeric text only, 16 character limit.');
+    const nameTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
+        .addComponents(responseName);
+
+    const triggerMessage = new TextInputBuilder()
+        .setCustomId('trigger')
+        .setLabel("Enter trigger word/phrase/message")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setMaxLength(50)
+        .setPlaceholder('50 character limit.');
+    const triggerTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
+        .addComponents(triggerMessage);
+
+
+    const responseMessage = new TextInputBuilder()
+        .setCustomId('response')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false)
+        .setMaxLength(50)
+        .setPlaceholder('50 character limit.');
+
+    if (isEmojiSet) {
+        responseMessage.setLabel("(OPTIONAL) Enter response message")
+    } else {
+        responseMessage.setLabel("Enter response message")
+    }
+    const responseTextRow = new ActionRowBuilder<ModalActionRowComponentBuilder>()
+        .addComponents(responseMessage);
+
+    modal.addComponents(nameTextRow, triggerTextRow, responseTextRow);
+    return modal;
+}
+
+export const sendAddResponseEmbedAndCollectResponses = async (
+    interaction: Message<boolean>,
+    guildData: GuildDataInterface,
+    authorId: string,
+    selectRow: ActionRowBuilder<MessageActionRowComponentBuilder>
+) => {
+
+    let response = await await updateAddButtonsAndSendMessage(interaction, false, null);
+
+    let isPartial = false;
+    let returnToSettingsMenu: boolean = false;
+    let reactionEmoji: MessageEmoji | null = null;
+    
+    try {
+        const addbuttonCollectorFilter = (i: { user: { id: string; }; }) => i.user.id === authorId;
+        const addbuttonCollector: InteractionCollector<ButtonInteraction<CacheType>> = response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: addbuttonCollectorFilter, time: 60000});
+        let collected: boolean = false;
+        
+        const modal = await buildAddModal(reactionEmoji != null)
+        addbuttonCollector.on('collect', async buttonResponse => {
+            if (buttonResponse.user.id == authorId && !collected) {
+                collected = true;
+                switch (buttonResponse.customId) {
+                    case 'back':
+
+                        addbuttonCollector.emit('end');
+                        await sendResponseSettingsEmbedAndCollectResponses(response, guildData,authorId,selectRow);
+                        break;
+                    
+                    case 'responsetype':
+
+                        isPartial = !isPartial;
+                        sleep(200).then(async () => response = await updateAddButtonsAndSendMessage(response, isPartial, reactionEmoji));
+                        break;
+
+                    case 'createresponse':
+                        await buttonResponse.showModal(modal);
+
+                        await buttonResponse.awaitModalSubmit({
+                            time: 60000,
+                            filter: i => {
+                                // All interactions must be deferred, even ones that do not match filter
+                                i.deferUpdate();
+                                return i.user.id === authorId
+                            },
+                        }).then(async submitted => {
+                            let responseName = submitted.fields.getTextInputValue('name').toLowerCase();
+                            let responseTrigger = submitted.fields.getTextInputValue('trigger');
+                            let responseMessage = submitted.fields.getTextInputValue('response');
+                            if (reactionEmoji == null && responseMessage == "") {
+                                await submitted.followUp({content: "Something went wrong.", ephemeral: true});
+                                throw new Error("Both reaction and response message are empty for custom response!");
+                            }
+
+                            // If response name already exists
+                            if (guildData.customResponses.some(r => r.name == responseName)) {
+                                await submitted.followUp({content: `A response named ${responseName} already exists for this server!`});
+                                return;
+                            }
+
+                            // Build new response
+                            const customResponse = {
+                                name: responseName,
+                                enabled: true,
+                                trigger: responseTrigger,
+                                response: responseMessage,
+                                regex: false,
+                                reply: true,
+                                channelId: null,
+                                allowPing: false,
+                                fullMessage: !isPartial,
+                                reaction: reactionEmoji
+                            };
+
+                            const num = guildData.customResponses.push(customResponse);
+                            await guildData.save();
+                            console.log(`Added new custom response to ${submitted.guild?.name}: ${responseName}`)
+                            await submitted.followUp({content: `${confirmationMessage()} I've added the custom response ${responseName}.\nThere are currently ${num} responses for this server.`})
+                        }).finally(async () =>
+                            await sendResponseSettingsEmbedAndCollectResponses(response, guildData,authorId,selectRow)
+                        );
+                        break;
+
+                    case 'setreaction':
+
+                        const reactionTargetMessage = await buttonResponse.channel!.send({content: "Please react to this message with the emoji you would like to use."});
+                        const reactionCollector = reactionTargetMessage.createReactionCollector({ 
+                            filter: (reaction, user) => {
+                                return user.id === authorId
+                            }, 
+                            time: 15_000 
+                        });
+
+                        reactionCollector.on('collect', async (reaction, user) => {
+                            reactionEmoji = {
+                                id: reaction.emoji.id,
+                                animated: reaction.emoji.animated,
+                                name: reaction.emoji.name
+                            } as MessageEmoji;
+
+                            reactionCollector.emit('end');
+                            if (reactionEmoji != null) await reactionTargetMessage.edit({content: `Okay, the reaction emoji has been set to ${emojiToString(reactionEmoji)}.`})
+                            else await reactionTargetMessage.edit({content: `something went wrong.`});
+                            try {
+                                response = await updateAddButtonsAndSendMessage(response, isPartial, reactionEmoji);
+                            } catch (e) {}
+                            sleep(10000).then(async () => await reactionTargetMessage.delete());
+                        });
+                        
+
+                        
+
+                        break;
+                    
+                }
+                // Try to update message and buttons w/ new data
+                
+                sleep(200).then(() => collected = false);
+            }
+        });
+
+    } catch (e) {
+        console.debug(`Error: ${e}`);
+    }
+    
+
+}
+
+export const sendResponseSettingsEmbedAndCollectResponses = async (
+    interaction: Message<boolean>,
+    guildData: GuildDataInterface,
+    authorId: string,
+    selectRow: ActionRowBuilder<MessageActionRowComponentBuilder>
+) => {
+    let responsesEnabled = guildData.messageScanning.customResponse && guildData.messageScanning.customResponse == true;
+    
+    let response = await updateSettingButtonsAndSendMessage(interaction, guildData, responsesEnabled, selectRow);
+
+    try {
+        const buttonCollectorFilter = (i: { user: { id: string; }; }) => i.user.id === authorId;
+        const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: buttonCollectorFilter, time: 60000});
+        let collected: boolean = false;
+        let addingButtons = false;
+
+        buttonCollector.on('collect', async buttonResponse => {
+            
+            if (buttonResponse.user.id == authorId && !collected) {
+                switch (buttonResponse.customId) {
+                    case 'done':
+                        try { await buttonResponse.deferUpdate() } catch (e) {}
+                        collected = true;
+                        sleep(200).then( async () => {try {await response.delete();} catch (e) {}});
+                        await buttonCollector.stop();
+                        return;
+
+                    case 'addresponse':
+                        try { await buttonResponse.deferUpdate() } catch (e) {}
+                        if (!responsesEnabled) {
+                            await buttonResponse.followUp({content: `Custom responses are disabled!`, ephemeral: true});
+                            break;
+                        }
+                        // If at max responses
+                        else if (guildData.customResponses.length >= config.response.maxGuildResponses) {
+                            await buttonResponse.followUp({content:`You've reached the maximum number of custom responses for this server (${config.response.maxGuildResponses}). Please delete an existing response if you want to add a new one.`, ephemeral: true});
+                            break;
+                        }
+                        collected = true;
+                        addingButtons = true;
+                        buttonCollector.emit('end');
+                        await sendAddResponseEmbedAndCollectResponses(interaction, guildData, authorId, selectRow);
+                        break;
+                    
+                    case 'deleteresponse':
+                        try { await buttonResponse.deferUpdate() } catch (e) {}
+                        collected = true;
+                        const deleteMessage = await buttonResponse.followUp({content:`Send a message with the number corresponding to the response you want to delete.`});
+                        const messageCollectorFilter = (m: Message<boolean>) => m.author.id === authorId;
+                        buttonResponse.channel!.awaitMessages({ filter: messageCollectorFilter, max: 1, time: 30000, errors: ['time'] }).then(async collectedResponse => {
+                            const collectedMessage = collectedResponse.first();
+                            if(collectedMessage == undefined) return;
+
+                            if(Number.isNaN(Number(collectedMessage.content)) || Number(collectedMessage.content) <= 0 || Number(collectedMessage.content) > guildData.customResponses.length) {
+                                await collectedMessage.reply({content: "Invalid number!"});
+                            } else {
+                                try { await collectedMessage.delete() } catch (e) {}
+                                const selectedNumber: number = Number(collectedMessage.content);
+                                const selectedResponse = guildData.customResponses[selectedNumber - 1];
+                                guildData.customResponses.splice(selectedNumber - 1, 1);
+                                await update(guildData);
+                                await collectedMessage.reply({content: `${confirmationMessage()} removed ${selectedResponse.name} from the list of custom responses.`});
+                                response = await updateSettingButtonsAndSendMessage(response, guildData, responsesEnabled, selectRow);
+                                return;
+                            }
+                        }).catch(async (e) => {
+                            await deleteMessage.edit("I ran into an error handling your reply.");
+                            console.error(e);
+                        });
+
+                        break;
+                    
+                    case 'toggleresponses':
+                        try { await buttonResponse.deferReply() } catch (e) {}
+                        collected = true;
+                        responsesEnabled = !responsesEnabled;
+                        await buttonResponse.followUp({content: `${confirmationMessage()} custom reactions are now ${responsesEnabled ? "enabled" : "disabled"}.`, ephemeral: true});
+                        guildData.messageScanning.customResponse = responsesEnabled;
+                        await update(guildData);
+                        break;
+                }
+                // Try to update message and buttons w/ new data
+                try {
+                    if (!addingButtons) response = await updateSettingButtonsAndSendMessage(response, guildData, responsesEnabled, selectRow);
+                } catch (e) {}
+                sleep(200).then(() => collected = false);
+            }
+        });
+
+        buttonCollector.on('end', async c =>  {
+            // Update message with buttons disabled
+            try {
+                if (!collected) {
+                    await updateSettingButtonsAndSendMessage(response, guildData, responsesEnabled, selectRow, true);
+                    await response.delete();
+                }
+            } catch (e) {}
+        });
+    } catch (e) {
+        console.debug(`Error: ${e}`);
+    }
+
+}
+
 
 // Regex patterns
 const variablePattern = /{([^}]*)}/g;
@@ -75,7 +531,7 @@ function validateRegex(pattern: string) {
     }
 }
 
-const validateMessages = async (interaction: CommandInteraction, trigger: string, response: string): Promise<{valid: boolean, isRegex: boolean, regexTrigger: string}> => {
+const validateMessages = async (interaction: CommandInteraction, trigger: string, response: string | null): Promise<{valid: boolean, isRegex: boolean, regexTrigger: string}> => {
     // Trigger: Validate whether brackets are correct (no nesting/orphaned brackets)
     let openingBracketFound = false;
     let valid = true;
@@ -104,22 +560,24 @@ const validateMessages = async (interaction: CommandInteraction, trigger: string
     // Response: validate whether brackets are correct
     openingBracketFound = false;
     valid = true;
-    if (response.includes('}') || response.includes('{')) {
-        for( let i = 0; i < response.length; i++) {
-            // If opening bracket found
-            if (response[i] == '{') {
-                if (openingBracketFound) {
-                    valid = false;
-                    break;
+    if (response != null) {
+        if (response.includes('}') || response.includes('{')) {
+            for( let i = 0; i < response.length; i++) {
+                // If opening bracket found
+                if (response[i] == '{') {
+                    if (openingBracketFound) {
+                        valid = false;
+                        break;
+                    }
+                    openingBracketFound = true;
                 }
-                openingBracketFound = true;
-            }
-            if (response[i] == '}') {
-                if (!openingBracketFound) {
-                    valid = false;
-                    break;
+                if (response[i] == '}') {
+                    if (!openingBracketFound) {
+                        valid = false;
+                        break;
+                    }
+                    openingBracketFound = false;
                 }
-                openingBracketFound = false;
             }
         }
     }
@@ -193,7 +651,9 @@ const createReaction = async (interaction: ChatInputCommandInteraction) => {
     let channelWhitelist = interaction.options.getChannel('channel');
     let allowping = interaction.options.getBoolean('allowping') ? interaction.options.getBoolean('allowping') : false;
     let fullmessage = interaction.options.getString('fullmessage') ? interaction.options.getString('fullmessage') : "full";
-    if (!name || !trigger || !response || !interaction.guildId) {
+    let reaction = interaction.options.getString('reaction') ? interaction.options.getString('reaction') : '';
+    
+    if (!name || !trigger || (!response && !reaction) || !interaction.guildId) {
         await interaction.editReply('Invalid response command! Make sure you define the name, trigger, and response.');
         return;
     }
@@ -222,19 +682,25 @@ const createReaction = async (interaction: ChatInputCommandInteraction) => {
     if (!valid) return;
     trigger = regexTrigger;
 
-
+    const reactionEmoji = await getEmoji(reaction ? reaction : '', BOT)
+    
+    if (response == null && reactionEmoji == null) {
+        await interaction.editReply('Invalid emoji! try again.');
+        return;
+    }
 
     // Save response to database
     const num = guildData.customResponses.push({
         name: name,
         enabled: true,
         trigger: trigger,
-        response: response,
+        response: response ? response : '',
         regex: isRegex,
         reply: isReply ? isReply : true,
         channelId: channelWhitelist ? channelWhitelist.id : null,
         allowPing: allowping ? allowping : false,
-        fullMessage: fullmessage ? fullmessage == 'full' ? true : false : true
+        fullMessage: fullmessage ? fullmessage == 'full' ? true : false : true,
+        reaction: reactionEmoji
     });
 
     await guildData.save();
@@ -292,7 +758,7 @@ const listReactions = async (interaction: ChatInputCommandInteraction) => {
         let responseList = "## Custom Responses\n";
         for (let r of guildData.customResponses) {
             responseList += `- ${r.name}${r.allowPing ? ` (pings)` : ``}${r.channelId != null ? ` ( <#${r.channelId}>)` : ``}`;
-            responseList += `\t\n\`${r.trigger}\`${r.fullMessage ? ` (full)` : `( partial)`} -> \`${r.response}\`\n`
+            responseList += `\t\n\`${r.trigger}\`${r.fullMessage ? ` (full)` : `( partial)`} -> \`${r.response}\`${r.reaction != null ? ` + ${emojiToString(r.reaction)}` : ''}\n`
         }
         await interaction.editReply(responseList);
     }
@@ -329,7 +795,13 @@ export const response: CommandInterface = {
                     option
                         .setName('response')
                         .setDescription('Message to respond with')
-                        .setRequired(true)
+                        .setRequired(false)
+                )
+                .addStringOption((option) => 
+                    option
+                        .setName('reaction')
+                        .setDescription('Emoji to react with')
+                        .setRequired(false)
                 )
                 .addChannelOption((option) =>
                     option
@@ -392,12 +864,17 @@ export const response: CommandInterface = {
             return;
         }
 
+        
 
         switch (interaction.options.getSubcommand()) {
             case 'help':
                 return await createHelpMessage(interaction);
                 
             case 'new':
+                if( !interaction.options.getString('response') && !interaction.options.getString('reaction')) {
+                    await interaction.editReply('Please specify a response or a reaction emoji!');
+                    return;
+                }
                 if(!hasPermissions(PermissionsBitField.Flags.ManageGuild, interaction.guild, interaction.user)) {
                     await interaction.editReply("You must have the `MANAGE SERVER` permission to create responses.");
                     return;
@@ -451,19 +928,49 @@ export const parseMessageForResponse = async (message: Message, guildData: Guild
                 const re = new RegExp(pattern.trigger, "i");
                 const match = message.content.match(re);
                 if (match) {
-                    response = pattern.response;
-                    for (let i = 0; i < match.length; i++) {
-                        response = response.replaceAll(`{${i + 1}}`, match[i + 1]);
+
+                    // Send reaction
+                    if (pattern.reaction != null) {
+                        const reactionEmoji = emojiToString(pattern.reaction);
+                        if (reactionEmoji != '') await message.react(reactionEmoji);
                     }
-                    if (pattern.reply) {
-                        await message.reply(response);
-                    } else {
-                        await message.channel.send(response);
+
+                    // Send response
+                    if (pattern.response != '') {
+                        response = pattern.response;
+                        for (let i = 0; i < match.length; i++) {
+                            response = response.replaceAll(`{${i + 1}}`, match[i + 1]);
+                        }
+                        if (pattern.reply) {
+                            await message.reply(response);
+                        } else {
+                            await message.channel.send(response);
+                        }
                     }
                 }
             } catch (e) {
                 console.error(`Response ${pattern.name} is defined as regex but regex string is invalid: ${e}`);
             }
+            return;
+        }
+
+        if (!pattern.fullMessage && message.content.includes(pattern.trigger)) {
+            // Send reaction
+            if (pattern.reaction != null) {
+                const reactionEmoji = emojiToString(pattern.reaction);
+                if (reactionEmoji != '') await message.react(reactionEmoji);
+            }
+
+            // Send response
+            if (pattern.response != '') {
+                response = pattern.response;
+                if (pattern.reply) {
+                    await message.reply(response);
+                } else {
+                    await message.channel.send(response);
+                }
+            }
+            return;
         }
 
         if (pattern.trigger == message.content) {
@@ -471,6 +978,11 @@ export const parseMessageForResponse = async (message: Message, guildData: Guild
                 // Prevent pings
                 if( !pattern.allowPing ) {
                     response = response.replaceAll("@", "");
+                }
+                // Send reaction
+                if (pattern.reaction != null) {
+                    const reactionEmoji = emojiToString(pattern.reaction);
+                    if (reactionEmoji != '') await message.react(reactionEmoji);
                 }
                 if (pattern.reply) {
                     await message.reply(response);

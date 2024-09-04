@@ -345,5 +345,5 @@ export const emojiToString = (emoji: MessageEmoji) => {
     if (emoji.name != undefined && emoji.id != undefined) {
         return `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
     }
-    return "unknown emoji";
+    return "";
 }
